@@ -117,8 +117,8 @@ function bergGeometry() {
     const p = v3(d.x * 5.4 * r, d.y * 6.4 * r, d.z * 4.0 * r);
     // the tip: a narrow, angular peak breaking the surface off-centre
     const tp = smooth((d.y - 0.62) / 0.38);
-    p.x = p.x * (1 - 0.72 * tp) + 0.9 * tp; p.z *= (1 - 0.66 * tp);
-    p.y += Math.pow(tp, 1.2) * 3.4 + 0.6 * tp * fbm(d.x * 6, d.z * 6, 3, 3) + 0.5 * tp * Math.max(0, d.x);
+    p.x = p.x * (1 - 0.6 * tp) + 0.9 * tp; p.z *= (1 - 0.6 * tp);
+    p.y += Math.pow(tp, 1.15) * 4.6 + 0.6 * tp * fbm(d.x * 6, d.z * 6, 3, 3) + 0.5 * tp * Math.max(0, d.x);
     p.y -= 6.75;
     return p;
   });
@@ -135,7 +135,7 @@ function icebergShot() {
     vertexShader: 'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
     fragmentShader: `varying vec3 vP; void main(){
       float h = vP.y;
-      vec3 zen = vec3(0.006,0.025,0.06), mid = vec3(0.05,0.17,0.28), hor = vec3(0.42,0.55,0.62), warm = vec3(1.0,0.58,0.40);
+      vec3 zen = vec3(0.004,0.018,0.045), mid = vec3(0.035,0.12,0.2), hor = vec3(0.2,0.3,0.36), warm = vec3(1.0,0.55,0.38);
       vec3 c = mix(mid, zen, smoothstep(0.05, 0.6, h));
       c = mix(hor, c, smoothstep(0.0, 0.22, h));
       float sunAz = max(0.0, dot(normalize(vec3(vP.x, 0.0, vP.z)), normalize(vec3(-0.75, 0.0, -0.65))));
@@ -164,7 +164,7 @@ function icebergShot() {
 
   // the iceberg
   const bump = noiseTexture('ice-bump-fine', { scale: 18, contrast: 1.4 });
-  const bergMat = new THREE.MeshPhysicalMaterial({ color: col('#e8f7ff'), roughness: 0.32, clearcoat: 1, clearcoatRoughness: 0.15, sheen: 0.6, sheenColor: col('#9fe6ff'), bumpMap: bump, bumpScale: 1.2, transparent: true });
+  const bergMat = new THREE.MeshPhysicalMaterial({ color: col('#e8f7ff'), roughness: 0.32, clearcoat: 1, clearcoatRoughness: 0.15, bumpMap: bump, bumpScale: 1.2, transparent: true });
   const forms = [v3(0.3, -5.6, 2.2), v3(-2.3, -3.0, 1.9), v3(2.5, -3.2, 1.6), v3(-1.0, -8.6, 1.6)];
   const bU = { uForms: { value: forms }, uGlow: { value: 1 }, uUnder: { value: 0 } };
   bergMat.onBeforeCompile = sh => {
@@ -177,12 +177,12 @@ function icebergShot() {
         float fr = 1.0 - abs(dot(normalize(vViewPosition), normal));
         totalEmissiveRadiance += vec3(1.0, 0.62, 0.22) * gl * uGlow * below * (0.35 + 0.65 * (1.0 - fr));
         totalEmissiveRadiance += vec3(0.25, 0.75, 0.9) * pow(fr, 3.0) * below * 0.35;`)
-      .replace('#include <opaque_fragment>', '#include <opaque_fragment>\n gl_FragColor.a = mix(1.0, mix(0.5, 0.92, pow(fr, 1.5)), below);');
+      .replace('#include <opaque_fragment>', '#include <opaque_fragment>\n gl_FragColor.a = mix(1.0, mix(0.3, 0.9, pow(fr, 1.2)), below);');
   };
   const berg = new THREE.Mesh(bergGeometry(), bergMat); world.add(berg);
 
   // buried golden forms: an egg (the origin), a coiled serpent (what is to come), shards
-  const goldM = mats.gold({ emissive: col('#ff9a2a'), emissiveIntensity: 0.9, roughness: 0.25 });
+  const goldM = mats.gold({ emissive: col('#ff9a2a'), emissiveIntensity: 1.5, roughness: 0.25 });
   const eggPts = []; for (let i = 0; i <= 40; i++) { const y = -Math.cos(Math.PI * i / 40); eggPts.push(new THREE.Vector2(Math.max(1e-3, 0.74 * Math.sqrt(1 - y * y) * (1 - 0.12 * y)), y)); }
   const egg = new THREE.Mesh(new THREE.LatheGeometry(eggPts, 48), goldM); egg.position.copy(forms[0]); egg.scale.setScalar(1.4); egg.rotation.z = 0.35; world.add(egg);
   const coil = []; for (let i = 0; i <= 120; i++) { const s = i / 120, a = s * TAU * 2.4; coil.push(v3(Math.cos(a) * (0.55 - 0.25 * s), s * 0.9 - 0.45, Math.sin(a) * (0.55 - 0.25 * s))); }
@@ -253,22 +253,27 @@ function icebergShot() {
       compU.split.value = lerp(0.47, 0.66, sink);
       // gentle bob
       berg.rotation.y = -0.25 + t * 0.03; egg.rotation.y = t * 0.4;
-      [egg, coilM].forEach(o => o.position.applyAxisAngle && null);
       const bob = Math.sin(t * 1.4) * 0.05;
       const camZ = lerp(24, 22.5, u), camX = lerp(1.8, 1.2, u);
       bU.uGlow.value = lerp(0.7, 1.15, smooth(range(u, 0.1, 0.9)));
       // above
       dome.material = skyMat; dome.position.set(camX, 0, camZ); top.visible = true; under.visible = false; shafts.visible = false; motes.visible = false;
       world.fog = new THREE.Fog(col('#3a6476'), 60, 300);
-      look(Ca, v3(camX, lerp(0.9, 0.5, sink) + bob, camZ), v3(0.4, lerp(0.6, 1.4, sink), 0));
+      // both cameras share the pitch that puts the horizon exactly on the meniscus
+      const pitch = -Math.atan((2 * compU.split.value - 1) * Math.tan(THREE.MathUtils.degToRad(Ca.fov / 2)));
+      const aim = (cy) => v3(0.4, cy + Math.tan(pitch) * camZ, 0);
+      const ya = lerp(0.9, 0.6, sink) + bob;
+      look(Ca, v3(camX, ya, camZ), aim(ya));
       const prev = r.getRenderTarget();
-      r.setRenderTarget(rtA); r.render(world, Ca);
+      const HH = H * PR, sp = compU.split.value, cut = Math.floor(HH * (sp - 0.04));
+      r.setRenderTarget(rtA); rtA.scissorTest = true; rtA.scissor.set(0, cut, W * PR, HH - cut); r.render(world, Ca);
       // below
       dome.material = deepMat; top.visible = false; under.visible = true; shafts.visible = true; motes.visible = true;
       world.fog = new THREE.FogExp2(col('#06303c'), 0.032);
       motes.material.uniforms.uScale.value = pixelScale(r, Cu);
-      look(Cu, v3(camX, lerp(-0.6, -1.6, sink) + bob, camZ), v3(0.3, lerp(-4.6, -5.0, sink), 0));
-      r.setRenderTarget(rtB); r.render(world, Cu);
+      const yu = lerp(-0.6, -1.4, sink) + bob; look(Cu, v3(camX, yu, camZ), aim(yu));
+      const topPx = Math.ceil(HH * (sp + 0.04));
+      r.setRenderTarget(rtB); rtB.scissorTest = true; rtB.scissor.set(0, 0, W * PR, topPx); r.render(world, Cu);
       r.setRenderTarget(prev);
       return { bloom: 0.5, threshold: 0.85, exposure: 1.0 };
     },
@@ -299,7 +304,7 @@ function glycine() {
 function waterShot() {
   const S = new THREE.Scene(), C = camera(32);
   backdrop(S, 'frost');
-  S.fog = null;
+  S.fog = null; S.environmentIntensity = 0.45;
   const L = rig(S, 'frost', { key: v3(4, 6, 7), keyI: 2.6, rimI: 3.5, fillI: 0.5, shadow: false });
   const mol = new THREE.Group(); mol.position.set(-1.7, 0.1, 0); S.add(mol);
   const oM = mats.plastic('#d8222c', { roughness: 0.16, clearcoat: 1, clearcoatRoughness: 0.05 });
@@ -460,7 +465,7 @@ function snakeHead(skinMat, rBody) {
 
 function ouroborosShot() {
   const S = new THREE.Scene(), C = camera(30);
-  backdrop(S, 'frost'); S.fog = null;
+  backdrop(S, 'frost'); S.fog = null; S.environmentIntensity = 0.5;
   const L = rig(S, 'frost', { key: v3(3, 7, 8), keyI: 3.0, rimI: 4, fillI: 0.45, shadow: false });
   const { map, bump } = scaleTextures(); map.repeat.set(30, 1); bump.repeat.set(30, 1);
   const skin = new THREE.MeshPhysicalMaterial({ map, bumpMap: bump, bumpScale: 2, roughness: 0.38, clearcoat: 0.7, clearcoatRoughness: 0.25, iridescence: 0.5, iridescenceIOR: 1.6, sheen: 0.4, sheenColor: col('#9fe6ff') });
@@ -981,7 +986,7 @@ function cambrianShot() {
   L.key.color.set('#d8fff4');
   const R = rng(55);
   // seafloor: rippled silt
-  const floorG = new THREE.PlaneGeometry(40, 40, 220, 220).rotateX(-Math.PI / 2);
+  const floorG = new THREE.PlaneGeometry(40, 40, 150, 150).rotateX(-Math.PI / 2);
   displace(floorG, v => { v.y = 0.12 * fbm(v.x * 0.35, 0, v.z * 0.35, 4) + 0.025 * Math.sin(v.x * 7 + 2 * fbm(v.x * 0.5, 1, v.z * 0.5, 2)) - 0.02; return v; });
   const caust = canvasTexture('caustic', 256, 256, (g, w, h) => {
     const img = g.createImageData(w, h);
@@ -1104,38 +1109,54 @@ function lightningShot() {
     const c = new THREE.Mesh(new THREE.PlaneGeometry(220, 220), m); c.rotation.x = Math.PI / 2; c.position.set(0, 16 + i * 2.5, -30); c.material.map = cloudTex.clone(); c.material.map.repeat.set(2 + i, 2 + i); c.material.map.offset.set(i * 0.3, i * 0.17); c.material.map.needsUpdate = true; S.add(c); clouds.push(c);
   }
   // barren primordial land and distant volcanic ridges
-  const landG = new THREE.PlaneGeometry(240, 240, 240, 240).rotateX(-Math.PI / 2);
+  const landG = new THREE.PlaneGeometry(240, 240, 160, 160).rotateX(-Math.PI / 2);
   displace(landG, v => { const d = Math.hypot(v.x, v.z); v.y = 0.6 * fbm(v.x * 0.08, 0, v.z * 0.08, 5) + 0.15 * fbm(v.x * 0.6, 3, v.z * 0.6, 3) + Math.max(0, -v.z - 40) * 0.25 * (0.6 + fbm(v.x * 0.03, 5, 0, 4)) - 0.4 * Math.exp(-d * d / 20); return v; });
   const land = new THREE.Mesh(landG, mats.stone('#2c2a28', { roughness: 0.95, bumpScale: 2 })); land.receiveShadow = true; S.add(land);
   // dead tree: twisted, leafless
   const T = growTree(R, { trunk: 1.9, r0: 0.22, depth: 4, spread: 0.6, up: 0.25, twist: 0.4, kids: [2, 3], shrink: 0.66, root: v3(0, -0.3, 0) });
-  const woodM = new THREE.MeshStandardMaterial({ color: col('#2a221c'), roughness: 0.9, bumpMap: noiseTexture('bark-n', { scale: 30, contrast: 1.5 }), bumpScale: 2, emissive: col('#ff5a10'), emissiveMap: noiseTexture('ember', { scale: 14, contrast: 3 }), emissiveIntensity: 0 });
+  const woodM = new THREE.MeshStandardMaterial({ color: col('#2a221c'), roughness: 0.9, bumpMap: noiseTexture('bark-n', { scale: 30, contrast: 1.5 }), bumpScale: 2, emissive: col('#ff5a10'), emissiveMap: noiseTexture('ember-fine', { scale: 40, contrast: 4 }), emissiveIntensity: 0 });
+  const burnU = { uY: { value: 10 } };
+  woodM.onBeforeCompile = sh => { Object.assign(sh.uniforms, burnU); sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying float vWY;').replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvWY = (modelMatrix * vec4(transformed, 1.0)).y;'); sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vWY; uniform float uY;').replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance *= smoothstep(uY - 0.6, uY + 0.2, vWY);'); };
   const tree = new THREE.Mesh(mergeGeometries(T.geos.map(g => g.toNonIndexed())), woodM); tree.castShadow = true; S.add(tree);
   let topTip = T.tips[0]; T.tips.forEach(tp => { if (tp.p.y > topTip.p.y) topTip = tp; });
   // lightning bolt: jagged main channel + branches as glowing tubes
-  const strikeAt = v3(topTip.p.x, topTip.p.y, topTip.p.z), from = v3(-6, 22, -10);
-  const paths = crack(from, strikeAt, R, { depth: 7, rough: 0.32, branches: 6, branchLen: 0.35 });
+  const strikeAt = v3(topTip.p.x, topTip.p.y, topTip.p.z), from = v3(-3.5, 10.5, -4);
+  const paths = crack(from, strikeAt, R, { depth: 7, rough: 0.3, branches: 7, branchLen: 0.4 });
   const boltM = new THREE.MeshBasicMaterial({ color: col('#f2eaff').multiplyScalar(6), fog: false });
   const haloM = new THREE.MeshBasicMaterial({ color: col('#b07aff').multiplyScalar(0.9), transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });
-  const bolts = paths.map((pl, i) => { const g = tube(pl, i ? 0.03 : 0.07, pl.length * 3, 6); const m = new THREE.Mesh(g, boltM), h = new THREE.Mesh(tube(pl, i ? 0.12 : 0.3, pl.length * 3, 6), haloM); const grp = new THREE.Group(); grp.add(m, h); S.add(grp); return { grp, g, hg: h.geometry, n: g.index.count, hn: h.geometry.index.count, i }; });
+  const bolts = paths.map((pl, i) => { const g = tube(pl, i ? 0.018 : 0.045, pl.length * 3, 6); const m = new THREE.Mesh(g, boltM), h = new THREE.Mesh(tube(pl, i ? 0.08 : 0.22, pl.length * 3, 6), haloM); const grp = new THREE.Group(); grp.add(m, h); S.add(grp); return { grp, g, hg: h.geometry, n: g.index.count, hn: h.geometry.index.count, i }; });
   const boltLight = new THREE.PointLight(col('#d8d0ff'), 0, 60, 1.5); boltLight.position.copy(strikeAt).add(v3(-1, 4, 1)); S.add(boltLight);
   const moon = new THREE.DirectionalLight(col('#7fb8c0'), 0.5); moon.position.set(-4, 6, -8); S.add(moon);
   const hemi = new THREE.HemisphereLight(col('#3a6a70'), col('#0a0806'), 0.4); S.add(hemi);
-  // fire: flame tongues at the crown (shader-animated, additive)
+  // fire: procedural billboard flames clustered on the struck crown
   const flameU = { t: { value: 0 }, k: { value: 0 } };
   const flameM = new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, uniforms: flameU,
-    vertexShader: `uniform float t; uniform float k; varying float vH; varying vec3 vN; varying vec3 vV; attribute float aSeed;
-      void main(){ vec3 p = position; vH = clamp(p.y + 0.5, 0.0, 1.0);
-        float w = 1.0 - vH * 0.85; p.xz *= w;
-        p.x += sin(t * 9.0 + aSeed * 7.0 + vH * 4.0) * 0.12 * vH; p.z += cos(t * 7.0 + aSeed * 5.0 + vH * 3.0) * 0.1 * vH;
-        p.y *= (0.8 + 0.25 * sin(t * 13.0 + aSeed * 3.0)) ;
-        vec4 mv = modelViewMatrix * instanceMatrix * vec4(p, 1.0); vN = normalize(normalMatrix * mat3(instanceMatrix) * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }`,
-    fragmentShader: `uniform float k; varying float vH; varying vec3 vN; varying vec3 vV;
-      void main(){ float e = pow(abs(dot(vN, vV)), 1.5); vec3 c = mix(vec3(4.0, 2.2, 0.7), vec3(2.2, 0.35, 0.05), vH); gl_FragColor = vec4(c * e * (1.0 - vH) * k, 1.0); }`,
+    vertexShader: `attribute float aSeed; varying vec2 vUv; varying float vSeed;
+      void main(){ vUv = uv; vSeed = aSeed;
+        vec4 c = modelViewMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+        float sx = length(instanceMatrix[0].xyz), sy = length(instanceMatrix[1].xyz);
+        c.xy += vec2(position.x * sx, (position.y + 0.5) * sy);
+        gl_Position = projectionMatrix * c; }`,
+    fragmentShader: `uniform float t; uniform float k; varying vec2 vUv; varying float vSeed;
+      float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f); return mix(mix(h(i), h(i+vec2(1,0)), f.x), mix(h(i+vec2(0,1)), h(i+vec2(1,1)), f.x), f.y); }
+      float fb(vec2 p){ return n(p)*0.5 + n(p*2.1)*0.3 + n(p*4.3)*0.2; }
+      void main(){
+        float y = vUv.y, x = (vUv.x - 0.5) * 2.0;
+        float tur = fb(vec2(vUv.x * 3.0 + vSeed * 10.0, y * 2.5 - t * 3.5 - vSeed * 5.0));
+        x += (tur - 0.5) * 0.9 * y;
+        float w = 0.9 * pow(1.0 - y, 0.6) * (0.35 + 0.65 * smoothstep(0.0, 0.25, y)) + 1e-3;
+        float ax = abs(x);
+        float m = (1.0 - smoothstep(w * 0.3, w, ax)) * smoothstep(0.0, 0.25, tur + 0.3 - y * 0.75) * smoothstep(0.0, 0.08, y);
+        float core = (1.0 - smoothstep(0.0, w * 0.6, ax)) * (1.0 - y);
+        vec3 c = mix(vec3(1.6, 0.25, 0.04), vec3(3.0, 1.4, 0.35), core);
+        c = mix(c, vec3(4.0, 3.0, 1.6), core * core * (1.0 - y));
+        gl_FragColor = vec4(c * m * k * 0.42, 1.0); }`,
   });
-  const flameGeo = new THREE.SphereGeometry(0.5, 16, 12); flameGeo.translate(0, 0.0, 0);
-  const fl = [...T.tips.filter(tp => tp.p.y > topTip.p.y - 1.4), ...T.nodes.filter(n => n.p.y > topTip.p.y - 1.6)].slice(0, 26);
+  const flameGeo = new THREE.PlaneGeometry(1, 1);
+  const crownY = topTip.p.y;
+  const fl = [...T.tips, ...T.nodes].filter(n => n.p.y > crownY - 1.5 && n.p.distanceTo(topTip.p) < 2.2).slice(0, 16);
   const flames = new THREE.InstancedMesh(flameGeo, flameM, fl.length);
   const seeds = new Float32Array(fl.length).map((_, i) => R()); flameGeo.setAttribute('aSeed', new THREE.InstancedBufferAttribute(seeds, 1));
   const fm4 = new THREE.Matrix4(); flames.frustumCulled = false; S.add(flames);
@@ -1161,14 +1182,15 @@ function lightningShot() {
       // ignition
       const fire = smooth(range(u, ST + 0.02, ST + 0.35));
       flameU.t.value = t; flameU.k.value = fire;
-      fl.forEach((f, i) => { const s = (0.35 + 0.5 * seeds[i]) * fire * (1 + 0.15 * Math.sin(t * 11 + i)); fm4.makeScale(s * 0.8, s * 2.2, s * 0.8).setPosition(f.p.clone().add(v3(0, s * 0.8, 0))); flames.setMatrixAt(i, fm4); });
+      fl.forEach((f, i) => { const loc = smooth(range(fire * 2.4 - f.p.distanceTo(topTip.p) * 0.9, 0, 0.6)); const s = (0.55 + 0.6 * seeds[i]) * loc * (1 + 0.12 * Math.sin(t * 11 + i)); fm4.makeScale(s * 1.15, s * 2.0, 1).setPosition(f.p.clone().add(v3(0, -0.15 * s, 0))); flames.setMatrixAt(i, fm4); });
+      burnU.uY.value = crownY - 1.7 * fire;
       flames.instanceMatrix.needsUpdate = true;
-      woodM.emissiveIntensity = 1.6 * fire * (0.8 + 0.2 * Math.sin(t * 17));
-      fireLight.intensity = 40 * fire * (0.85 + 0.15 * Math.sin(t * 23) * Math.sin(t * 7));
+      woodM.emissiveIntensity = 0.9 * fire * (0.8 + 0.2 * Math.sin(t * 17));
+      fireLight.intensity = 25 * fire * (0.85 + 0.15 * Math.sin(t * 23) * Math.sin(t * 7));
       ed.forEach((e, i) => { const a = ((t * 0.8 + e.ph) % 1); embers.setV(i, e.o.clone().addScaledVector(e.v, a * 1.6).add(v3(Math.sin(t * 3 + i) * 0.1, 0, 0))); embers.alpha[i] = fire * Math.sin(Math.PI * a); }); embers.dirty();
-      const camP = v3(lerp(3.2, 2.4, u), lerp(1.0, 1.4, u), lerp(12.5, 10.5, easeOut(u))).add(drift(t, 0.02)).add(v3(0, 0, 0));
+      const camP = v3(lerp(3.2, 2.4, u), lerp(1.2, 1.6, u), lerp(14.5, 12.8, easeOut(u))).add(drift(t, 0.02)).add(v3(0, 0, 0));
       const shake = af >= 0 ? Math.exp(-af * 25) * 0.04 : 0;
-      look(C, camP.add(v3(Math.sin(t * 60) * shake, Math.cos(t * 47) * shake, 0)), v3(-0.5, lerp(3.2, 3.0, u), 0));
+      look(C, camP.add(v3(Math.sin(t * 60) * shake, Math.cos(t * 47) * shake, 0)), v3(-0.5, lerp(3.9, 4.1, u), 0));
       return { bloom: 0.7, threshold: 0.85, exposure: 1.0, flash: af >= 0 ? 0.55 * Math.exp(-af * 50) : 0 };
     },
   };
