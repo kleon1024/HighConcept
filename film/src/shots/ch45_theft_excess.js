@@ -110,8 +110,6 @@ function caveWallTexture() {
       g.drawImage(tmp, x - 110, y - 130);
     });
     g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
-    // red ochre dots
-    for (let i = 0; i < 14; i++) { g.fillStyle = 'rgba(160,50,25,0.75)'; g.beginPath(); g.arc(700 + i * 38, 640 + Math.sin(i) * 10, 9, 0, TAU); g.fill(); }
   });
 }
 
@@ -511,6 +509,10 @@ function waferTexture() {
       blocks.forEach(([bx, by, bw, bh, cc]) => { g.fillStyle = cc; g.fillRect(x + bx * c, y + by * c, bw * c, bh * c); g.fillStyle = 'rgba(255,255,255,0.12)'; for (let k = 0; k < bw * c; k += 3) g.fillRect(x + bx * c + k, y + by * c, 1, bh * c); });
       g.fillStyle = '#c8a860'; for (let k = 0; k < 10; k++) { g.fillRect(x + 6 + k * (c - 12) / 10, y + 5, 4, 4); g.fillRect(x + 6 + k * (c - 12) / 10, y + c - 9, 4, 4); }
     }
+    g.globalCompositeOperation = 'overlay'; g.globalAlpha = 0.55;
+    const rb = g.createLinearGradient(0, 0, w, h); ['#ff4080', '#ffa020', '#e0ff40', '#20ffa0', '#20a0ff', '#8040ff', '#ff40c0', '#ffa020', '#40ffa0'].forEach((cc, i, a) => rb.addColorStop(i / (a.length - 1), cc));
+    g.fillStyle = rb; g.beginPath(); g.arc(w / 2, h / 2, w * 0.49, 0, TAU); g.fill();
+    g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
   });
 }
 function circuitTexture() {
@@ -524,6 +526,12 @@ function circuitTexture() {
     // vias + pads
     for (let i = 0; i < 1800; i++) { g.fillStyle = `rgba(200,240,255,${r() * 0.9})`; g.fillRect(r() * w, r() * h, 3, 3); }
     g.fillStyle = '#e0c070'; for (let k = 0; k < 40; k++) { g.fillRect(30 + k * (w - 60) / 40, 6, 22, 22); g.fillRect(30 + k * (w - 60) / 40, h - 28, 22, 22); g.fillRect(6, 30 + k * (h - 60) / 40, 22, 22); g.fillRect(w - 28, 30 + k * (h - 60) / 40, 22, 22); }
+  });
+}
+function windowsTexture() {
+  return canvasTexture('city-windows', 64, 128, (g, w, h) => {
+    const r = rng(90); g.fillStyle = '#000'; g.fillRect(0, 0, w, h);
+    for (let y = 4; y < h - 4; y += 8) for (let x = 4; x < w - 4; x += 10) if (r() < 0.55) { g.fillStyle = `rgba(160,220,255,${r.range(0.4, 1)})`; g.fillRect(x, y, 5, 4); }
   });
 }
 // ================================================================ BABEL parts
@@ -995,15 +1003,15 @@ export const shots = {
   // ── silicon wafer macro: iridescent dies, pushing into one whose circuitry glows like a city ──
   chip() {
     const S = new THREE.Scene(), C = camera(38, 0.002, 200);
-    backdrop(S, 'silicon'); S.fog = null; S.environmentIntensity = 0.9;
+    backdrop(S, 'silicon'); S.fog = null; S.environmentIntensity = 0.5;
     const wt = waferTexture();
-    const waferM = new THREE.MeshPhysicalMaterial({ map: wt, metalness: 0.75, roughness: 0.16, iridescence: 1, iridescenceIOR: 1.7, iridescenceThicknessRange: [180, 720], iridescenceThicknessMap: noiseTexture('rough-mid', { scale: 12, contrast: 1.4 }), clearcoat: 0.6 });
+    const waferM = new THREE.MeshPhysicalMaterial({ map: wt, metalness: 0.35, roughness: 0.25, envMapIntensity: 0.8, iridescence: 1, iridescenceIOR: 1.7, iridescenceThicknessRange: [180, 720], iridescenceThicknessMap: noiseTexture('rough-mid', { scale: 12, contrast: 1.4 }), clearcoat: 0.6 });
     const edgeM = new THREE.MeshStandardMaterial({ color: col('#8a9aaa'), metalness: 0.9, roughness: 0.3 });
     const wafer = new THREE.Mesh(new THREE.CylinderGeometry(5, 5, 0.05, 256), [edgeM, waferM, edgeM]); wafer.position.y = -0.025; S.add(wafer);
     // hero die: circuitry plane + a city of transistor blocks
     const ct = circuitTexture();
     const die = new THREE.Group(); die.position.set(0.25, 0.0015, 0.25); S.add(die);
-    const dieM = new THREE.MeshStandardMaterial({ color: col('#0a1220'), metalness: 0.6, roughness: 0.35, emissive: col('#4fc0ff'), emissiveMap: ct, emissiveIntensity: 0.3 });
+    const dieM = new THREE.MeshStandardMaterial({ map: ct, color: col('#7090c0'), metalness: 0.3, roughness: 0.5, envMapIntensity: 0.2, emissive: col('#4fc0ff'), emissiveMap: ct, emissiveIntensity: 0.3 });
     const dp = new THREE.Mesh(new THREE.PlaneGeometry(0.47, 0.47), dieM); dp.rotation.x = -Math.PI / 2; die.add(dp);
     const r = rng(60), blk = [], lit = [];
     for (let i = 0; i < 2400; i++) {
@@ -1013,21 +1021,21 @@ export const shots = {
       const m = M4(x, hgt / 2, z, 0, cell * r.range(0.5, 0.85), hgt, cell * r.range(0.5, 0.85));
       (r() < 0.22 ? lit : blk).push(m);
     }
-    const city = instanced(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: col('#1a2a40'), metalness: 0.8, roughness: 0.3 }), blk); die.add(city);
-    const cityLit = instanced(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: col('#0a1a30'), emissive: col('#6fd0ff'), emissiveIntensity: 0.0, metalness: 0.5, roughness: 0.4 }), lit); die.add(cityLit);
-    const key = new THREE.DirectionalLight(col('#e0f0ff'), 2.2); key.position.set(4, 6, 2); S.add(key);
-    const rimL = new THREE.DirectionalLight(col('#3fa9ff'), 3); rimL.position.set(-5, 2, -6); S.add(rimL);
+    const city = instanced(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: col('#0c1626'), metalness: 0.3, roughness: 0.6, envMapIntensity: 0.3 }), blk); die.add(city);
+    const cityLit = instanced(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: col('#0a1a30'), emissive: col('#6fd0ff'), emissiveMap: windowsTexture(), emissiveIntensity: 0.0, metalness: 0.3, roughness: 0.6, envMapIntensity: 0.3 }), lit); die.add(cityLit);
+    const key = new THREE.DirectionalLight(col('#e0f0ff'), 1.4); key.position.set(4, 3, 2); S.add(key);
+    const rimL = new THREE.DirectionalLight(col('#3fa9ff'), 2); rimL.position.set(-5, 2, -6); S.add(rimL);
     S.add(new THREE.HemisphereLight(col('#a0d0ff'), col('#02060c'), 0.3));
     return {
       scene: S, cam: C,
       update(u, t) {
-        const k = easeInOut(u), d = 11 * Math.pow(0.15 / 11, k);
+        const k = easeInOut(u), d = 11 * Math.pow(0.42 / 11, k);
         const tgt = v3(lerp(0.0, 0.25, smooth(range(u, 0, 0.6))), 0, lerp(0.0, 0.25, smooth(range(u, 0, 0.6))));
-        const pos = orbit(d, lerp(0.75, 0.35, k), lerp(0.85, 0.32, k), tgt);
+        const pos = orbit(d, lerp(0.75, 0.35, k), lerp(0.9, 0.42, k), tgt);
         look(C, pos.add(drift(t, 0.002 * d)), tgt.clone().add(v3(0, 0, 0)));
         const g = smooth(range(u, 0.35, 0.9));
-        dieM.emissiveIntensity = lerp(0.3, 2.6, g); cityLit.material.emissiveIntensity = lerp(0.0, 1.6, g);
-        return { bloom: 0.55, threshold: 0.9, exposure: 1.0, vignette: 1.0 };
+        dieM.emissiveIntensity = lerp(0.3, 1.8, g); cityLit.material.emissiveIntensity = lerp(0.0, 1.5, g); S.environmentIntensity = lerp(0.5, 0.08, g); key.intensity = lerp(1.4, 0.5, g);
+        return { bloom: 0.45, threshold: 0.95, exposure: 1.0, vignette: 1.0 };
       },
     };
   },
@@ -1036,10 +1044,10 @@ export const shots = {
   babel() {
     const S = new THREE.Scene(), C = camera(40, 0.5, 3000);
     const bd = backdrop(S, 'silicon', { radius: 1500 }); bd.visible = false;
-    gradientSky(S, '#0a2a50', '#3a78b8', '#02081a', v3(-0.6, 0.12, -0.8).normalize(), '#6ab8ff');
+    gradientSky(S, '#0a2448', '#2a5a94', '#020814', v3(-0.6, 0.12, -0.8).normalize(), '#1a3a60');
     S.fog = new THREE.Fog(col('#2a5a90'), 60, 420); S.environmentIntensity = 0.5;
     const N = 9, th = 2.4, ct = circuitTexture(), at = arcadeTexture();
-    const stoneM = (n) => { const m = rep(at, 1); m.repeat.set(n, 1); return new THREE.MeshStandardMaterial({ map: m, bumpMap: m, bumpScale: 2, roughness: 0.85 }); };
+    const stoneM = (n) => { const m = rep(at, 1); m.repeat.set(n, 2); return new THREE.MeshStandardMaterial({ map: m, bumpMap: m, bumpScale: 2, roughness: 0.85 }); };
     const chipM = (n, e) => { const m = rep(ct, 1); m.repeat.set(n / 4, 0.5); return new THREE.MeshStandardMaterial({ color: col('#0c1626'), metalness: 0.7, roughness: 0.35, emissive: col('#4fb8ff'), emissiveMap: m, emissiveIntensity: e }); };
     const ledgeStone = mats.stone('#8a7c6a', { bumpMap: rep(noiseTexture('bump-rock', { scale: 16, contrast: 1.6 }), 8), bumpScale: 1 });
     const ledgeChip = new THREE.MeshStandardMaterial({ color: col('#101c2c'), metalness: 0.8, roughness: 0.3, emissive: col('#3fa9ff'), emissiveIntensity: 0.4 });
@@ -1073,23 +1081,23 @@ export const shots = {
     const plain = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), new THREE.MeshStandardMaterial({ color: col('#1a2a3a'), roughness: 1 })); plain.rotation.x = -Math.PI / 2; plain.position.y = -3; S.add(plain);
     // clouds
     const cloudT = cloudTexture(), clouds = [], r = rng(11);
-    for (let i = 0; i < 26; i++) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudT, color: col('#c8dcff'), transparent: true, opacity: r.range(0.5, 0.9), depthWrite: false, fog: true })); const a = r() * TAU, rr = r.range(13, 34); sp.position.set(Math.sin(a) * rr, r.range(7, 11.5), Math.cos(a) * rr); sp.scale.set(r.range(18, 34), r.range(6, 10), 1); S.add(sp); clouds.push(sp); }
-    const moon = new THREE.DirectionalLight(col('#d0e4ff'), 2.4); moon.position.set(-30, 40, 30); moon.castShadow = true; moon.shadow.mapSize.set(2048, 2048); const sc = moon.shadow.camera; sc.left = -20; sc.right = 20; sc.top = 25; sc.bottom = -10; sc.near = 1; sc.far = 150; moon.shadow.bias = -0.0005; S.add(moon);
+    for (let i = 0; i < 26; i++) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudT, color: col('#8aa8d8'), transparent: true, opacity: r.range(0.3, 0.55), depthWrite: false, fog: true })); const a = r() * TAU, rr = r.range(13, 23); sp.position.set(Math.sin(a) * rr, r.range(6, 9.5), Math.cos(a) * rr); sp.scale.set(r.range(18, 34), r.range(6, 10), 1); S.add(sp); clouds.push(sp); }
+    const moon = new THREE.DirectionalLight(col('#d0e4ff'), 3.2); moon.position.set(-30, 40, 30); moon.castShadow = true; moon.shadow.mapSize.set(2048, 2048); const sc = moon.shadow.camera; sc.left = -20; sc.right = 20; sc.top = 25; sc.bottom = -10; sc.near = 1; sc.far = 150; moon.shadow.bias = -0.0005; S.add(moon);
     const rimL = new THREE.DirectionalLight(col('#3fa9ff'), 2.5); rimL.position.set(30, 10, -30); S.add(rimL);
-    S.add(new THREE.HemisphereLight(col('#7ab0ff'), col('#101820'), 0.5));
+    S.add(new THREE.HemisphereLight(col('#7ab0ff'), col('#101820'), 0.3));
     const glowL = new THREE.PointLight(col('#5fd0ff'), 0, 0, 1.2); glowL.position.set(0, topY + 1, 0); S.add(glowL);
     return {
       scene: S, cam: C,
       update(u, t) {
         const k = easeInOut(u);
         const az = lerp(0.35, 0.75, u);
-        const pos = v3(Math.sin(az) * lerp(46, 34, k), lerp(4, topY + 6, k), Math.cos(az) * lerp(46, 34, k));
-        look(C, pos.add(drift(t, 0.08)), v3(0, lerp(9, topY - 2, k), 0));
+        const pos = v3(Math.sin(az) * lerp(46, 26, k), lerp(3, topY + 2.5, k), Math.cos(az) * lerp(46, 26, k));
+        look(C, pos.add(drift(t, 0.08)), v3(0, lerp(10, topY - 4, k), 0));
         const e = smooth(range(u, 0.2, 0.8));
         chipMats.forEach((m, i) => { m.emissiveIntensity = (1.8 + 0.3 * Math.sin(t * 6 + i)) * e; });
         ledgeChip.emissiveIntensity = 0.5 * e; glowL.intensity = 30 * e;
         clouds.forEach((c, i) => { c.position.x += 0; c.material.rotation = 0; });
-        return { bloom: 0.55, threshold: 0.9, exposure: 1.0, vignette: 1.0 };
+        return { bloom: 0.45, threshold: 0.92, exposure: 0.95, vignette: 1.0 };
       },
     };
   },
@@ -1128,12 +1136,13 @@ export const shots = {
           vec3 dir = normalize((uCamMat * vec4(q.x * uTan * uAspect, q.y * uTan, -1.0, 0.0)).xyz);
           vec3 pos = uCamPos; vec3 col = vec3(0.0); float trans = 1.0;
           float h2 = dot(cross(pos, dir), cross(pos, dir));
-          bool hole = false;
+          bool hole = false; float rmin = 100.0;
           for (int i = 0; i < 200; i++) {
             float r = length(pos);
+            rmin = min(rmin, r);
             if (r < 1.0) { hole = true; break; }
             if (r > 60.0 && dot(pos, dir) > 0.0) break;
-            float dt = clamp(0.07 * r * (r > 4.0 ? 1.4 : 1.0), 0.015, 3.0);
+            float dt = clamp(r < 3.0 ? 0.035 * r : 0.07 * r * (r > 4.0 ? 1.4 : 1.0), 0.01, 3.0);
             vec3 prev = pos;
             vec3 acc = -1.5 * h2 * pos / pow(r, 5.0);
             dir += acc * dt; pos += dir * dt;
@@ -1148,16 +1157,17 @@ export const shots = {
                 vec3 k = -normalize(dir);
                 float b = length(v), g = 1.0 / (inversesqrt(1.0 - b * b) * (1.0 - dot(v, k)));
                 g *= sqrt(1.0 - 1.0 / rr);
-                float I = pow(g, 3.5) * x * x * 3.2 * (0.45 + n);
-                vec3 dc = temp(clamp(x * g * 0.95, 0.0, 1.0)) * I;
+                float I = pow(g, 2.6) * x * x * 3.2 * (0.45 + n);
+                vec3 dc = temp(clamp(x * g * 0.9, 0.0, 1.0)) * I; dc = dc / (1.0 + 0.25 * dc);
                 float edge = smoothstep(2.9, 3.4, rr) * smoothstep(13.0, 8.0, rr);
                 float a = clamp((0.55 + 0.6 * n) * edge, 0.0, 1.0);
-                col += trans * dc * a * 2.2; trans *= (1.0 - a * 0.85);
+                col += trans * dc * a * 0.55; trans *= (1.0 - a * 0.85);
                 if (trans < 0.02) break;
               }
             }
           }
           if (!hole) col += trans * stars(normalize(dir));
+          col += trans * vec3(1.0, 0.75, 0.45) * 0.5 * exp(-pow((rmin - 1.53) / 0.035, 2.0));
           gl_FragColor = vec4(col, 1.0);
         }`,
     })); bhQuad.frustumCulled = false; bhScene.add(bhQuad);
@@ -1170,7 +1180,7 @@ export const shots = {
     const r = rng(48), deb = [];
     const stone = mats.stone('#8a7c6a'), shardM = new THREE.MeshStandardMaterial({ color: col('#0c1626'), metalness: 0.7, roughness: 0.3, emissive: col('#4fb8ff'), emissiveIntensity: 1.2 });
     for (let i = 0; i < 36; i++) {
-      const m = new THREE.Mesh(i % 4 === 0 ? new THREE.BoxGeometry(0.22, 0.03, 0.22) : new THREE.BoxGeometry(r.range(0.15, 0.4), r.range(0.1, 0.25), r.range(0.12, 0.3)), i % 4 === 0 ? shardM : stone);
+      const m = new THREE.Mesh(i % 4 === 0 ? new THREE.BoxGeometry(0.16, 0.025, 0.16) : new THREE.BoxGeometry(r.range(0.25, 0.6), r.range(0.15, 0.35), r.range(0.2, 0.45)), i % 4 === 0 ? shardM : stone);
       m.userData = { r0: r.range(11, 22), a0: r.range(-0.9, 0.9), y0: r.range(-0.5, 0.9), spin: r.dir(), sp: r.range(0.6, 1.2) }; S.add(m); deb.push(m);
     }
     const diskL = new THREE.PointLight(col('#ffb070'), 60, 0, 1.2); S.add(diskL);
@@ -1186,7 +1196,7 @@ export const shots = {
         const prevT = R.getRenderTarget(); R.setRenderTarget(rt); R.render(bhScene, oc); R.setRenderTarget(prevT);
         deb.forEach((m, i) => { const d = m.userData, s = clamp(t * 0.12 * d.sp); const rr = lerp(d.r0, 3.5, s * s); const a = d.a0 + az + s * 2.2 + t * 0.35 / Math.sqrt(rr / 10);
           m.position.set(Math.sin(a) * rr, d.y0 * (rr / 12), Math.cos(a) * rr); m.rotation.set(d.spin.x * t * 2, d.spin.y * t * 2, d.spin.z * t * 2);
-          const toCam = C.position.clone().sub(m.position); m.visible = toCam.dot(C.position) > 0 && m.position.distanceTo(C.position) > 1.5; });
+          const toCam = C.position.clone().sub(m.position); m.visible = toCam.dot(C.position) > 0 && m.position.distanceTo(C.position) > 5.0; });
         return { bloom: 0.55, threshold: 0.85, exposure: 1.0, vignette: 1.0 };
       },
     };
@@ -1200,7 +1210,7 @@ export const shots = {
     const brass = new THREE.MeshStandardMaterial({ color: col('#d8a85a'), metalness: 1, roughness: 0.28, roughnessMap: noiseTexture('rough-fine', { scale: 40, contrast: 1.5 }) });
     const B = bunsen(brass); S.add(B);
     // bench: dark soapstone
-    const bench = new THREE.Mesh(new THREE.PlaneGeometry(30, 20), new THREE.MeshStandardMaterial({ color: col('#141210'), roughness: 0.32, roughnessMap: noiseTexture('rough-mid', { scale: 12, contrast: 1.4 }) }));
+    const bench = new THREE.Mesh(new THREE.PlaneGeometry(30, 20), new THREE.MeshStandardMaterial({ color: col('#141210'), roughness: el === 'Na' ? 0.6 : 0.32, roughnessMap: noiseTexture('rough-mid', { scale: 12, contrast: 1.4 }) }));
     bench.rotation.x = -Math.PI / 2; bench.receiveShadow = true; S.add(bench);
     // flames: faint blue inner cone + element-coloured outer flame
     const flameG = new THREE.Group(); flameG.position.y = 1.6; S.add(flameG);
@@ -1265,7 +1275,7 @@ export const shots = {
       Li: u => ({ pos: orbit(lerp(2.6, 2.3, u), lerp(-0.9, -0.75, u), 0.02, v3(0, 1.75, 0)), tgt: v3(0.15, 2.05, 0), loop: v3(0.25, 1.95, 0.05) }),
       K: u => ({ pos: orbit(lerp(1.45, 1.3, u), lerp(1.25, 1.15, u), lerp(0.15, 0.1, u), v3(0.2, 2.0, 0)), tgt: v3(0.1, 2.0, 0), loop: v3(0.2, 1.95, 0.05) }),
       Cu: u => ({ pos: orbit(lerp(4.2, 3.8, u), lerp(2.6, 2.75, u), 0.62, v3(0, 1.3, 0)), tgt: v3(0, 1.75, 0), loop: v3(0.22, 1.9, 0.04) }),
-      Na: u => { const k = easeInOut(range(u, 0.1, 0.95)); return { pos: v3(lerp(1.6, 5.15, k), lerp(3.9, 2.25, k), lerp(5.6, 2.65, k)), tgt: v3(lerp(2.6, 6.57, k), lerp(1.95, 2.14, k), lerp(0.3, 1.93, k)), loop: v3(0.22, 1.9, 0.04) }; },
+      Na: u => { const k = easeInOut(range(u, 0.3, 0.95)); return { pos: v3(lerp(0.9, 5.15, k) + u * 0.3, lerp(3.0, 2.25, k), lerp(5.4, 2.65, k)), tgt: v3(lerp(1.5, 6.57, k), lerp(2.0, 2.14, k), lerp(0.2, 1.93, k)), loop: v3(0.22, 1.9, 0.04) }; },
     };
     return {
       scene: S, cam: C,

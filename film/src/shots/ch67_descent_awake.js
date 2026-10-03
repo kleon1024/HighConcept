@@ -17,7 +17,8 @@ function patch(m, key, o = {}) {
     sh.fragmentShader = sh.fragmentShader
       .replace('#include <common>', '#include <common>\nvarying vec3 vObj;\n' + (o.fHead || ''))
       .replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>\n' + (o.fDiscard || ''))
-      .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n' + (o.fMain || ''));
+      .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n' + (o.fMain || ''))
+      .replace('#include <opaque_fragment>', '#include <opaque_fragment>\n' + (o.fEnd || ''));
   };
   m.customProgramCacheKey = () => key;
   return m;
@@ -36,7 +37,7 @@ function sweep(pts, rFn, radial = 8, { closed = false, up = null, uvLen = 1 } = 
   }
   for (let i = 0; i < n; i++) {
     let nn;
-    if (up) nn = up.clone ? (up.isVector3 ? up.clone() : up(i)) : up(i);
+    if (up) nn = (up.isVector3 ? up : up(i)).clone();
     else if (i === 0) { nn = Math.abs(T[0].y) < 0.9 ? v3(0, 1, 0) : v3(1, 0, 0); }
     else nn = N[i - 1].clone();
     nn.sub(T[i].clone().multiplyScalar(nn.dot(T[i]))).normalize();
@@ -188,7 +189,7 @@ function shapeHead(v) {
   return { x, y, z, w };
 }
 function androidHead() {
-  const sph = new THREE.SphereGeometry(1, 340, 280);
+  const sph = new THREE.SphereGeometry(1, 300, 240);
   // remember eye-region vertices (pre-sculpt) for the REM flicker
   const P0 = sph.attributes.position, eyeV = [];
   for (let i = 0; i < P0.count; i++) {
@@ -209,7 +210,7 @@ function androidHead() {
     float dark = max(seam * 0.9, max(lid, mouth));
     diffuseColor.rgb *= 1.0 - 0.88 * dark; roughnessFactor = mix(roughnessFactor, 0.7, dark);
     totalEmissiveRadiance += uRemCol * lid * uRem;`;
-  const ceramic = patch(new THREE.MeshPhysicalMaterial({ color: col('#f1eee8'), roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.08, sheen: 0.3, sheenColor: col('#ffffff') }), 'android-ceramic', {
+  const ceramic = patch(new THREE.MeshPhysicalMaterial({ color: col('#f1eee8'), roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.08 }), 'android-ceramic', {
     uniforms: uni, fHead: 'uniform float uRem; uniform vec3 uRemCol;\n' + GLSL_LINE, fMain: seams,
   });
   const head = new THREE.Mesh(g, ceramic); head.castShadow = true; head.receiveShadow = true;
@@ -310,7 +311,7 @@ function makeSheep() {
     const hoof = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.042, 0.05, 16), mats.plastic('#0a0806', { roughness: 0.3 })); hoof.position.y = -0.26; knee.add(hoof);
     legs.push({ hip, knee, front });
   }
-  sheep.traverse(o => { if (o.isMesh && o !== core) o.castShadow = true; });
+  sheep.traverse(o => { o.castShadow = o.isMesh && o !== wool; });
   return { sheep, uni, woolPts, legs, inner };
 }
 // one continuous dream-jump. phi in [0,1]
@@ -357,7 +358,7 @@ function dreamField(S) {
     const s = r.range(0.6, 1.5); M.compose(v3(x, 0, z), q, v3(s, s * r.range(0.7, 1.3), s)); grass.setMatrixAt(i, M);
     grass.setColorAt(i, col('#1f4a3c').lerp(col('#2d5f6a'), r()).multiplyScalar(r.range(0.6, 1.1)));
   }
-  grass.receiveShadow = true; S.add(grass);
+  S.add(grass);
   const wood = new THREE.MeshStandardMaterial({ map: woodTexture(), roughness: 0.8, bumpMap: noiseTexture('rough-fine', { scale: 40, contrast: 1.5 }), bumpScale: 1.5 });
   const fence = new THREE.Group(); S.add(fence);
   for (const z of [-2.2, -0.9, 0.9, 2.2]) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.86, 0.11), wood); p.position.set(0, 0.43, z); fence.add(p); const cap = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.08, 4), wood); cap.position.set(0, 0.9, z); cap.rotation.y = Math.PI / 4; fence.add(cap); }
@@ -407,7 +408,7 @@ function skinZ(x, y, edge, open) {
   const rl = 1.0 + 0.07 * smooth(edge / 0.08) + 0.012;
   const zl = Math.sqrt(Math.max(0, rl * rl - x * x - y * y));
   const brow = 0.38 * gauss2(x + 0.1, y - 1.2, 1.4, 0.4), cheek = 0.28 * gauss2(x - 0.3, y + 1.3, 1.5, 0.55), nose = 0.5 * gauss2(x + 1.9, y + 0.6, 0.45, 1.2);
-  const zf = 0.55 + brow + cheek + nose - 0.03 * x * x;
+  const zf = 0.5 + 0.36 * gauss2(x, y - 0.1, 1.25, 0.95) + brow + cheek + nose - 0.03 * x * x;
   const hh = 0.45, dd = Math.abs(zl - zf), sm = Math.max(zl, zf) + hh * 0.25 * Math.max(0, 1 - dd / hh) ** 2;
   const crease = y > 0 ? -0.05 * open * Math.exp(-(((y - marginU(x, open) - 0.28) / 0.05) ** 2)) * Math.max(0, 1 - (x / 1.1) ** 2) : 0;
   return sm + crease;
@@ -427,23 +428,23 @@ function makeEye({ lashes = true } = {}) {
   // black hole pupil: photon ring + edge-on accretion disk
   const bh = new THREE.Group(); bh.position.z = irisZ + 0.045; grp.add(bh);
   const hole = new THREE.Mesh(new THREE.CircleGeometry(PUPIL_R * 0.98, 96), new THREE.MeshBasicMaterial({ color: 0x000000 })); bh.add(hole);
-  const ring = new THREE.Mesh(new THREE.RingGeometry(PUPIL_R * 0.98, PUPIL_R * 1.04, 128), new THREE.MeshBasicMaterial({ color: col('#fff0c8').multiplyScalar(3.5), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+  const ring = new THREE.Mesh(new THREE.RingGeometry(PUPIL_R * 0.98, PUPIL_R * 1.04, 128), new THREE.MeshBasicMaterial({ color: col('#fff0c8').multiplyScalar(1.5), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
   ring.position.z = 0.001; bh.add(ring);
   const diskTex = canvasTexture('accretion', 512, 64, (g, w, h) => {
     const gr = g.createLinearGradient(0, 0, w, 0); gr.addColorStop(0, 'rgba(255,170,60,0)'); gr.addColorStop(0.3, 'rgba(255,200,110,0.9)'); gr.addColorStop(0.5, 'rgba(255,245,215,1)'); gr.addColorStop(0.7, 'rgba(255,200,110,0.9)'); gr.addColorStop(1, 'rgba(255,170,60,0)');
     g.fillStyle = gr; g.fillRect(0, 0, w, h);
     const v = g.createLinearGradient(0, 0, 0, h); v.addColorStop(0, 'rgba(0,0,0,1)'); v.addColorStop(0.5, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,1)'); g.globalCompositeOperation = 'destination-out'; g.fillStyle = v; g.fillRect(0, 0, w, h);
   });
-  const disk = new THREE.Mesh(new THREE.PlaneGeometry(PUPIL_R * 3.4, PUPIL_R * 0.16), new THREE.MeshBasicMaterial({ map: diskTex, color: col('#ffffff').multiplyScalar(2.2), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+  const disk = new THREE.Mesh(new THREE.PlaneGeometry(PUPIL_R * 3.4, PUPIL_R * 0.16), new THREE.MeshBasicMaterial({ map: diskTex, color: col('#ffffff').multiplyScalar(1.3), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
   disk.position.z = 0.002; bh.add(disk);
   // cornea: additive specular-only dome
   const cR = 0.62, th = Math.asin(IRIS_R / cR + 0.02);
-  const cornea = new THREE.Mesh(new THREE.SphereGeometry(cR, 96, 48, 0, TAU, 0, th), new THREE.MeshPhysicalMaterial({ color: 0x000000, roughness: 0.02, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.0, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, envMapIntensity: 0.5 }));
+  const cornea = new THREE.Mesh(new THREE.SphereGeometry(cR, 96, 48, 0, TAU, 0, th), new THREE.MeshPhysicalMaterial({ color: 0x000000, roughness: 0.02, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.0, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, envMapIntensity: 0.7 }));
   cornea.rotation.x = Math.PI / 2; cornea.position.z = irisZ - cR * Math.cos(th) + 0.02; grp.add(cornea);
   // a softbox catchlight reflected in the cornea (small emissive window)
   const catchL = new THREE.Mesh(new THREE.CircleGeometry(0.045, 32), new THREE.MeshBasicMaterial({ color: col('#fff6e6').multiplyScalar(2.5), transparent: true, opacity: 0.9 }));
   { const n = v3(-0.32, 0.35, 1).normalize(); catchL.position.copy(n.clone().multiplyScalar(cR)).add(v3(0, 0, cornea.position.z)); catchL.lookAt(catchL.position.clone().add(n)); catchL.rotation.z += 0.15; }
-  grp.add(catchL);
+  catchL.visible = false;
   // skin: upper + lower sheets parametrised from the lid margins outward
   const NXs = 150, NYs = 46, X0 = -3.4, X1 = 3.4, Ytop = 2.4, Ybot = -2.4;
   const mk = () => { const g = new THREE.PlaneGeometry(1, 1, NXs, NYs); g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2)); return g; };
@@ -451,7 +452,9 @@ function makeEye({ lashes = true } = {}) {
   const skinUni = { uFadeR: { value: 2.4 } };
   const skinMat = patch(mats.organic('#c98a66', { roughness: 0.52, clearcoat: 0.25, clearcoatRoughness: 0.45, sheenColor: col('#ffcfae'), bumpMap: noiseTexture('skin-pores', { scale: 90, contrast: 1.2 }), bumpScale: 0.6, side: THREE.DoubleSide }), 'eye-skin', {
     uniforms: skinUni, fHead: 'uniform float uFadeR;',
-    fMain: 'float fr = 1.0 - smoothstep(uFadeR * 0.55, uFadeR, length(vObj.xy * vec2(0.8, 1.15))); diffuseColor.rgb *= fr; totalEmissiveRadiance *= fr;',
+    fDiscard: 'if (length(vObj.xy * vec2(0.8, 1.15)) > uFadeR) discard;',
+    fMain: 'float fr = 1.0 - smoothstep(uFadeR * 0.5, uFadeR, length(vObj.xy * vec2(0.8, 1.15)));',
+    fEnd: 'gl_FragColor.rgb *= fr;',
   });
   // fade the specular too, via a dark overlay is not possible — so restrict env on outer skin
   const up = new THREE.Mesh(upG, skinMat), lo = new THREE.Mesh(loG, skinMat);
@@ -506,7 +509,7 @@ function makeEye({ lashes = true } = {}) {
     });
     lashG.attributes.position.needsUpdate = true; lashG.computeVertexNormals();
   };
-  const set = open => { shapeSkin(upG, true, open); shapeSkin(loG, false, open); if (lashes) shapeLashes(open); };
+  const set = open => { cornea.visible = open > 0.3; shapeSkin(upG, true, open); shapeSkin(loG, false, open); if (lashes) shapeLashes(open); };
   set(0);
   return { grp, set, bh, ring, disk, iris, sclera, cornea, skinUni, catchL };
 }
@@ -841,8 +844,8 @@ export const shots = {
         E.set(open);
         L.key.intensity = 2.4 * lit; L.rim.intensity = 2.0 * lit; L.fill.intensity = 0.4 * lit; spec.intensity = 6 * lit;
         S.environmentIntensity = PALETTES.awake.env * lit;
-        E.ring.material.color.copy(col('#fff0c8')).multiplyScalar(3.5 * smooth(range(u, 0.6, 0.85)));
-        E.disk.material.color.copy(col('#ffffff')).multiplyScalar(2.2 * smooth(range(u, 0.65, 0.9)));
+        E.ring.material.color.copy(col('#fff0c8')).multiplyScalar(1.5 * smooth(range(u, 0.6, 0.85)));
+        E.disk.material.color.copy(col('#ffffff')).multiplyScalar(1.3 * smooth(range(u, 0.65, 0.9)));
         E.catchL.material.opacity = 0.9 * lit;
         seed.visible = u < 0.62;
         // camera pushes in
@@ -864,17 +867,17 @@ export const shots = {
     const E = makeEye(); E.set(1); world.add(E.grp);
     const spec = new THREE.PointLight(col('#fff0d0'), 6, 12, 1.5); spec.position.set(-1.6, 1.8, 4.5); S.add(spec);
     // serpent
-    const R = 2.15, scaleMap = scaleTexture();
+    const R = 2.0, scaleMap = scaleTexture();
+    E.skinUni.uFadeR.value = 1.7;
     const snakeMat = new THREE.MeshPhysicalMaterial({ color: col('#ffd27a'), map: scaleMap, metalness: 1, roughness: 0.3, bumpMap: scaleMap, bumpScale: 3, clearcoat: 0.4, clearcoatRoughness: 0.25 });
     const eyeMat = new THREE.MeshPhysicalMaterial({ color: col('#ff9a1a'), emissive: col('#ff8a10'), emissiveIntensity: 0.8, roughness: 0.05, clearcoat: 1 });
     const NB = 260, RAD = 18;
     let bodyG = null; const body = new THREE.Mesh(new THREE.BufferGeometry(), snakeMat); world.add(body);
     const H = snakeHead(snakeMat, eyeMat); world.add(H.grp);
     // path traced by the head: spiral in from outside, then the ring (theta measured clockwise from the top)
-    const TH_END = TAU * 1.0, ringPt = (th, k) => { const rr = R + k; return v3(Math.sin(th) * rr, Math.cos(th) * rr, 0); };
+    const TH_END = TAU * 1.0, ringPt = (th, k) => { const rr = R + k; return v3(Math.sin(th) * rr, Math.cos(th) * rr, 0.75); };
     const pathAt = th => { const out = Math.max(0, (TH_END - TAU) - th); return ringPt(th, out * 0.55 + 0.0); };
     const BODY = TAU * 0.965;
-    const ws = new THREE.Group(); world.add(ws);
     const seed = seedPoint(); seed.opacity(0); S.add(seed);
     const tmpUp = v3();
     return {
@@ -892,15 +895,15 @@ export const shots = {
           pts.push(p);
         }
         if (bodyG) bodyG.dispose();
-        bodyG = sweep(pts, s => 0.15 * Math.pow(clamp(s / 0.4), 0.55) * (1 - 0.25 * smooth(range(s, 0.9, 1))) + 0.004, RAD, { up: i => tmpUp.copy(pts[i]).setZ(0).normalize(), uvLen: 2.2 });
+        bodyG = sweep(pts, s => 0.21 * Math.pow(clamp(s / 0.45), 0.6) * (1 - 0.2 * smooth(range(s, 0.92, 1))) + 0.005, RAD, { up: i => tmpUp.copy(pts[i]).setZ(0).normalize(), uvLen: 1.1 });
         body.geometry = bodyG;
         // head at the front of the body, facing along the path
         const hp = pts[NB], ht = pts[NB].clone().sub(pts[NB - 3]).normalize(), hu = hp.clone().setZ(0).normalize();
         hu.sub(ht.clone().multiplyScalar(hu.dot(ht))).normalize();
         const hs = ht.clone().cross(hu);
-        H.grp.position.copy(hp).sub(ht.clone().multiplyScalar(0.06));
+        H.grp.position.copy(hp).sub(ht.clone().multiplyScalar(0.12));
         H.grp.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(ht, hu, hs));
-        H.grp.scale.setScalar(1.05);
+        H.grp.scale.setScalar(1.45);
         H.jawP.rotation.z = -0.45 * (1 - smooth(range(u, 0.5, 0.6))) - 0.15;
         // reveal: the serpent fades in from the dark as it arrives
         const vis = smooth(range(u, 0.02, 0.2));
