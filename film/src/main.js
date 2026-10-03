@@ -96,7 +96,7 @@ window.renderFrame = function (f) {
     if (age >= 0 && age < 6) { const c = crackFor(cb); c.material.opacity = 1 - age / 6; overlay.add(c); flash = Math.max(flash, 0.22 * Math.exp(-age / 1.5)); }
   }
   let fade = post.fade ?? 1;
-  if (shot.p && shot.p.flash && (beat - shot.s) * BEAT_FRAMES < 2) fade = 0;
+  if (shot.p && shot.p.flash && (beat - shot.s) * BEAT_FRAMES < 1.5) fade = 0;
   if (SILENCES.some(([a, b]) => beat >= a - 1e-9 && beat < b - 1e-9)) { fade = 0; flash = 0; }
 
   grade.uniforms.uTime.value = Math.floor(f);
