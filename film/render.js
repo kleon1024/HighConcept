@@ -38,7 +38,7 @@ async function work(w) {
   // each worker takes a contiguous chunk so scenes are built once per shot
   const n = Math.ceil(frames.length / workers), mine = frames.slice(w * n, (w + 1) * n);
   for (const f of mine) {
-    const data = await page.evaluate(([fr, n]) => { if (n > 1) return window.renderFrameBlur(fr, n); window.renderFrame(fr); return document.querySelector('canvas').toDataURL('image/png'); }, [f, blur]);
+    const data = await page.evaluate(([fr, n]) => window.renderOut(fr, n), [f, blur]);
     fs.writeFileSync(path.join(outDir, `${String(f).padStart(5, '0')}.png`), Buffer.from(data.split(',')[1], 'base64'));
     if (++done % 30 === 0) console.log(`${done}/${frames.length}  ${((Date.now() - t0) / done).toFixed(0)} ms/frame`);
   }

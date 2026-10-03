@@ -1,87 +1,96 @@
 // Shared beat grid for picture and score. 120 BPM, 30 fps → 1 beat = 15 frames.
-// s = start beat, l = length in beats, k = scene key, p = scene params.
-// One subject per shot; each chapter has its own palette (see storyboard v4).
+//
+// v5 structure: the film breathes. Long, slow passages carry the story spine (the gold seed's journey);
+// short, fast montages cut on the drums carry the many motifs. Transitions connect shots by shape and motion.
+//
+// Shot fields:
+//   s, l   start / length in beats
+//   k      scene key;  p  scene params
+//   win    [a, b] — which part of the scene's own animation (u range) plays during this shot (default [0,1])
+//   tr     transition INTO this shot: 'cut' (default) | 'zoom' (zoom-through, spark) | 'dissolve' | 'fadein' | 'crack'
 export const BPM = 120;
 export const FPS = 30;
 export const BEAT_SEC = 60 / BPM;
 export const TOTAL_BEATS = 60;
 
-export const CHAPTERS = [
-  { name: 'egg', s: 0 },
-  { name: 'cosmos', s: 4 },
-  { name: 'frost', s: 12 },
-  { name: 'genesis', s: 20 },
-  { name: 'theft', s: 28 },
-  { name: 'excess', s: 36 },
-  { name: 'descent', s: 48 },
-  { name: 'awake', s: 56 },
+// energy sections (drive the score and the cutting)
+export const SECTIONS = [
+  { name: 'seed', s: 0, e: 8, energy: 'slow' },
+  { name: 'cosmos burst', s: 8, e: 10, energy: 'fast' },
+  { name: 'the fall', s: 10, e: 16, energy: 'slow' },
+  { name: 'chemistry burst', s: 16, e: 20, energy: 'fast' },
+  { name: 'first eye', s: 20, e: 25, energy: 'slow' },
+  { name: 'fire', s: 25, e: 29, energy: 'medium' },
+  { name: 'civilization', s: 29, e: 37, energy: 'fastest' },
+  { name: 'black hole', s: 37, e: 43, energy: 'slow' },
+  { name: 'dream', s: 43, e: 51.5, energy: 'medium' },
+  { name: 'awake', s: 51.5, e: 60, energy: 'slow' },
 ];
 
 export const SHOTS = [
-  // 序 · 卵 — gold on black
-  { s: 0, l: 4, k: 'egg' },
-  // I 振 — indigo cosmos, gold
-  { s: 4, l: 2, k: 'panguEyes' },
-  { s: 6, l: 2, k: 'solids' },
-  { s: 8, l: 2, k: 'orbitals' },
-  { s: 10, l: 2, k: 'meteor' },
-  // II 冻 — glacial cyan and white
-  { s: 12, l: 2, k: 'iceberg' },
-  { s: 14, l: 2, k: 'water' },
-  { s: 16, l: 2, k: 'ouroboros' },
-  { s: 18, l: 2, k: 'dna' },
-  // III 生 — bioluminescent teal and magenta
-  { s: 20, l: 2, k: 'mitosis' },
-  { s: 22, l: 1, k: 'synapse' },
-  { s: 23, l: 1, k: 'eden' },
-  { s: 24, l: 2, k: 'cambrian' },
-  { s: 26, l: 2, k: 'lightning' },
-  // IV 盗 — firelight, bronze
-  { s: 28, l: 2, k: 'cave' },
-  { s: 30, l: 0.5, k: 'flame', p: { el: 'Li' } },
-  { s: 30.5, l: 0.5, k: 'flame', p: { el: 'K' } },
-  { s: 31, l: 0.5, k: 'flame', p: { el: 'Cu' } },
-  { s: 31.5, l: 1.5, k: 'flame', p: { el: 'Na' } },
-  { s: 33, l: 1, k: 'ding' },
-  { s: 34, l: 2, k: 'oracle' },
-  // V 繁 — marble and gilt, then silicon blue, then the void
-  { s: 36, l: 1, k: 'parthenon' },
-  { s: 37, l: 1, k: 'armillary' },
-  { s: 38, l: 1, k: 'dome' },
-  { s: 39, l: 1, k: 'library' },
-  { s: 40, l: 1, k: 'chip' },
-  { s: 41, l: 2, k: 'babel' },
-  { s: 43, l: 0.5, k: 'solids', p: { flash: true, u0: 0.5 } },
-  { s: 43.5, l: 0.5, k: 'dna', p: { flash: true, u0: 0.4 } },
-  { s: 44, l: 0.5, k: 'ding', p: { flash: true, u0: 0.8 } },
-  { s: 44.5, l: 0.5, k: 'dome', p: { flash: true, u0: 0.5 } },
-  { s: 45, l: 3, k: 'blackhole' },
-  // VI 降 — data cyan and amber
-  { s: 48, l: 2, k: 'loss' },
-  { s: 50, l: 1, k: 'network' },
-  { s: 51, l: 1, k: 'android' },
-  { s: 52, l: 0.5, k: 'sheep', p: { n: 0 } },
-  { s: 52.5, l: 0.5, k: 'sheep', p: { n: 1 } },
-  { s: 53, l: 0.5, k: 'sheep', p: { n: 2 } },
-  { s: 53.5, l: 1.5, k: 'sheep', p: { n: 3, dissolve: true } },
-  { s: 55, l: 1, k: 'converge' },
-  // VII 觉 — gold returns
-  { s: 56, l: 2, k: 'eye' },
-  { s: 58, l: 2, k: 'ending' },
+  // ── slow: the seed becomes the cosmic egg (4 s) ──
+  { s: 0, l: 8, k: 'egg' },
+  // ── fast: the egg bursts into the cosmos (1 s, cuts on the drums) ──
+  { s: 8, l: 1, k: 'panguEyes', win: [0.25, 1], tr: 'crack' },
+  { s: 9, l: 0.5, k: 'solids', win: [0.45, 0.8] },
+  { s: 9.5, l: 0.5, k: 'orbitals', win: [0, 1] },
+  // ── slow: a meteorite carries the seed down into the polar sea (3 s) ──
+  { s: 10, l: 2.5, k: 'meteor', win: [0, 0.97], tr: 'zoom' },
+  { s: 12.5, l: 3.5, k: 'iceberg', tr: 'zoom' },
+  // ── fast: chemistry (2 s) ──
+  { s: 16, l: 0.5, k: 'water', win: [0.35, 0.95], tr: 'zoom' },
+  { s: 16.5, l: 1.25, k: 'ouroboros', win: [0.3, 0.8] },          // bite lands exactly on beat 17
+  { s: 17.75, l: 0.75, k: 'dna', win: [0.15, 0.75] },
+  { s: 18.5, l: 0.5, k: 'mitosis', win: [0, 1], tr: 'zoom' },
+  { s: 19, l: 0.5, k: 'synapse', win: [0.3, 1] },
+  { s: 19.5, l: 0.375, k: 'eden', win: [0.4, 1] },
+  // ── slow: the Cambrian sea; everything stops; the first eye receives light (2.5 s) ──
+  { s: 20, l: 4, k: 'cambrian', tr: 'fadein' },
+  { s: 24, l: 1, k: 'lightning', win: [0.1, 1] },
+  // ── medium: fire, the cave, the flame test (fate motif) (2 s) ──
+  { s: 25, l: 1.5, k: 'cave', tr: 'dissolve' },
+  { s: 26.5, l: 0.5, k: 'flame', p: { el: 'Li' } },
+  { s: 27, l: 0.5, k: 'flame', p: { el: 'K' } },
+  { s: 27.5, l: 0.5, k: 'flame', p: { el: 'Cu' } },
+  { s: 28, l: 1, k: 'flame', p: { el: 'Na' } },
+  // ── fastest: civilization accelerates (4 s), shots shorten 1 → ½ → ¼ beat ──
+  { s: 29, l: 1, k: 'ding', win: [0.35, 1], tr: 'zoom' },
+  { s: 30, l: 1, k: 'oracle', win: [0, 0.6] },
+  { s: 31, l: 0.75, k: 'parthenon', win: [0.3, 1] },
+  { s: 31.75, l: 0.75, k: 'armillary', win: [0.2, 0.9] },
+  { s: 32.5, l: 0.5, k: 'dome', win: [0.3, 0.9] },
+  { s: 33, l: 0.5, k: 'library', win: [0.2, 0.8] },
+  { s: 33.5, l: 0.5, k: 'chip', win: [0.3, 1] },
+  { s: 34, l: 2, k: 'babel' },
+  { s: 36, l: 0.25, k: 'solids', win: [0.55, 0.6] },
+  { s: 36.25, l: 0.25, k: 'dna', win: [0.4, 0.45] },
+  { s: 36.5, l: 0.25, k: 'ding', win: [0.85, 0.9] },
+  { s: 36.75, l: 0.25, k: 'dome', win: [0.5, 0.55] },
+  // ── slow: the black hole swallows it all (3 s) ──
+  { s: 37, l: 5.5, k: 'blackhole', tr: 'zoom' },
+  // ── medium: descent, the dreaming machine, electric sheep (fate motif) (4 s) ──
+  { s: 43, l: 2, k: 'loss', tr: 'fadein' },
+  { s: 45, l: 0.75, k: 'network', tr: 'dissolve' },
+  { s: 45.75, l: 1.5, k: 'android', tr: 'dissolve' },
+  { s: 47.25, l: 0.5, k: 'sheep', p: { n: 0 }, tr: 'dissolve' },
+  { s: 47.75, l: 0.5, k: 'sheep', p: { n: 1 } },
+  { s: 48.25, l: 0.5, k: 'sheep', p: { n: 2 } },
+  { s: 48.75, l: 1.75, k: 'sheep', p: { n: 3, dissolve: true } },
+  { s: 50.5, l: 0.75, k: 'converge', tr: 'zoom' },
+  // ── slow: the eye opens; the ouroboros closes; back to the seed (4.25 s) ──
+  { s: 51.5, l: 4.5, k: 'eye', tr: 'fadein' },
+  { s: 56, l: 4, k: 'ending' },
 ];
 
-// Moments of absolute silence / black (beat ranges), shared by picture and score.
-export const SILENCES = [
-  [11.75, 12], [19.75, 20], [27.75, 28], [35.75, 36], [47.5, 48], [55.5, 56],
-];
+// Absolute silence / black (beats), shared by picture and score: breaths before the big turns.
+export const SILENCES = [[7.75, 8], [19.875, 20], [42.5, 43], [51.25, 51.5]];
 
-// Musical accents the picture reacts to (light pulses), in beats. Generated from the score plan.
+// Accents for light pulses: every cut inside fast sections plus the score's marked hits.
 export const ACCENTS = [
-  0.5, 1, 1.5, 2.5, 4, 6, 8, 8.667, 9.333, 10, 12, 14, 14.5, 16, 17, 18, 20, 20.5, 21, 21.5, 22, 23, 24, 26.5,
-  28, 29, 30, 30.5, 31, 31.5, 33, 34, 34.25, 34.5, 34.75, 36, 37, 38, 39, 40, 41, 42, 43, 43.5, 44, 44.5, 45,
-  48, 50, 51, 52, 52.5, 53, 53.5, 55, 56.8, 58,
-];
+  ...SHOTS.filter(s => SECTIONS.some(x => x.energy.startsWith('fast') && s.s >= x.s && s.s < x.e)).map(s => s.s),
+  8, 12.5, 17, 22.5, 24.25, 26.5, 27, 27.5, 28, 37, 53.3, 56,
+].sort((a, b) => a - b);
 
 if (typeof process !== 'undefined' && process.argv[1] && process.argv[1].endsWith('timeline.js')) {
-  console.log(JSON.stringify({ BPM, FPS, TOTAL_BEATS, CHAPTERS, SHOTS, SILENCES, ACCENTS }));
+  console.log(JSON.stringify({ BPM, FPS, TOTAL_BEATS, SECTIONS, SHOTS, SILENCES, ACCENTS }));
 }

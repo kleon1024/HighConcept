@@ -336,15 +336,25 @@ export function seedPoint(scale = 1) {
 
 // ---------------------------------------------------------------- post grade (after tone mapping)
 export const gradeShader = {
-  uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uFlash: { value: 0 }, uFade: { value: 1 }, uGrain: { value: 0.025 }, uVignette: { value: 0.9 }, uRes: { value: new THREE.Vector2(W, H) } },
+  uniforms: {
+    tDiffuse: { value: null }, uTime: { value: 0 }, uFlash: { value: 0 }, uFade: { value: 1 }, uGrain: { value: 0.025 }, uVignette: { value: 0.9 },
+    uRes: { value: new THREE.Vector2(W, H) }, uZoom: { value: 1 }, uRadial: { value: 0 }, uSpark: { value: 0 },
+  },
   vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
   fragmentShader: `
-    uniform sampler2D tDiffuse; uniform float uTime, uFlash, uFade, uGrain, uVignette; uniform vec2 uRes; varying vec2 vUv;
+    uniform sampler2D tDiffuse; uniform float uTime, uFlash, uFade, uGrain, uVignette, uZoom, uRadial, uSpark; uniform vec2 uRes; varying vec2 vUv;
     float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233))) * 43758.5453); }
     void main(){
-      vec3 c = texture2D(tDiffuse, vUv).rgb;
+      // zoom-through: scale about the centre with a radial (zoom) blur
+      vec2 uv = 0.5 + (vUv - 0.5) / uZoom;
+      vec3 c = vec3(0.0);
+      for (int i = 0; i < 10; i++) { float k = 1.0 - uRadial * 0.12 * float(i) / 9.0; c += texture2D(tDiffuse, 0.5 + (uv - 0.5) * k).rgb; }
+      c /= 10.0;
       vec2 q = vUv - 0.5; q.x *= uRes.x / uRes.y;
-      c *= mix(1.0, smoothstep(1.25, 0.25, length(q)), uVignette);
+      // the gold spark that travels through every zoom cut
+      float d = length(q);
+      c += uSpark * (vec3(1.0, 0.82, 0.45) * exp(-d * d * 900.0) * 3.0 + vec3(1.0, 0.7, 0.3) * exp(-d * 18.0) * 0.35);
+      c *= mix(1.0, smoothstep(1.25, 0.25, d), uVignette);
       c += (hash(vUv * uRes + uTime * 17.0) - 0.5) * uGrain;
       c = c * uFade + uFlash * vec3(1.0, 0.95, 0.88);
       gl_FragColor = vec4(c, 1.0);

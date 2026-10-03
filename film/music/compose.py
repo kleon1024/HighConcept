@@ -88,164 +88,156 @@ def voicing(tri, lo=0):
     return [tri[0] - 12 + lo, tri[0] + lo, tri[1] + lo, tri[2] + lo, tri[0] + 12 + lo]
 
 
-# ---- 序 · 卵 (0–4): celesta seed motif over a low string pedal and a breath of choir
-note(LOW, 0, 4, C - 12, 55); ramp(LOW, 0, 3.8, 30, 90)
-chord(CHO, 0.5, 3.5, [C + 12, C + 19], 45); ramp(CHO, 0.5, 3.8, 20, 85)
-for b, p in [(0.5, 79), (1, 84), (1.5, 87), (2.5, 86), (3, 84)]:
-    note(CEL, b, 1.2, p, 80)
-note(DRM, 3.0, 1, 49, 40)  # soft crash swell start
-
-# ---- I 振 (4–12): strings Cm → Ab, piano motif, harp, celesta orbitals, tremolo build to the meteor
 def hit(beat, big=True):
     note(TIM, beat, 1.5, C - 12, 120 if big else 95)
-    note(DRM, beat, 2, 49, 115 if big else 90)
+    note(DRM, beat, 2, 49, 115 if big else 85)
     note(DRM, beat, 1, 36, 120)
     if big:
         chord(HIT, beat, 0.5, [C, C + 7, C + 12], 100)
         note(TAI, beat, 1, 48, 120)
 
 
-hit(4)
-chord(STR, 4, 4, voicing(Cm), 80); ramp(STR, 4, 8, 70, 100)
-chord(STR, 8, 3.75, voicing(Ab), 85)
-note(LOW, 4, 4, C - 12, 95); note(LOW, 8, 3.75, C - 16, 95)
-for i, p in enumerate([67, 72, 75, 74]):
-    note(PNO, 4.5 + i * 0.5, 0.9, p, 82)
-note(PNO, 6.5, 1.5, 72, 80)
-for i in range(8):  # solids: rising harp arpeggio
-    note(HRP, 6 + i * 0.25, 1, [48, 55, 60, 63, 67, 72, 75, 79][i], 85)
-for b, p in [(8, 84), (8.667, 91), (9.333, 96)]:  # 2s, 4p, 6d
-    note(CEL, b, 0.8, p, 95); note(GLK, b, 0.5, p, 70)
-chord(CHO, 8, 2, [C + 12, C + 15, C + 19], 70); ramp(CHO, 8, 10, 40, 100)
-chord(TRM, 10, 1.75, [C - 4, C, C + 3, C + 8], 90); ramp(TRM, 10, 11.75, 30, 127)
-for i in range(14):
-    note(TIM, 10 + i * 0.125, 0.12, C - 12, 50 + i * 5)
+def cut_hit(beat, i, pitch_set=(0, 7, 12, 15), vel=100):
+    """a percussive accent on a fast cut: taiko/timpani + a short orchestral stab"""
+    note(TAI, beat, 0.3, 48, vel + 10)
+    note(TIM, beat, 0.3, C - 12 + (i % 2) * 7, vel)
+    chord(HIT, beat, 0.2, [C + pitch_set[i % len(pitch_set)], C + 12 + pitch_set[i % len(pitch_set)]], vel - 15)
 
-# ---- II 冻 (12–20): Eb → Bb, pizzicato ice, glockenspiel, choir; the snake bites at 17
-hit(12, big=False)
-chord(CHO, 12, 4, [C + 15, C + 19, C + 22], 65)
-chord(STR, 12, 4, voicing(Eb, -12)[1:], 60)
-chord(STR, 16, 3.75, voicing(Bb, -12)[1:], 65); ramp(STR, 16, 19.75, 70, 110)
-note(LOW, 12, 4, C - 9, 80); note(LOW, 16, 3.75, C - 14, 85)
-ice = [75, 79, 82, 87, 82, 79]  # six-note benzene ring
-for i in range(30):
-    b = 12 + i * 0.25
-    if b >= 19.75:
-        break
-    note(PIZ, b, 0.25, ice[i % 6] - 12, 70 + (20 if abs(b - 17) < 1e-6 else 0))
-note(GLK, 14, 1, 88, 95); note(GLK, 14.5, 1, 91, 90)  # H-O-H
-for i, p in enumerate([84, 86, 87, 91]):
-    note(CEL, 15 + i * 0.25, 0.5, p, 75)
-note(DRM, 17, 2, 49, 110); note(TIM, 17, 1, C - 9, 110); chord(HIT, 17, 0.5, [C + 3, C + 10, C + 15], 95)
-for i in range(14):  # DNA: harp climbs
-    note(HRP, 18 + i * 0.125, 0.6, [58, 62, 65, 70, 74, 77, 82][i % 7] + 12 * (i // 7), 80)
-for i, p in enumerate([70, 74, 77, 79]):
-    note(PNO, 18 + i * 0.5, 0.6, p, 75)
 
-# ---- III 生 (20–28): Cm → Fm, staccato 16th pulse, heartbeat timpani; freeze at 24 (first eye); lightning at 26.5
-hit(20)
-for i in range(16):
-    b = 20 + i * 0.25
-    tri = Cm if b < 22 else Fm
-    note(STR, b, 0.2, tri[i % 3] + 12, 70 + (i % 4 == 0) * 20)
-for b in np.arange(20, 24, 1.0):
-    note(TIM, b, 0.3, C - 12, 100); note(TIM, b + 0.2, 0.3, C - 12, 70)
-note(LOW, 20, 2, C - 12, 90); note(LOW, 22, 2, C - 7, 90)
-for i, b in enumerate([20, 20.5, 21, 21.5]):  # 1 → 2 → 4 → 8 cells
-    note(HRP, b, 0.8, 60 + 12 * (i % 3) + [0, 7, 3, 10][i], 95)
+fast_cuts = lambda a, b: [s['s'] for s in TL['SHOTS'] if a <= s['s'] < b]
+
+# ======== SLOW · seed (0–8): almost nothing — celesta seed motif, a low pedal, a breath of choir
+note(LOW, 0, 7.75, C - 12, 50); ramp(LOW, 0, 7.5, 25, 85)
+chord(CHO, 1.5, 6.25, [C + 12, C + 19], 45); ramp(CHO, 1.5, 7.5, 15, 90)
+for b, p in [(1, 79), (2, 84), (3, 87), (4.5, 86), (5, 84), (6, 79), (6.5, 91)]:
+    note(CEL, b, 1.8, p, 78)
+chord(STR, 4, 3.75, [C - 12, C, C + 3, C + 7], 50); ramp(STR, 4, 7.6, 20, 95)
+note(DRM, 5.5, 2.2, 49, 35)  # cymbal swell into the crack
+
+# ======== FAST · cosmos burst (8–10): every cut hits
+hit(8)
+for i, b in enumerate(fast_cuts(8, 10)):
+    cut_hit(b, i)
+for i in range(8):
+    note(STR, 8 + i * 0.25, 0.2, [C + 12, C + 15, C + 19, C + 24][i % 4], 95)
+for b, p in [(9.5, 96), (9.667, 101), (9.833, 103)]:  # 2s, 4p, 6d
+    note(CEL, b, 0.5, p, 100); note(GLK, b, 0.3, p, 80)
+note(LOW, 8, 2, C - 12, 110)
+
+# ======== SLOW · the fall (10–16): meteor rumble swells; plunge at 12.5; underwater stillness
+chord(TRM, 10, 2.5, [C - 4, C, C + 3, C + 8], 80); ramp(TRM, 10, 12.4, 25, 125)
+for i in range(18):
+    note(TIM, 10 + i * 0.125, 0.12, C - 12, 40 + i * 4)
+note(LOW, 10, 2.5, C - 16, 90)
+note(TIM, 12.5, 2, C - 12, 127); note(DRM, 12.5, 2, 49, 100)
+chord(CHO, 12.5, 3.5, [C + 3, C + 10, C + 15], 60); ramp(CHO, 12.5, 15.8, 70, 40)   # E♭, muffled under water
+chord(STR, 12.5, 3.5, [C - 9, C + 3, C + 7], 55)
+note(LOW, 12.5, 3.5, C - 21, 75)
+for b, p in [(13.5, 87), (14.25, 91), (15, 94), (15.5, 99)]:
+    note(CEL, b, 1.5, p, 55)
+
+# ======== FAST · chemistry (16–20): pizzicato 16ths, a hit on each cut, the bite on 17
+for i in range(15):
+    note(PIZ, 16 + i * 0.25, 0.22, [75, 79, 82, 87, 82, 79][i % 6] - 12, 85 + (i % 2) * 10)
+for i, b in enumerate(fast_cuts(16, 20)):
+    cut_hit(b, i, (3, 10, 15, 7), 95)
+hit(17, big=True)
+note(GLK, 16, 0.6, 88, 95); note(GLK, 16.25, 0.6, 91, 90)        # H–O–H
 for i in range(6):
-    note(CEL, 22 + i * 0.125, 0.3, [96, 91, 99, 94, 103, 98][i], 70)  # synapse sparks
-chord(CHO, 23, 1, [C + 8, C + 12, C + 17], 80)  # Eden
-note(CEL, 24, 2.5, 100, 90); note(GLK, 24, 2, 100, 50)  # first light — everything else drops out
-chord(CHO, 24, 2, [C + 24], 30)
-chord(TRM, 26, 0.5, [C - 11, C - 4, C + 1], 60); ramp(TRM, 26, 26.5, 40, 120)
+    note(HRP, 17.75 + i * 0.125, 0.5, [58, 62, 65, 70, 74, 77][i] + 12, 85)
+for i, b in enumerate([18.5, 18.625, 18.75, 18.875]):                # cells 1 → 2 → 4 → 8
+    note(HRP, b, 0.4, 72 + 5 * i, 100)
 for i in range(4):
-    note(TIM, 26 + i * 0.125, 0.12, C - 11, 70 + i * 12)
-note(TIM, 26.5, 1.5, C - 12, 127); note(DRM, 26.5, 2, 49, 127); note(DRM, 26.5, 2, 57, 110); chord(HIT, 26.5, 0.5, [C - 11, C - 4, C + 1], 110)
+    note(CEL, 19 + i * 0.125, 0.3, [96, 91, 99, 103][i], 80)          # synapse
+chord(CHO, 19.5, 0.375, [C + 8, C + 12, C + 17], 85)                 # Eden
+chord(STR, 16, 3.875, [C - 9, C + 3, C + 10], 70); ramp(STR, 16, 19.8, 70, 115)
+note(LOW, 16, 3.875, C - 9, 95)
 
-# ---- IV 盗 (28–36): taiko drive, horns state the fate motif on the flame test, ding, oracle cracks
-hit(28)
-for b, v in [(28, 120), (28.75, 90), (29, 110), (29.5, 95), (30, 120), (31.5, 120), (32, 100), (32.75, 90), (33, 120), (34, 110), (35, 120), (35.5, 100)]:
+# ======== SLOW · the first eye (20–25): a slow pulse under water; at 22.5 everything stops — one note of light
+for b in (20, 21, 22):
+    note(TIM, b, 0.6, C - 12, 70); note(TIM, b + 0.25, 0.4, C - 12, 45)
+chord(STR, 20, 2.5, [C - 12, C, C + 3, C + 7], 50); ramp(STR, 20, 22.4, 60, 30)
+chord(CHO, 20, 2.5, [C + 12, C + 15], 40)
+note(LOW, 20, 2.5, C - 24, 70)
+note(CEL, 22.5, 2.5, 100, 95); note(GLK, 22.5, 2, 100, 45)          # first light
+chord(CHO, 22.5, 1.5, [C + 24], 30)
+chord(TRM, 23.75, 0.5, [C - 11, C - 4, C + 1], 60); ramp(TRM, 23.75, 24.25, 40, 125)
+note(TIM, 24.25, 1.5, C - 12, 127); note(DRM, 24.25, 2, 49, 127); note(DRM, 24.25, 2, 57, 110); chord(HIT, 24.25, 0.5, [C - 11, C - 4, C + 1], 110)
+
+# ======== MEDIUM · fire (25–29): taiko and horns; the fate motif on the flame test
+for b, v in [(25, 110), (25.75, 85), (26, 100), (26.5, 120), (27, 120), (27.5, 120), (28, 125), (28.5, 95)]:
     note(TAI, b, 0.5, 48, v)
-for b in (29, 31, 33, 35):
-    note(DRM, b, 0.3, 38, 90)
-chord(STR, 28, 2, voicing(Cm), 85)
-chord(HRN, 28, 2, [C, C + 7], 70)
-note(LOW, 28, 2, C - 12, 100)
-for i, b in enumerate([30, 30.5, 31]):  # G G G
-    chord(HRN, b, 0.4, [C + 7, C - 5], 115); chord(HIT, b, 0.3, [C - 5, C + 2, C + 7], 105)
-    note(TIM, b, 0.4, C - 5, 115); note(LOW, b, 0.4, C - 17, 110)
-chord(HRN, 31.5, 1.5, [C + 3, C - 9, C + 10], 120); chord(STR, 31.5, 1.5, voicing(Eb, -12), 100)  # E♭
-chord(CHO, 31.5, 1.5, [C + 15, C + 19, C + 22], 90); note(LOW, 31.5, 1.5, C - 21, 110); note(DRM, 31.5, 2, 49, 115)
-note(BEL, 33, 2, C + 12, 110); note(BEL, 33, 2, C, 90); note(TIM, 33, 1, C - 16, 120)
-chord(STR, 33, 1, voicing(Ab), 85); note(LOW, 33, 1, C - 16, 100)
-chord(TRM, 34, 1.75, [C - 12, C - 5, C, C + 3], 70); ramp(TRM, 34, 35.75, 50, 127)
-for b in (34, 34.25, 34.5, 34.75):
-    note(TIM, b, 0.2, C - 10 + int((b - 34) * 8), 100)
-note(TAI, 35, 0.5, 48, 127); note(DRM, 35, 1, 49, 120)
+chord(STR, 25, 1.5, [C - 12, C, C + 3, C + 7], 75)
+chord(HRN, 25, 1.5, [C, C + 7], 65)
+note(LOW, 25, 1.5, C - 12, 95)
+for b in (26.5, 27, 27.5):                                           # G G G
+    chord(HRN, b, 0.45, [C + 7, C - 5], 118); chord(HIT, b, 0.3, [C - 5, C + 2, C + 7], 108)
+    note(TIM, b, 0.45, C - 5, 118); note(LOW, b, 0.45, C - 17, 112)
+chord(HRN, 28, 1, [C + 3, C - 9, C + 10], 122); chord(STR, 28, 1, [C - 9, C + 3, C + 7, C + 10, C + 15], 105)  # E♭
+chord(CHO, 28, 1, [C + 15, C + 19, C + 22], 95); note(LOW, 28, 1, C - 21, 112); note(DRM, 28, 1.5, 49, 115)
 
-# ---- V 繁 (36–48): organ + choir + brass climb a whole tone every two beats; stutter; black-hole pull
-hit(36)
-for k, (b0, tr) in enumerate([(36, 0), (38, 2), (40, 4), (42, 6)]):
-    l = 2 if b0 < 42 else 1
+# ======== FASTEST · civilization (29–37): cuts accelerate, organ/choir/brass climb a whole tone per bar-half
+hit(29)
+for i, b in enumerate(fast_cuts(29, 37)):
+    cut_hit(b, i, (0, 7, 12, 3), 105)
+for k, (b0, tr) in enumerate([(29, 0), (31, 2), (33, 4), (35, 6)]):
     tri = [C + tr, C + tr + 3, C + tr + 7]
-    chord(ORG, b0, l, voicing(tri), 90 + k * 8)
-    chord(CHO, b0, l, [tri[0] + 12, tri[1] + 12, tri[2] + 12], 85 + k * 8)
-    chord(HRN, b0, l, [tri[0], tri[2]], 90 + k * 8)
-    note(LOW, b0, l, tri[0] - 12, 105)
-    for i in range(int(l * 4)):
+    chord(ORG, b0, 2, [tri[0] - 12] + tri + [tri[0] + 12], 85 + k * 10)
+    chord(CHO, b0, 2, [t + 12 for t in tri], 80 + k * 10)
+    chord(HRN, b0, 2, [tri[0], tri[2]], 85 + k * 10)
+    note(LOW, b0, 2, tri[0] - 12, 105)
+    for i in range(8):
         note(STR, b0 + i * 0.25, 0.22, tri[i % 3] + 24, 80 + (i % 4 == 0) * 25)
-    for i in range(int(l)):
-        note(DRM, b0 + i, 0.3, 36, 120); note(DRM, b0 + i + 0.5, 0.3, 42, 80)
+    for i in range(4):
+        note(DRM, b0 + i * 0.5, 0.25, 36, 120); note(DRM, b0 + i * 0.5 + 0.25, 0.2, 42, 80)
     note(DRM, b0 + 1, 0.3, 38, 110)
-    note(TAI, b0, 0.5, 48, 115)
-for i in range(16):  # flash-montage stutter (43–45)
-    b = 43 + i * 0.125
-    if i % 4 == 3:
-        continue
-    chord(HIT, b, 0.1, [C + 6, C + 13, C + 18], 90 + (i % 4 == 0) * 30)
-    note(DRM, b, 0.1, 38 if i % 2 else 36, 100)
-# 45–47.5: everything is pulled down in pitch (12-semitone bend) and swallowed
-chord(ORG, 45, 2.5, [C - 18, C - 6, C - 3, C + 1], 110)
-chord(STR, 45, 2.5, [C - 6, C + 1, C + 6, C + 9], 100)
-chord(CHO, 45, 2.5, [C + 6, C + 9, C + 13], 100)
-note(LOW, 45, 2.5, C - 18, 115)
-for ch in (STR, CHO, ORG):
-    for i in range(21):
-        b = 45 + 2.4 * i / 20
-        bend(ch, b, -8192 * (i / 20) ** 2)
-    bend(ch, 47.6, 0)
-note(TIM, 45, 1, C - 12, 127); note(DRM, 45, 2, 49, 120)
+for i, b in enumerate((30, 30.208, 30.417, 30.625)):                 # oracle cracks
+    note(TIM, b, 0.2, C - 10 + i * 2, 105)
+for i in range(8):                                                    # the reprise: 32nd stutter
+    b = 36 + i * 0.125
+    chord(HIT, b, 0.1, [C + 6, C + 13, C + 18], 95 + (i % 2) * 25)
+    note(DRM, b, 0.1, 38 if i % 2 else 36, 110)
 
-# ---- VI 降 (48–56): piano descends like an optimizer, settles; network choir rhyme; music-box sheep (fate)
-note(TIM, 48, 1, C - 12, 90)
-chord(STR, 48, 7.5, [C - 12, C, C + 3, C + 7], 55); ramp(STR, 48, 55.5, 70, 40)
-note(LOW, 48, 7.5, C - 24, 70)
+# ======== SLOW · black hole (37–43): one long chord pulled down in pitch, then silence
+hit(37)
+chord(ORG, 37, 5.4, [C - 18, C - 6, C - 3, C + 1], 105)
+chord(STR, 37, 5.4, [C - 6, C + 1, C + 6, C + 9], 90)
+chord(CHO, 37, 5.4, [C + 6, C + 9, C + 13], 90)
+note(LOW, 37, 5.4, C - 18, 110)
+for ch in (STR, CHO, ORG):
+    ramp(ch, 37, 42.4, 110, 60)
+    for i in range(41):
+        bend(ch, 38 + 4.4 * i / 40, -8192 * (i / 40) ** 2)
+    bend(ch, 42.6, 0)
+
+# ======== MEDIUM · descent and dream (43–51.5): piano optimizer, music-box lullaby, sheep fate motif
+chord(STR, 43, 8.2, [C - 12, C, C + 3, C + 7], 55); ramp(STR, 43, 51, 65, 35)
+note(LOW, 43, 8.2, C - 24, 65)
 descent = [84, 82, 86, 80, 79, 82, 77, 75, 79, 74, 72, 75, 72, 71, 72]
-b = 48.0
+b = 43.0
 for i, p in enumerate(descent):
-    d = 0.125 if i < 8 else 0.25 if i < 12 else 0.5
+    d = 0.125 if i < 8 else 0.25 if i < 12 else 0.333
     note(PNO, b, d * 1.6, p, 88 - i * 2)
     b += d
-chord(CHO, 50, 1.2, [C + 12, C + 15, C + 19], 85)  # same voicing as the cosmic web at beat 8
-for i, p in enumerate([72, 75, 79, 75, 74, 72, 70, 72]):
-    note(CEL, 51 + i * 0.125, 0.4, p + 12, 75)
-for b in (52, 52.5, 53):
-    note(CEL, b, 0.45, 91, 105); note(PIZ, b, 0.4, 67, 90); note(GLK, b, 0.3, 91, 70)
-note(CEL, 53.5, 1.5, 87, 110); note(PIZ, 53.5, 1, 63, 95); chord(CHO, 53.5, 2, [C + 15, C + 19], 70)
+chord(CHO, 45, 0.75, [C + 12, C + 15, C + 19], 85)
+for i, p in enumerate([72, 75, 79, 75, 74, 72, 70, 72, 67, 72]):
+    note(CEL, 45.75 + i * 0.15, 0.5, p + 12, 70)
+for b in (47.25, 47.75, 48.25):                                       # G G G
+    note(CEL, b, 0.45, 91, 108); note(PIZ, b, 0.4, 67, 95); note(GLK, b, 0.3, 91, 75); note(TIM, b, 0.3, C - 5, 80)
+note(CEL, 48.75, 1.75, 87, 112); note(PIZ, 48.75, 1, 63, 95); chord(CHO, 48.75, 1.75, [C + 15, C + 19], 70)   # E♭
 for i in range(6):
-    note(CEL, 54 + i * 0.25, 0.3, 87 + [0, 3, 7, 12, 7, 3][i], 60 - i * 6)
-note(PNO, 55, 0.5, 60, 80)
+    note(CEL, 49.25 + i * 0.2, 0.3, 87 + [0, 3, 7, 12, 7, 3][i], 60 - i * 6)
+note(PNO, 50.5, 0.75, 60, 80)
 
-# ---- VII 觉 (56–60): breath, C major opens (strings, choir, harp, celesta), bell, decay into the loop
-chord(STR, 56.8, 3.2, [C - 12, C, C + 4, C + 7, C + 12, C + 16], 85); ramp(STR, 56.8, 58, 40, 110); ramp(STR, 58.5, 59.9, 110, 20)
-chord(CHO, 56.8, 3.1, [C + 12, C + 16, C + 19], 80); ramp(CHO, 56.8, 58, 30, 105); ramp(CHO, 58.5, 59.9, 105, 15)
-note(LOW, 56.8, 3.1, C - 12, 80)
+# ======== SLOW · awake (51.5–60): breath, the eye opens into C major, the bell, the loop
+chord(STR, 53.3, 6.6, [C - 12, C, C + 4, C + 7, C + 12, C + 16], 85); ramp(STR, 53.3, 55, 30, 110); ramp(STR, 57.5, 59.9, 110, 15)
+chord(CHO, 53.3, 6.5, [C + 12, C + 16, C + 19], 80); ramp(CHO, 53.3, 55, 25, 105); ramp(CHO, 57.5, 59.9, 105, 10)
+note(LOW, 53.3, 6.5, C - 12, 80)
 for i, p in enumerate([60, 64, 67, 72, 76, 79, 84]):
-    note(HRP, 56.8 + i * 0.125, 2, p, 80)
-for i, p in enumerate([79, 84, 87, 86]):  # the seed motif again, now resolved
-    note(CEL, 57.5 + i * 0.25, 1, p if p != 87 else 88, 70)
-note(BEL, 58, 2, 72, 110); note(BEL, 58, 2, 60, 90); note(PNO, 58, 2, 36, 70)
+    note(HRP, 53.3 + i * 0.125, 2, p, 80)
+for i, p in enumerate([79, 84, 88, 86, 84]):                          # the seed motif, now in major
+    note(CEL, 54.5 + i * 0.5, 1.2, p, 72)
+note(BEL, 56, 3, 72, 110); note(BEL, 56, 3, 60, 90); note(PNO, 56, 3, 36, 70)
 
 mid = mido.MidiFile(ticks_per_beat=TPB)
 tr = mido.MidiTrack()
@@ -358,22 +350,24 @@ def breath(dur):
     return lp(bp(x, 500, 2500), 3000) * env
 
 
-for b in (4, 12, 20, 28, 36):
+for b in (8, 29, 37):
     add(b, boom(), 0.9)
-add(48, boom(3, 50, 22), 0.7)
-add(45, boom(3, 70, 18), 1.0)
-add(10, riser(1.75 * BEAT), 0.35)
-add(26, riser(0.5 * BEAT, 400, 8000), 0.3)
-add(26.5, thunder(), 0.55)
-add(34, crackle(1.8 * BEAT, 0.06), 0.4)
-for b in (34, 34.25, 34.5, 34.75):
+add(17, boom(1.5, 70, 35), 0.6)
+add(10, riser(2.4 * BEAT, 150, 7000), 0.4)          # meteor entry
+add(12.5, boom(3, 55, 20), 1.0)                      # plunge
+add(12.5, hp(rng.standard_normal(int(1.2 * SR)), 300) * np.exp(-np.arange(int(1.2 * SR)) / (0.25 * SR)), 0.35)  # splash
+add(23.75, riser(0.5 * BEAT, 400, 8000), 0.3)
+add(24.25, thunder(), 0.55)
+add(25, crackle(4 * BEAT, 0.02), 0.25)               # torch
+for b in (30, 30.208, 30.417, 30.625):
     add(b, hp(rng.standard_normal(1500), 2000) * np.exp(-np.arange(1500) / 300), 0.5, rng.uniform(-0.5, 0.5))
-add(28, crackle(1.75 * BEAT, 0.02), 0.25)  # torch
-add(45, riser(2.5 * BEAT, 300, 9000), 0.4)
-add(48, shepard(7.5 * BEAT), 0.06)
-add(56, breath(0.65), 0.35)
-for b in (43, 43.5, 44, 44.5):
-    add(b, hp(rng.standard_normal(4000), 3000) * np.linspace(1, 0, 4000) ** 2, 0.25, rng.uniform(-0.6, 0.6))
+for s in TL['SHOTS']:                                # a whoosh into every zoom-through
+    if s.get('tr') == 'zoom':
+        add(s['s'] - 0.3, riser(0.3 * BEAT, 500, 9000), 0.22)
+add(37, boom(3.5, 70, 16), 1.0)
+add(39, riser(3.4 * BEAT, 300, 9000), 0.35)
+add(43, shepard(8.2 * BEAT), 0.06)
+add(51.5, breath(0.7), 0.4)
 add(58.6, np.sin(2 * np.pi * np.cumsum(np.linspace(32.7, 20, int(1.4 * BEAT * SR))) / SR) * np.linspace(0, 1, int(1.4 * BEAT * SR)) ** 0.5, 0.25)
 
 # ---------------------------------------------------------------- mix & master
