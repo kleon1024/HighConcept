@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "music": "node music/compose.js",
-    "render": "node render.js",
-    "build": "node music/compose.js && node render.js"
+    "music": "python3 music/compose.py",
+    "render": "node render.js --blur 3",
+    "preview": "node render.js --scale 0.5 --dir preview"
   },
   "keywords": [],
   "author": "",

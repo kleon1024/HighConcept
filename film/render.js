@@ -12,7 +12,7 @@ const arg = (k, d) => { const i = process.argv.indexOf(`--${k}`); return i > 0 ?
 const total = Math.round(TOTAL_BEATS * BEAT_SEC * FPS);
 const from = Number(arg('from', 0)), to = Number(arg('to', total));
 const only = arg('only', null);
-const scale = arg('scale', '1'), workers = Number(arg('workers', 2));
+const scale = arg('scale', '1'), workers = Number(arg('workers', 2)), blur = Number(arg('blur', 1));
 const outDir = path.join(root, 'out', arg('dir', 'frames'));
 fs.mkdirSync(outDir, { recursive: true });
 
@@ -38,7 +38,7 @@ async function work(w) {
   // each worker takes a contiguous chunk so scenes are built once per shot
   const n = Math.ceil(frames.length / workers), mine = frames.slice(w * n, (w + 1) * n);
   for (const f of mine) {
-    const data = await page.evaluate(fr => { window.renderFrame(fr); return document.querySelector('canvas').toDataURL('image/png'); }, f);
+    const data = await page.evaluate(([fr, n]) => { if (n > 1) return window.renderFrameBlur(fr, n); window.renderFrame(fr); return document.querySelector('canvas').toDataURL('image/png'); }, [f, blur]);
     fs.writeFileSync(path.join(outDir, `${String(f).padStart(5, '0')}.png`), Buffer.from(data.split(',')[1], 'base64'));
     if (++done % 30 === 0) console.log(`${done}/${frames.length}  ${((Date.now() - t0) / done).toFixed(0)} ms/frame`);
   }
@@ -51,6 +51,6 @@ console.log(`rendered ${frames.length} frames in ${((Date.now() - t0) / 1000).to
 if (!only && !process.argv.includes('--no-encode')) {
   const wav = path.join(root, 'out', 'score.wav'), mp4 = path.join(root, 'out', 'DESCENT_30s.mp4');
   execFileSync('ffmpeg', ['-y', '-hide_banner', '-loglevel', 'error', '-framerate', String(FPS), '-start_number', String(from), '-i', path.join(outDir, '%05d.png'), '-i', wav,
-    '-c:v', 'libx264', '-preset', 'slow', '-crf', '16', '-pix_fmt', 'yuv420p', '-tune', 'film', '-c:a', 'aac', '-b:a', '320k', '-shortest', '-movflags', '+faststart', mp4], { stdio: 'inherit' });
+    '-c:v', 'libx264', '-preset', 'slow', '-crf', '16', '-pix_fmt', 'yuv420p', '-tune', 'film', '-c:a', 'aac', '-b:a', '320k', '-af', 'aresample=48000', '-shortest', '-movflags', '+faststart', mp4], { stdio: 'inherit' });
   console.log('wrote', mp4);
 }
