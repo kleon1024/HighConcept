@@ -273,7 +273,7 @@ function boneTexture() {
     const r = rng(77);
     g.fillStyle = '#e6d6b4'; g.fillRect(0, 0, w, h);
     g.globalCompositeOperation = 'multiply';
-    const n1 = noiseCanvas('rough-mid', { scale: 12, contrast: 1.4 }); g.globalAlpha = 0.18; g.drawImage(n1, 0, 0, w, h);
+    const n1 = noiseCanvas('rough-fine', { scale: 40, contrast: 1.5 }); g.globalAlpha = 0.12; for (let i = 0; i < 2; i++) for (let j = 0; j < 3; j++) g.drawImage(n1, i * w / 2, j * h / 3, w / 2, h / 3);
     g.globalAlpha = 1;
     // age staining toward the rim
     const gr = g.createRadialGradient(w / 2, h / 2, w * 0.25, w / 2, h / 2, w * 0.75); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(1, 'rgba(150,110,60,0.7)'); g.fillStyle = gr; g.fillRect(0, 0, w, h);
@@ -380,7 +380,7 @@ const M4 = (x, y, z, ry = 0, sx = 1, sy = 1, sz = 1, rx = 0, rz = 0) => new THRE
 
 // ================================================================ PARTHENON parts
 function flutedShaft(h, rb, rt, flutes = 20) {
-  const g = new THREE.CylinderGeometry(1, 1, h, 160, 12, true); g.translate(0, h / 2, 0);
+  const g = new THREE.CylinderGeometry(1, 1, h, 100, 8, true); g.translate(0, h / 2, 0);
   const P = g.attributes.position;
   for (let i = 0; i < P.count; i++) {
     const x = P.getX(i), y = P.getY(i), z = P.getZ(i), th = Math.atan2(x, z), s = y / h;
@@ -564,11 +564,11 @@ export const shots = {
     S.fog = new THREE.Fog(col('#0a0402'), 14, 32);
     const r = rng(28);
     // rock wall (concave, displaced) with Lascaux paintings
-    const wallG = new THREE.PlaneGeometry(26, 11, 220, 100);
+    const wallG = new THREE.PlaneGeometry(26, 11, 150, 64);
     displace(wallG, (v) => { const n = fbm(v.x * 0.35, v.y * 0.35, 1.3, 5); return v3(v.x, v.y, v.z + n * 0.9 + 0.012 * v.x * v.x - 0.1 * Math.max(0, v.y - 3) ** 2); });
     const wall = new THREE.Mesh(wallG, new THREE.MeshStandardMaterial({ map: caveWallTexture(), roughness: 0.95, bumpMap: noiseTexture('bump-rock', { scale: 16, contrast: 1.6 }), bumpScale: 4 }));
     wall.position.set(0, 4.2, -6); wall.receiveShadow = true; S.add(wall);
-    const floorG = new THREE.PlaneGeometry(30, 20, 120, 80);
+    const floorG = new THREE.PlaneGeometry(30, 20, 70, 46);
     displace(floorG, v => v3(v.x, v.y, v.z + fbm(v.x * 0.4, v.y * 0.4, 5, 4) * 0.35));
     const floor = new THREE.Mesh(floorG, mats.stone('#4a3628', { bumpScale: 0.8, bumpMap: rep(noiseTexture('bump-rock', { scale: 16, contrast: 1.6 }), 6) })); floor.rotation.x = -Math.PI / 2; floor.position.z = 2; floor.receiveShadow = true; S.add(floor);
     // low parapet behind which the carriers walk
@@ -590,7 +590,7 @@ export const shots = {
     flames[0].position.set(0, 0.12, 0); flames[1].position.set(-0.18, 0.12, 0.1); flames[2].position.set(0.15, 0.1, -0.05);
     flames.forEach(f => fire.add(f));
     const fl = new THREE.PointLight(col('#ff8a30'), 30, 0, 1.15); fl.position.set(0.6, 1.05, 3.6); fl.castShadow = true;
-    fl.shadow.mapSize.set(1024, 1024); fl.shadow.bias = -0.004; fl.shadow.radius = 3; fl.shadow.camera.near = 0.2; fl.shadow.camera.far = 30; S.add(fl);
+    fl.shadow.mapSize.set(512, 512); fl.shadow.bias = -0.004; fl.shadow.radius = 3; fl.shadow.camera.near = 0.2; fl.shadow.camera.far = 30; S.add(fl);
     const hemi = new THREE.HemisphereLight(col('#ff9a50'), col('#100604'), 0.12); S.add(hemi);
     // the forms carried past on poles: the five Platonic solids
     const geos = [new THREE.TetrahedronGeometry(0.42), new THREE.BoxGeometry(0.52, 0.52, 0.52), new THREE.OctahedronGeometry(0.42), new THREE.DodecahedronGeometry(0.4), new THREE.IcosahedronGeometry(0.42)];
@@ -754,8 +754,9 @@ export const shots = {
     const sunDir = v3(0.8, 0.13, 0.55).normalize();
     gradientSky(S, '#c0704a', '#e89060', '#24305a', sunDir, '#ffb060');
     S.fog = new THREE.Fog(col('#c88058'), 150, 1200); S.environmentIntensity = 0.35;
-    const marble = mats.marble({ color: col('#f6e8d2'), roughness: 0.45, clearcoat: 0.1 });
-    const marbleD = mats.marble({ color: col('#d8c6a8'), roughness: 0.6, clearcoat: 0 });
+    const veins = mats.marble().map;
+    const marble = new THREE.MeshStandardMaterial({ map: veins, color: col('#f6e8d2'), roughness: 0.5 });
+    const marbleD = new THREE.MeshStandardMaterial({ map: veins, color: col('#d8c6a8'), roughness: 0.65 });
     const colH = 9.5, top = 1.5 + colH + 0.87;
     // steps (krepidoma)
     [[33.4, 72.0, 0.5], [32.4, 71.0, 1.0], [31.4, 70.0, 1.5]].forEach(([w, d, y]) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.5, d), marble); m.position.y = y - 0.25; m.castShadow = m.receiveShadow = true; S.add(m); });
@@ -791,11 +792,11 @@ export const shots = {
     const fig = new THREE.MeshStandardMaterial({ color: col('#e4d4b8'), roughness: 0.7 }); const rr = rng(36);
     for (let i = 0; i < 13; i++) { const x = -11 + i * 22 / 12, hh = (pedH - 0.9) * (1 - Math.abs(x) / 14.5) * rr.range(0.55, 0.95); const f = new THREE.Mesh(new THREE.CapsuleGeometry(0.42, Math.max(0.1, hh - 0.84), 4, 8), fig); f.position.set(x, base + 0.35 + hh / 2, 33.2); f.rotation.z = rr.range(-0.2, 0.2) + (Math.abs(x) > 9 ? Math.sign(x) * 1.2 : 0); f.castShadow = true; S.add(f); }
     // the rock of the Acropolis
-    const groundG = new THREE.PlaneGeometry(900, 900, 160, 160); displace(groundG, v => v3(v.x, v.y, v.z + (Math.hypot(v.x, v.y) > 60 ? -Math.min(40, (Math.hypot(v.x, v.y) - 60) * 0.25) : 0) + fbm(v.x * 0.05, v.y * 0.05, 1, 4) * 1.2));
+    const groundG = new THREE.PlaneGeometry(900, 900, 90, 90); displace(groundG, v => v3(v.x, v.y, v.z + (Math.hypot(v.x, v.y) > 60 ? -Math.min(40, (Math.hypot(v.x, v.y) - 60) * 0.25) : 0) + fbm(v.x * 0.05, v.y * 0.05, 1, 4) * 1.2));
     const ground = new THREE.Mesh(groundG, mats.stone('#b08a64', { bumpMap: rep(noiseTexture('bump-rock', { scale: 16, contrast: 1.6 }), 40), bumpScale: 1.5 })); ground.rotation.x = -Math.PI / 2; ground.position.y = -0.05; ground.receiveShadow = true; S.add(ground);
     // golden-hour light
     const sun = new THREE.DirectionalLight(col('#ffa050'), 7.5); sun.position.copy(sunDir.clone().multiplyScalar(120)); sun.target.position.set(0, 6, 10);
-    sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); const sc = sun.shadow.camera; sc.left = -60; sc.right = 60; sc.top = 45; sc.bottom = -45; sc.near = 10; sc.far = 300; sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.05; S.add(sun, sun.target);
+    sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024); const sc = sun.shadow.camera; sc.left = -60; sc.right = 60; sc.top = 45; sc.bottom = -45; sc.near = 10; sc.far = 300; sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.05; S.add(sun, sun.target);
     const hemi = new THREE.HemisphereLight(col('#6a80c0'), col('#804a30'), 0.55); S.add(hemi);
     // golden rectangle + spiral on the facade
     const W0 = 30.6, H0 = W0 / 1.618, x0 = -W0 / 2, y0 = 0, zf = 36.5;
@@ -879,13 +880,13 @@ export const shots = {
     backdrop(S, 'marble'); S.fog = null; S.environmentIntensity = 0.4;
     const T = domeTextures();
     const { R, y0, th0 } = DOME;
-    const dg = new THREE.SphereGeometry(R, 256, 96, 0, TAU, th0, Math.PI / 2 - th0);
+    const dg = new THREE.SphereGeometry(R, 192, 80, 0, TAU, th0, Math.PI / 2 - th0);
     { const P = dg.attributes.position, UV = dg.attributes.uv;
       for (let i = 0; i < P.count; i++) { const uu = UV.getX(i), vv = UV.getY(i), th = th0 + (1 - vv) * (Math.PI / 2 - th0), b = 1 - (th - th0) / (Math.PI / 2 - th0); const d = cofferDepth((uu * DOME.sectors) % 1, b); const k = 1 + d * 0.012 * Math.sin(th); P.setXYZ(i, P.getX(i) * k, P.getY(i) * k, P.getZ(i) * k); }
       dg.computeVertexNormals(); }
     const domeM = new THREE.MeshStandardMaterial({ map: T.color, roughnessMap: T.mr, metalnessMap: T.mr, roughness: 1, metalness: 1, bumpMap: T.bump, bumpScale: 4, side: THREE.BackSide });
     const dome = new THREE.Mesh(dg, domeM); dome.position.y = y0; S.add(dome);
-    const gold = mats.gold({ roughness: 0.25 });
+    const gold = new THREE.MeshStandardMaterial({ color: col('#ffc35a'), metalness: 1, roughness: 0.25 });
     // gilded ribs following the meridians
     for (let k = 0; k < DOME.sectors; k++) { const a = k / DOME.sectors * TAU, pts = []; for (let i = 0; i <= 30; i++) { const th = th0 + i / 30 * (Math.PI / 2 - th0); pts.push(v3(Math.sin(th) * Math.sin(a) * (R - 0.15), y0 + Math.cos(th) * (R - 0.15), Math.sin(th) * Math.cos(a) * (R - 0.15))); } S.add(new THREE.Mesh(tube(pts, 0.17, 60, 8), gold)); }
     // oculus ring + lantern with painted sky
@@ -929,7 +930,7 @@ export const shots = {
   library() {
     const S = new THREE.Scene(), C = camera(62, 0.05, 300);
     backdrop(S, 'marble'); S.fog = new THREE.Fog(col('#050302'), 6, 34); S.environmentIntensity = 0.4; S.background = col('#050302');
-    const Rh = 5.6, r0 = 2.9, HF = 3.2, NF = 16, FY0 = 4 * HF;
+    const Rh = 5.6, r0 = 2.9, HF = 3.2, NF = 11, FY0 = 4 * HF;
     const r = rng(39);
     const wood = new THREE.MeshStandardMaterial({ color: col('#3a2210'), roughness: 0.55 });
     const plaster = new THREE.MeshStandardMaterial({ color: col('#b8a080'), roughness: 0.85 });
@@ -987,7 +988,7 @@ export const shots = {
     const lampPos = []; for (let f = 0; f < NF; f++) [0, 3].forEach(e => { const a = hexPts(Rh - 1.6)[e]; lampPos.push(M4(a.x * 0.85, FY0 - f * HF + 2.4, a.y * 0.85)); });
     S.add(instanced(new THREE.SphereGeometry(0.16, 16, 12), mats.glow('#ffd8a0', 4), lampPos));
     const lights = [];
-    for (let f = 0; f < 8; f++) { const L = new THREE.PointLight(col('#ffbf78'), 22, 14, 1.5); L.position.set(f % 2 ? 2.2 : -2.2, FY0 - f * HF + 2.2, f % 2 ? 1.5 : -1.5); S.add(L); lights.push(L); }
+    for (let f = 0; f < 5; f++) { const L = new THREE.PointLight(col('#ffbf78'), 26, 14, 1.5); L.position.set(f % 2 ? 2.2 : -2.2, FY0 - f * HF + 2.2, f % 2 ? 1.5 : -1.5); S.add(L); lights.push(L); }
     S.add(new THREE.HemisphereLight(col('#ffd8a8'), col('#100804'), 0.25));
     return {
       scene: S, cam: C,
@@ -1246,9 +1247,9 @@ export const shots = {
       const pa = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.0, 0.04), plateM); pa.position.x = -0.21; slit.add(pa);
       const pb = pa.clone(); pb.position.x = 0.21; slit.add(pb);
       const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.6, 12), brass); stand.position.set(1.9, 0.8, 0); S.add(stand);
-      const prism = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.75, 3, 1), new THREE.MeshPhysicalMaterial({ color: col('#f0f6ff'), roughness: 0.04, metalness: 0, transparent: true, opacity: 0.4, clearcoat: 1, envMapIntensity: 3, emissive: col('#ff9a20'), emissiveIntensity: 0.12, side: THREE.DoubleSide }));
-      prism.position.set(3.4, 2.1, 0.2); prism.rotation.y = 0.35; S.add(prism);
-      prism.add(new THREE.LineSegments(new THREE.EdgesGeometry(prism.geometry), new THREE.LineBasicMaterial({ color: col('#ffd890').multiplyScalar(1.2), transparent: true, opacity: 0.6 })));
+      const prism = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 0.42, 3, 1), new THREE.MeshPhysicalMaterial({ color: col('#e8f2ff'), roughness: 0.03, metalness: 0, transparent: true, opacity: 0.18, clearcoat: 1, envMapIntensity: 4, side: THREE.DoubleSide, depthWrite: false }));
+      prism.position.set(3.4, 2.05, 0.2); prism.rotation.y = 0.9; S.add(prism);
+      prism.add(new THREE.LineSegments(new THREE.EdgesGeometry(prism.geometry), new THREE.LineBasicMaterial({ color: col('#fff4e0').multiplyScalar(1.6), transparent: true, opacity: 0.85 })));
       const pst = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.56, 0.12, 6), brass); pst.position.set(3.4, 1.6, 0.2); S.add(pst);
       const pst2 = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.6, 12), brass); pst2.position.set(3.4, 0.8, 0.2); S.add(pst2);
       const beamMat = (c, o) => new THREE.MeshBasicMaterial({ color: col(c).multiplyScalar(o), transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
