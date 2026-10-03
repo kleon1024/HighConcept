@@ -2,7 +2,7 @@
 import {
   THREE, TAU, clamp, lerp, smooth, smoother, easeOut, easeIn, easeInOut, range, v3, col, rng, fbm,
   displace, backdrop, rig, mats, materialize, canvasTexture, Dust, LineBuilder, tube, squareSpiral,
-  camera, look, orbit, drift, seedPoint, noiseTexture, settle,
+  camera, look, orbit, drift, seedPoint, noiseTexture, settle, reignLandscape,
 } from '../core.js';
 import { MarchingCubes } from 'three/addons/objects/MarchingCubes.js';
 
@@ -58,11 +58,12 @@ export const shots = {
   // ── 0–4: a gold point unspools into a thread, the thread becomes a golden egg on a lotus; first crack of light ──
   egg() {
     const S = new THREE.Scene(), C = camera(32);
-    backdrop(S, 'egg', { stars: 600 });
+    const sky = backdrop(S, 'egg', { stars: 600 });
+    const skyNight = [col('#05030a'), col('#120a1c')], skyDawn = [col('#f0a070'), col('#5a3a6a')];
     const L = rig(S, 'egg', { key: v3(4, 7, 5), keyI: 2.2, rimI: 3 });
     // floor: dark lacquer that catches reflections and the egg's shadow
-    const floor = new THREE.Mesh(new THREE.CircleGeometry(120, 96), new THREE.MeshStandardMaterial({ color: col('#080503'), roughness: 0.95, metalness: 0 }));
-    floor.rotation.x = -Math.PI / 2; floor.position.y = -1.62; floor.receiveShadow = true; S.add(floor);
+    // a Moebius dusk plain: dunes, buttes, painted clouds, bulbous flora — revealed as dawn rises
+    const land = reignLandscape(S, { y: -1.62, seed: 4 });
 
     const egg = new THREE.Mesh(eggGeometry(), mats.gold({ bumpMap: thunderCloudBump(), bumpScale: 4, roughness: 0.3 }));
     egg.castShadow = true; S.add(egg);
@@ -119,7 +120,11 @@ export const shots = {
         egg.rotation.y = 0.3 * t;
         const camP = orbit(lerp(9.5, 6.4, easeInOut(u)), lerp(-0.25, 0.25, u), lerp(0.08, 0.16, u)).add(drift(t, 0.02));
         look(C, camP, v3(0, lerp(0, -0.25, u), 0));
-        return { bloom: 0.45, exposure: lerp(0.85, 0.95, u) };
+        const dawn = smooth(range(u, 0.15, 0.7));
+        sky.material.uniforms.a.value.copy(skyNight[0]).lerp(skyDawn[0], dawn); sky.material.uniforms.b.value.copy(skyNight[1]).lerp(skyDawn[1], dawn);
+        S.fog.color.copy(skyNight[0]).lerp(col('#e0907a'), dawn);
+        land.sway(t);
+        return { bloom: 0.45, exposure: lerp(0.2, 1.0, dawn) };
       },
     };
   },

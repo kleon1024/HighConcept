@@ -1,4 +1,4 @@
-import { THREE, W, H, rng, v3, crack, LineBuilder, gradeShader, setRenderer, backdrop, seedPoint, clamp, lerp, easeOut, easeIn } from './core.js';
+import { THREE, W, H, rng, v3, col, crack, LineBuilder, gradeShader, inkShader, toonify, TOON, PALETTES, setRenderer, backdrop, seedPoint, clamp, lerp, easeOut, easeIn } from './core.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
@@ -33,7 +33,32 @@ const mainPass = new RenderPass(new THREE.Scene(), new THREE.PerspectiveCamera()
 const overPass = new RenderPass(overlay, ortho); overPass.clear = false; overPass.clearDepth = true;
 const bloom = new UnrealBloomPass(new THREE.Vector2(W * PR, H * PR), 0.6, 0.6, 0.9);
 const grade = new ShaderPass(gradeShader);
-composer.addPass(mainPass); composer.addPass(overPass); composer.addPass(bloom); composer.addPass(new OutputPass()); composer.addPass(grade);
+const ink = new ShaderPass(inkShader);
+composer.addPass(mainPass); composer.addPass(overPass); composer.addPass(bloom); composer.addPass(new OutputPass()); composer.addPass(ink); composer.addPass(grade);
+const STYLE = new URLSearchParams(location.search).get('style') || 'reign';
+
+// normal + depth pre-pass for the ink lines
+const nrmRT = new THREE.WebGLRenderTarget(W * PR, H * PR, { type: THREE.HalfFloatType });
+nrmRT.depthTexture = new THREE.DepthTexture(W * PR, H * PR); nrmRT.depthTexture.type = THREE.UnsignedIntType;
+const nrmMat = new THREE.MeshNormalMaterial();
+ink.uniforms.tNormal.value = nrmRT.texture; ink.uniforms.tDepth.value = nrmRT.depthTexture;
+ink.uniforms.uWidth.value = 2.0 * PR; TOON.uPR.value = PR;
+function inkPrepass(scene, cam) {
+  const hidden = [];
+  scene.traverse(o => {
+    const m = o.material;
+    const skip = o.isPoints || o.isLine || o.isSprite || o.userData.noInk ||
+      (o.isMesh && m && (m.isShaderMaterial || (m.isMeshBasicMaterial && (m.transparent || m.blending === THREE.AdditiveBlending))));
+    if (skip && o.visible) { o.visible = false; hidden.push(o); }
+  });
+  const bg = scene.background, fog = scene.fog;
+  scene.background = null; scene.fog = null; scene.overrideMaterial = nrmMat;
+  renderer.setRenderTarget(nrmRT); renderer.setClearColor(0x8080ff, 1); renderer.clear(); renderer.render(scene, cam);
+  renderer.setRenderTarget(null); renderer.setClearColor(0x000000, 1);
+  scene.overrideMaterial = null; scene.background = bg; scene.fog = fog;
+  hidden.forEach(o => { o.visible = true; });
+  ink.uniforms.uNear.value = cam.near; ink.uniforms.uFar.value = cam.far;
+}
 
 function placeholder() {
   const S = new THREE.Scene(); backdrop(S, 'void');
@@ -48,7 +73,9 @@ function dispose(obj) { obj.traverse(o => { if (o.geometry) o.geometry.dispose()
 function getShot(idx) {
   if (!cache.has(idx)) {
     const sh = SHOTS[idx];
-    cache.set(idx, (SCENES[sh.k] || placeholder)(sh.p || {}, { renderer }));
+    const built = (SCENES[sh.k] || placeholder)(sh.p || {}, { renderer });
+    if (STYLE === 'reign') toonify(built.scene);
+    cache.set(idx, built);
   }
   for (const k of [...cache.keys()]) if (k !== idx && k !== idx - 1 && k !== idx + 1) { dispose(cache.get(k).scene); cache.delete(k); }
   return cache.get(idx);
@@ -85,8 +112,8 @@ function renderShot(idx, f, fx) {
 
   const last = ACCENTS.filter(k => k <= beat + 1e-9).pop();
   const pulse = last === undefined ? 0 : Math.exp(-(beat - last) * BEAT_SEC / 0.15);
-  bloom.strength = (post.bloom ?? 0.6) * (1 + 0.3 * pulse);
-  bloom.threshold = post.threshold ?? 0.9;
+  bloom.strength = (post.bloom ?? 0.6) * (STYLE === 'reign' ? 0.6 : 1) * (1 + 0.3 * pulse);
+  bloom.threshold = (post.threshold ?? 0.9) + (STYLE === 'reign' ? 0.2 : 0);
   renderer.toneMappingExposure = post.exposure ?? 1.0;
 
   overlay.clear();
@@ -102,6 +129,14 @@ function renderShot(idx, f, fx) {
   grade.uniforms.uZoom.value = fx.zoom;
   grade.uniforms.uRadial.value = fx.radial;
   grade.uniforms.uSpark.value = fx.spark;
+  // per-palette cel tints and ink colour
+  const pal = PALETTES[cur.scene.userData.palette || 'void'];
+  if (STYLE === 'reign') {
+    TOON.uToonShadow.value.copy(col(pal.shadow)); TOON.uToonLight.value.copy(col(pal.light)); TOON.uToonMix.value = post.toon ?? 1; TOON.uHatch.value = post.hatch ?? 1;
+    ink.enabled = (post.ink ?? 1) > 0; ink.uniforms.uStrength.value = 0.85 * (post.ink ?? 1);
+    ink.uniforms.uInk.value.copy(col(pal.ink)); ink.uniforms.uBoil.value = Math.floor(f / 2) * 1.37;
+    if (ink.enabled) inkPrepass(cur.scene, cur.cam);
+  } else { TOON.uToonMix.value = 0; ink.enabled = false; }
   composer.render();
   return renderer.domElement;
 }

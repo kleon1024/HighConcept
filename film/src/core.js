@@ -60,16 +60,17 @@ export function displace(geom, fn) {
 // ---------------------------------------------------------------- palettes (one per chapter)
 // bg: [bottom, top] gradient; key/fill/rim light colours; accent for emissive details.
 export const PALETTES = {
-  egg: { bg: ['#020101', '#0e0804'], key: '#ffd9a8', fill: '#2a1a0c', rim: '#ffb54a', accent: '#ffc96b', env: 0.6 },
-  cosmos: { bg: ['#02030c', '#141038'], key: '#fff1d6', fill: '#1a1a4a', rim: '#8f7bff', accent: '#ffcf70', env: 0.5 },
-  frost: { bg: ['#01080e', '#0d3c52'], key: '#eaf7ff', fill: '#123a50', rim: '#7fe3ff', accent: '#bff4ff', env: 0.8 },
-  genesis: { bg: ['#000608', '#04282a'], key: '#c8fff4', fill: '#062a2a', rim: '#ff4fb0', accent: '#3dffd6', env: 0.6 },
-  theft: { bg: ['#050100', '#200a02'], key: '#ff9a3d', fill: '#1c0a04', rim: '#ffcf70', accent: '#ff7a1a', env: 0.5 },
-  marble: { bg: ['#16120d', '#5a4a36'], key: '#fff3e0', fill: '#3a2e22', rim: '#ffd590', accent: '#ffcf70', env: 1.0 },
-  silicon: { bg: ['#00040c', '#062a52'], key: '#d8f0ff', fill: '#04203a', rim: '#3fa9ff', accent: '#5fd0ff', env: 0.8 },
-  void: { bg: ['#000000', '#020204'], key: '#ffe2b0', fill: '#000000', rim: '#ffb050', accent: '#ffc070', env: 0.2 },
-  data: { bg: ['#01040a', '#062028'], key: '#bff4ff', fill: '#04161c', rim: '#ffb030', accent: '#40e0ff', env: 0.6 },
-  awake: { bg: ['#030201', '#140c05'], key: '#fff0d0', fill: '#20140a', rim: '#ffc060', accent: '#ffd27a', env: 0.7 },
+  // bg: [bottom, top] sky gradient; key/fill/rim lights; shadow/light: cel-shade tints; ink: outline colour
+  egg: { bg: ['#140b18', '#4a2a2a'], key: '#ffe2b8', fill: '#3a2440', rim: '#ffb860', accent: '#ffc96b', env: 0.6, shadow: '#5a3f86', light: '#fff0d8', ink: '#1a0f20' },
+  cosmos: { bg: ['#0c0a26', '#3a2a70'], key: '#fff1d6', fill: '#2a2a6a', rim: '#9f8bff', accent: '#ffcf70', env: 0.5, shadow: '#3c3f96', light: '#fff4e2', ink: '#0b0920' },
+  frost: { bg: ['#8fc9c9', '#f2ead6'], key: '#fff8ea', fill: '#6aa0b8', rim: '#bff4ff', accent: '#bff4ff', env: 0.8, shadow: '#5a78b4', light: '#fffaf0', ink: '#1a2a40' },
+  genesis: { bg: ['#0c3236', '#3e8a7a'], key: '#e8fff2', fill: '#1a4a4a', rim: '#ff7ab8', accent: '#3dffd6', env: 0.6, shadow: '#5a3c86', light: '#f4fff0', ink: '#0b1c22' },
+  theft: { bg: ['#2a0e10', '#b85a2a'], key: '#ffb060', fill: '#3a1a20', rim: '#ffd890', accent: '#ff7a1a', env: 0.5, shadow: '#5a2a66', light: '#fff0d0', ink: '#1c0a10' },
+  marble: { bg: ['#e0a882', '#fbe9cf'], key: '#fff3e0', fill: '#a07a80', rim: '#ffd590', accent: '#ffcf70', env: 1.0, shadow: '#8a6ab0', light: '#fffaf0', ink: '#2a1820' },
+  silicon: { bg: ['#06202e', '#1f7a8a'], key: '#e0f6ff', fill: '#103a50', rim: '#5fd0ff', accent: '#5fd0ff', env: 0.8, shadow: '#2c3c86', light: '#f0fbff', ink: '#06121a' },
+  void: { bg: ['#040309', '#120c20'], key: '#ffe2b0', fill: '#0a0814', rim: '#ffb050', accent: '#ffc070', env: 0.2, shadow: '#2a2050', light: '#fff0d8', ink: '#000000' },
+  data: { bg: ['#0a1c28', '#2a5a6a'], key: '#d8faff', fill: '#123040', rim: '#ffb030', accent: '#40e0ff', env: 0.6, shadow: '#3c2c72', light: '#f0fcff', ink: '#071018' },
+  awake: { bg: ['#3a2030', '#e8b080'], key: '#fff0d0', fill: '#5a3a4a', rim: '#ffc060', accent: '#ffd27a', env: 0.7, shadow: '#7a5a9a', light: '#fff6e6', ink: '#1e1018' },
 };
 
 // ---------------------------------------------------------------- environment (reflections) per palette
@@ -106,7 +107,9 @@ export function backdrop(scene, name, { stars = 0, radius = 400, seed = 3 } = {}
   dome.renderOrder = -10; scene.add(dome);
   scene.environment = envMap(name);
   scene.environmentIntensity = P.env;
-  scene.fog = new THREE.Fog(col(P.bg[0]), radius * 0.04, radius * 0.12);
+  scene.fog = new THREE.Fog(col(P.bg[0]).lerp(col(P.bg[1]), 0.55), radius * 0.04, radius * 0.14);
+  scene.userData.palette = name;
+  dome.userData.noInk = true;
   if (stars) {
     const r = rng(seed), d = new Dust(stars, { size: 1.2, sizeAttenuation: false });
     for (let i = 0; i < stars; i++) { d.setV(i, r.dir().multiplyScalar(radius * 0.9)); d.alpha[i] = Math.pow(r(), 3) * 0.9 + 0.05; d.size[i] = r.range(0.6, 2.2); d.color(i, r() < 0.8 ? col('#fff4e0') : col(P.rim)); }
@@ -354,9 +357,160 @@ export const gradeShader = {
       // the gold spark that travels through every zoom cut
       float d = length(q);
       c += uSpark * (vec3(1.0, 0.82, 0.45) * exp(-d * d * 900.0) * 3.0 + vec3(1.0, 0.7, 0.3) * exp(-d * 18.0) * 0.35);
-      c *= mix(1.0, smoothstep(1.25, 0.25, d), uVignette);
-      c += (hash(vUv * uRes + uTime * 17.0) - 0.5) * uGrain;
+      c *= mix(1.0, smoothstep(1.35, 0.3, d), uVignette * 0.7);
+      // painterly: low-frequency watercolour mottle + paper fibre grain
+      vec2 pp = vUv * vec2(uRes.x / uRes.y, 1.0);
+      float mott = sin(pp.x * 5.3 + sin(pp.y * 3.1) * 2.0) * sin(pp.y * 4.7 + sin(pp.x * 2.3) * 1.7);
+      c *= 1.0 + 0.035 * mott;
+      float fib = hash(floor(vUv * uRes / 2.0)) - 0.5;
+      c += (hash(vUv * uRes + uTime * 17.0) - 0.5) * uGrain + fib * 0.018;
       c = c * uFade + uFlash * vec3(1.0, 0.95, 0.88);
       gl_FragColor = vec4(c, 1.0);
     }`,
 };
+
+// ---------------------------------------------------------------- Scavengers Reign / Moebius look (NPR)
+// Cel shading injected into every lit (standard/physical) material: banded light, coloured shadows, crisp highlight.
+// Scenes keep their own material objects (and animate them as before); only the final shading changes.
+export const TOON = {
+  uToonShadow: { value: col('#5a3f86') }, uToonLight: { value: col('#fff0d8') }, uToonMix: { value: 1 },
+  uToonE1: { value: 0.22 }, uToonE2: { value: 0.62 }, uHatch: { value: 1 }, uPR: { value: 1 },
+};
+const TOON_GLSL = `
+  {
+    vec3 albedo = max(diffuseColor.rgb, vec3(0.015));
+    vec3 lit = max(outgoingLight - totalEmissiveRadiance, vec3(0.0));
+    float L = dot(lit, vec3(0.299, 0.587, 0.114)) / max(dot(albedo, vec3(0.299, 0.587, 0.114)), 0.03);
+    float b = 0.55 * smoothstep(uToonE1 - 0.03, uToonE1 + 0.03, L) + 0.45 * smoothstep(uToonE2 - 0.04, uToonE2 + 0.04, L);
+    vec3 shade = mix(uToonShadow * 0.55, uToonLight, b);
+    // Moebius hatching in the shadow side: diagonal ink lines, denser in the darkest band
+    vec2 fc = gl_FragCoord.xy / uPR;
+    float h1 = smoothstep(0.62, 0.8, abs(fract((fc.x + fc.y) / 7.0) - 0.5) * 2.0);
+    float h2 = smoothstep(0.62, 0.8, abs(fract((fc.x - fc.y) / 7.0) - 0.5) * 2.0);
+    float dark = 1.0 - smoothstep(uToonE1 - 0.03, uToonE1 + 0.03, L), mid = 1.0 - smoothstep(uToonE2 - 0.04, uToonE2 + 0.04, L);
+    shade *= 1.0 - uHatch * 0.35 * (h1 * mid * 0.6 + h2 * dark);
+    vec3 toon = albedo * shade + uToonLight * 0.28 * smoothstep(1.55, 1.65, L);
+    float k = uToonMix;
+    #ifdef USE_TRANSMISSION
+      k *= 0.5;
+    #endif
+    outgoingLight = mix(outgoingLight, toon + totalEmissiveRadiance, k);
+  }
+`;
+export function toonify(scene) {
+  scene.traverse(o => {
+    if (!o.isMesh) return;
+    (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => {
+      if (!m || !m.isMeshStandardMaterial || m.userData.toon) return;
+      const prev = m.onBeforeCompile;
+      m.onBeforeCompile = (sh, r) => {
+        if (prev) prev.call(m, sh, r);
+        Object.assign(sh.uniforms, TOON);
+        sh.fragmentShader = sh.fragmentShader
+          .replace('#include <common>', '#include <common>\nuniform vec3 uToonShadow; uniform vec3 uToonLight; uniform float uToonMix; uniform float uToonE1; uniform float uToonE2; uniform float uHatch; uniform float uPR;')
+          .replace('#include <opaque_fragment>', TOON_GLSL + '#include <opaque_fragment>');
+      };
+      const prevKey = m.customProgramCacheKey ? m.customProgramCacheKey.bind(m) : () => '';
+      m.customProgramCacheKey = () => prevKey() + '|toon';
+      m.userData.toon = true;
+      m.needsUpdate = true;
+    });
+  });
+}
+
+// Ink lines: edges from a normal + depth pre-pass, slightly "boiled" like hand-drawn line work.
+export const inkShader = {
+  uniforms: {
+    tDiffuse: { value: null }, tNormal: { value: null }, tDepth: { value: null },
+    uNear: { value: 0.05 }, uFar: { value: 2000 }, uRes: { value: new THREE.Vector2(W, H) },
+    uInk: { value: col('#1a0f20') }, uWidth: { value: 1.3 }, uStrength: { value: 0.85 }, uBoil: { value: 0 },
+  },
+  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+  fragmentShader: `
+    #include <packing>
+    uniform sampler2D tDiffuse, tNormal, tDepth; uniform float uNear, uFar, uWidth, uStrength, uBoil; uniform vec2 uRes; uniform vec3 uInk; varying vec2 vUv;
+    float vz(vec2 uv){ float d = texture2D(tDepth, uv).x; return -perspectiveDepthToViewZ(d, uNear, uFar); }
+    vec3 nrm(vec2 uv){ return texture2D(tNormal, uv).xyz * 2.0 - 1.0; }
+    float h(vec2 p){ return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5); }
+    void main(){
+      vec3 c = texture2D(tDiffuse, vUv).rgb;
+      vec2 jitter = (vec2(h(floor(vUv * 40.0) + uBoil), h(floor(vUv * 40.0) + uBoil + 7.0)) - 0.5) * 0.7 / uRes;
+      vec2 uv = vUv + jitter, px = uWidth / uRes;
+      float z0 = vz(uv); vec3 n0 = nrm(uv); float bg = step(0.9999, texture2D(tDepth, uv).x);
+      float dn = 0.0, dz = 0.0;
+      vec2 o[4]; o[0] = vec2(px.x, 0.0); o[1] = vec2(-px.x, 0.0); o[2] = vec2(0.0, px.y); o[3] = vec2(0.0, -px.y);
+      for (int i = 0; i < 4; i++) {
+        float zi = vz(uv + o[i]); vec3 ni = nrm(uv + o[i]);
+        float bgi = step(0.9999, texture2D(tDepth, uv + o[i]).x);
+        dn = max(dn, (1.0 - dot(n0, ni)) * (1.0 - max(bg, bgi)));
+        dz = max(dz, abs(zi - z0) / max(min(z0, zi), 0.001) + abs(bg - bgi));
+      }
+      float e = max(smoothstep(0.18, 0.4, dn), smoothstep(0.06, 0.14, dz));
+      e *= 1.0 - smoothstep(0.6, 1.0, z0 / uFar * 8.0) * 0.6; // far lines fade into the haze
+      c = mix(c, uInk, e * uStrength);
+      gl_FragColor = vec4(c, 1.0);
+    }`,
+};
+
+// ---------------------------------------------------------------- Moebius / Scavengers Reign landscape kit
+function cloudTexture(key, seed) {
+  return canvasTexture(key, 1024, 256, (g, w, h) => {
+    const r = rng(seed); g.clearRect(0, 0, w, h); g.fillStyle = '#fff';
+    for (let k = 0; k < 3; k++) {
+      const cx = w * (0.2 + 0.3 * k + r.range(-0.05, 0.05)), base = h * 0.78, len = w * r.range(0.18, 0.3);
+      g.beginPath(); g.rect(cx - len, base - 6, len * 2, 6); g.fill();
+      for (let i = 0; i < 9; i++) { const x = cx - len + (i + 0.5) * len * 2 / 9, rr = h * r.range(0.12, 0.3) * Math.sin(Math.PI * (i + 0.5) / 9); g.beginPath(); g.arc(x, base - rr * 0.6, rr, 0, TAU); g.fill(); }
+    }
+  });
+}
+export function reignLandscape(scene, {
+  y = -1.6, ground = '#c98a5a', groundDark = '#8a5240', far = '#5a2f55', near = '#8a4a5a', cloud = '#ffd8b8', cloud2 = '#f2a890',
+  flora = ['#3f8f86', '#e07a6a', '#f2c27a', '#8a6ab0'], seed = 1, floraCount = 14, clear = 2.6, mesas = 9,
+} = {}) {
+  const r = rng(seed), G = new THREE.Group(); scene.add(G);
+  // dunes
+  const gg = new THREE.PlaneGeometry(400, 400, 200, 200); gg.rotateX(-Math.PI / 2);
+  const pa = gg.attributes.position, colors = new Float32Array(pa.count * 3), cA = col(ground), cB = col(groundDark);
+  for (let i = 0; i < pa.count; i++) {
+    const x = pa.getX(i), z = pa.getZ(i), d = Math.hypot(x, z);
+    const hgt = (fbm(x * 0.03, 1, z * 0.03, 4) * 3 + Math.sin(x * 0.08 + z * 0.05) * 0.6) * smooth((d - clear) / 12);
+    pa.setY(i, hgt); const c = cA.clone().lerp(cB, clamp(0.5 - hgt * 0.25)); colors.set([c.r, c.g, c.b], i * 3);
+  }
+  gg.setAttribute('color', new THREE.BufferAttribute(colors, 3)); gg.computeVertexNormals();
+  const groundM = new THREE.Mesh(gg, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 }));
+  groundM.position.y = y; groundM.receiveShadow = true; G.add(groundM);
+  // mesas / buttes in receding layers (atmospheric perspective by colour)
+  for (let k = 0; k < mesas; k++) {
+    const dist = r.range(60, 170), ang = r.range(-1.2, 1.2) + Math.PI, w = r.range(10, 30), hh = r.range(6, 22);
+    const sh = new THREE.Shape(); sh.moveTo(-w, 0); sh.lineTo(-w * 0.7, hh * 0.85); sh.lineTo(-w * 0.55, hh); sh.lineTo(w * 0.5, hh); sh.lineTo(w * 0.65, hh * 0.8); sh.lineTo(w, 0);
+    const m = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 8, bevelEnabled: false }), new THREE.MeshStandardMaterial({ color: col(near).lerp(col(far), clamp((dist - 60) / 110)), roughness: 1 }));
+    m.position.set(Math.sin(ang) * dist, y - 1, Math.cos(ang) * dist); m.lookAt(0, y, 0); G.add(m);
+  }
+  // painted clouds: flat layered shapes
+  for (let k = 0; k < 6; k++) {
+    const tex = cloudTexture('cloud' + (k % 3), 30 + k % 3);
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(160, 40), new THREE.MeshBasicMaterial({ map: tex, color: col(k % 2 ? cloud : cloud2), transparent: true, depthWrite: false, fog: false }));
+    const ang = Math.PI + r.range(-0.9, 0.9), dist = r.range(220, 300);
+    m.position.set(Math.sin(ang) * dist, y + r.range(25, 70), Math.cos(ang) * dist); m.lookAt(0, m.position.y, 0); m.userData.noInk = true; G.add(m);
+  }
+  // alien flora: curved stalks with bulbs, caps and frills
+  const plants = [];
+  for (let k = 0; k < floraCount; k++) {
+    let x, z; do { x = r.range(-16, 16); z = r.range(-18, 4); } while (Math.hypot(x, z) < clear + 1.2 || (z > -3 && Math.abs(x) < 6));
+    const P = new THREE.Group(); P.position.set(x, y, z);
+    const hgt = r.range(1.2, 4.5), bend = r.range(-0.6, 0.6), c = col(flora[k % flora.length]);
+    const pts = []; for (let i = 0; i <= 8; i++) { const s = i / 8; pts.push(v3(bend * s * s, s * hgt, 0)); }
+    const stalk = new THREE.Mesh(tube(pts, 0.06 + hgt * 0.015, 24, 8), new THREE.MeshStandardMaterial({ color: c.clone().multiplyScalar(0.8), roughness: 0.8 }));
+    stalk.castShadow = true; P.add(stalk);
+    const top = pts[8], kind = k % 3;
+    let head;
+    if (kind === 0) head = new THREE.Mesh(new THREE.SphereGeometry(0.25 + hgt * 0.06, 24, 16), new THREE.MeshStandardMaterial({ color: c.clone().lerp(col('#fff2d0'), 0.3), roughness: 0.6, emissive: c, emissiveIntensity: 0.15 }));
+    else if (kind === 1) head = new THREE.Mesh(new THREE.SphereGeometry(0.5 + hgt * 0.08, 24, 12, 0, TAU, 0, Math.PI / 2.2), new THREE.MeshStandardMaterial({ color: c, roughness: 0.7, side: THREE.DoubleSide }));
+    else head = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.9, 16, 1, true), new THREE.MeshStandardMaterial({ color: c, roughness: 0.7, side: THREE.DoubleSide }));
+    head.position.copy(top); head.castShadow = true; P.add(head);
+    if (kind === 0) for (let j = 0; j < 3; j++) { const b = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 8), new THREE.MeshStandardMaterial({ color: col('#fff2d0'), emissive: col('#ffcf70'), emissiveIntensity: 0.6 })); b.position.copy(pts[3 + j * 2]).add(v3(0.12, 0, 0)); P.add(b); }
+    G.add(P); plants.push({ P, ph: r() * TAU, amp: r.range(0.02, 0.06) });
+  }
+  G.sway = t => plants.forEach(p => { p.P.rotation.z = Math.sin(t * 0.8 + p.ph) * p.amp; });
+  return G;
+}
