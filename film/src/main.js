@@ -9,8 +9,9 @@ import { shots as s01 } from './shots/ch01_cosmos.js';
 import { shots as s23 } from './shots/ch23_frost_genesis.js';
 import { shots as s45 } from './shots/ch45_theft_excess.js';
 import { shots as s67 } from './shots/ch67_descent_awake.js';
+import { shots as sab } from './shots/abstract.js';
 
-const SCENES = { ...s01, ...s23, ...s45, ...s67 };
+const SCENES = { ...s01, ...s23, ...s45, ...s67, ...sab };
 const PR = Number(new URLSearchParams(location.search).get('scale') || 1);
 const BF = FPS * BEAT_SEC; // frames per beat
 

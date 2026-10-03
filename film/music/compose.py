@@ -191,8 +191,10 @@ for k, (b0, tr) in enumerate([(29, 0), (31, 2), (33, 4), (35, 6)]):
     for i in range(4):
         note(DRM, b0 + i * 0.5, 0.25, 36, 120); note(DRM, b0 + i * 0.5 + 0.25, 0.2, 42, 80)
     note(DRM, b0 + 1, 0.3, 38, 110)
-for i, b in enumerate((30, 30.208, 30.417, 30.625)):                 # oracle cracks
+for i, b in enumerate((29, 29.208, 29.417, 29.625)):                 # oracle cracks
     note(TIM, b, 0.2, C - 10 + i * 2, 105)
+for i, b in enumerate((30.3, 30.6, 30.9, 31.2)):                      # the line of culture changes form
+    note(CEL, b, 0.4, [91, 94, 98, 103][i], 95); note(GLK, b, 0.3, [91, 94, 98, 103][i], 80); note(TAI, b, 0.25, 48, 95)
 for i in range(8):                                                    # the reprise: 32nd stutter
     b = 36 + i * 0.125
     chord(HIT, b, 0.1, [C + 6, C + 13, C + 18], 95 + (i % 2) * 25)
@@ -358,8 +360,8 @@ add(12.5, boom(3, 55, 20), 1.0)                      # plunge
 add(12.5, hp(rng.standard_normal(int(1.2 * SR)), 300) * np.exp(-np.arange(int(1.2 * SR)) / (0.25 * SR)), 0.35)  # splash
 add(23.75, riser(0.5 * BEAT, 400, 8000), 0.3)
 add(24.25, thunder(), 0.55)
-add(25, crackle(4 * BEAT, 0.02), 0.25)               # torch
-for b in (30, 30.208, 30.417, 30.625):
+add(24.5, crackle(4.5 * BEAT, 0.025), 0.3)            # the burning tree
+for b in (29, 29.208, 29.417, 29.625):
     add(b, hp(rng.standard_normal(1500), 2000) * np.exp(-np.arange(1500) / 300), 0.5, rng.uniform(-0.5, 0.5))
 for s in TL['SHOTS']:                                # a whoosh into every zoom-through
     if s.get('tr') == 'zoom':
