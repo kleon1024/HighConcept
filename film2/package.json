@@ -1,0 +1,21 @@
+{
+  "name": "first-light",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "music": "python3 music/compose.py",
+    "render": "node render.js --blur 3",
+    "preview": "node render.js --scale 0.5 --dir preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "three": "^0.170.0"
+  },
+  "type": "module",
+  "devDependencies": {
+    "playwright": "^1.56.1"
+  }
+}
