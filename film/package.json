@@ -1,0 +1,21 @@
+{
+  "name": "descent-film",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "music": "node music/compose.js",
+    "render": "node render.js",
+    "build": "node music/compose.js && node render.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "three": "^0.170.0"
+  },
+  "type": "module",
+  "devDependencies": {
+    "playwright": "^1.56.1"
+  }
+}
