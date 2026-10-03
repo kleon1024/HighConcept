@@ -296,7 +296,7 @@ function makeSheep() {
   }
   // tail
   for (let i = 0; i < 6; i++) addCurl(v3(-0.66 + r.range(-0.04, 0.04), 0.12 + r.range(-0.06, 0.06), r.range(-0.06, 0.06)), r.dir().add(v3(-1, 0, 0)).normalize(), r.range(0.045, 0.06), 40);
-  const woolMat = dissolve(new THREE.MeshStandardMaterial({ color: col('#f0a070'), metalness: 1, roughness: 0.28, emissive: col('#ff9a50'), emissiveIntensity: 0.5 }), 'sheep-wool');
+  const woolMat = dissolve(new THREE.MeshStandardMaterial({ color: col('#f0a070'), metalness: 1, roughness: 0.28, emissive: col('#ff9a50'), emissiveIntensity: 0.4 }), 'sheep-wool');
   const wool = new THREE.Mesh(merge(curls), woolMat); sheep.add(wool);
   const core = new THREE.Mesh(new THREE.SphereGeometry(1, 48, 32), dissolve(new THREE.MeshStandardMaterial({ color: col('#4a2410'), metalness: 0.6, roughness: 0.5, emissive: col('#ff6a1a'), emissiveIntensity: 0.12 }), 'sheep-core'));
   core.scale.set(RX * 0.98, RY * 0.97, RZ * 0.97); sheep.add(core);
@@ -386,7 +386,7 @@ function dreamField(S) {
   for (const z of [-2.2, -0.9, 0.9, 2.2]) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.86, 0.11), wood); p.position.set(0, 0.43, z); fence.add(p); const cap = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.08, 4), wood); cap.position.set(0, 0.9, z); cap.rotation.y = Math.PI / 4; fence.add(cap); }
   for (const y of [0.34, 0.68]) for (const [z0, z1] of [[-2.35, -0.85], [-0.95, 0.95], [0.85, 2.35]]) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.1, z1 - z0), wood); b.position.set(0.07, y, (z0 + z1) / 2); b.rotation.x = (y - 0.5) * 0.04; fence.add(b); }
   fence.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-  const moon = new THREE.Mesh(new THREE.SphereGeometry(4, 48, 32), mats.glow('#e8f6ff', 1.3, { fog: false })); moon.position.set(-10, 7.5, -26); moon.scale.setScalar(0.2); S.add(moon);
+  const moon = new THREE.Mesh(new THREE.SphereGeometry(4, 48, 32), mats.glow('#e8f6ff', 1.0, { fog: false })); moon.position.set(-10, 7.5, -26); moon.scale.setScalar(0.2); S.add(moon);
   return { ground, grass, fence, moon };
 }
 
@@ -811,7 +811,7 @@ export const shots = {
           L.key.intensity = 1.0 * (1 - z); L.rim.intensity = 2.2 * (1 - z); L.fill.intensity = 0.35 * (1 - z);
           F.fence.visible = z < 0.95;
         }
-        return { bloom: 0.65, threshold: 0.85, exposure };
+        return { bloom: 0.45, threshold: 0.9, exposure };
       },
     };
   },

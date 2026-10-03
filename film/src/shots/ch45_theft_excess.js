@@ -1275,7 +1275,8 @@ export const shots = {
       Li: u => ({ pos: orbit(lerp(2.6, 2.3, u), lerp(-0.9, -0.75, u), 0.02, v3(0, 1.75, 0)), tgt: v3(0.15, 2.05, 0), loop: v3(0.25, 1.95, 0.05) }),
       K: u => ({ pos: orbit(lerp(1.45, 1.3, u), lerp(1.25, 1.15, u), lerp(0.15, 0.1, u), v3(0.2, 2.0, 0)), tgt: v3(0.1, 2.0, 0), loop: v3(0.2, 1.95, 0.05) }),
       Cu: u => ({ pos: orbit(lerp(4.2, 3.8, u), lerp(2.6, 2.75, u), 0.62, v3(0, 1.3, 0)), tgt: v3(0, 1.75, 0), loop: v3(0.22, 1.9, 0.04) }),
-      Na: u => { const k = easeInOut(range(u, 0.3, 0.95)); return { pos: v3(lerp(0.9, 5.15, k) + u * 0.3, lerp(3.0, 2.25, k), lerp(5.4, 2.65, k)), tgt: v3(lerp(1.5, 6.57, k), lerp(2.0, 2.14, k), lerp(0.2, 1.93, k)), loop: v3(0.22, 1.9, 0.04) }; },
+      Na: u => { const k = u < 0.667 ? 0.02 * u : 0.97 + 0.03 * range(u, 0.667, 1); // hard cut on beat 32.5 instead of a glide through empty space
+        return { pos: v3(lerp(0.9, 5.15, k) + u * 0.3, lerp(3.0, 2.25, k), lerp(5.4, 2.65, k)), tgt: v3(lerp(1.5, 6.57, k), lerp(2.0, 2.14, k), lerp(0.2, 1.93, k)), loop: v3(0.22, 1.9, 0.04) }; },
     };
     return {
       scene: S, cam: C,
@@ -1287,7 +1288,7 @@ export const shots = {
         outer.material.uniforms.uK.value = E.k * (0.9 + 0.1 * fk); lamp.intensity = 6 * fk;
         loopG.position.copy(sh.loop).add(v3(0.01 * Math.sin(t * 4), 0.01 * Math.sin(t * 3), 0));
         ring.material.emissiveIntensity = 1.2 + Math.sin(t * 20) * 0.2;
-        if (el === 'Na') { const k = range(u, 0.0, 0.35); beamIn.material.opacity = 0.35 * k; beamOut.material.opacity = 0.35 * range(u, 0.2, 0.5); lines.children.forEach(l => { l.material.opacity = smooth(range(u, 0.25, 0.55)); }); }
+        if (el === 'Na') { const k = range(u, 0.0, 0.35); beamIn.material.opacity = 0.35 * k; beamOut.material.opacity = 0.35 * range(u, 0.2, 0.5); lines.children.forEach(l => { l.material.opacity = smooth(range(u, 0.68, 0.8)); }); }
         return { bloom: 0.4, threshold: 0.95, exposure: 1.0, vignette: 1.0 };
       },
     };
