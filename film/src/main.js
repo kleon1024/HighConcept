@@ -57,7 +57,8 @@ function setDustScale(scene, cam) {
   const s = H * PR / (2 * Math.tan(THREE.MathUtils.degToRad(cam.fov / 2)));
   scene.traverse(o => { if (o.isDust) o.material.uniforms.uScale.value = s; });
 }
-const shotIndexAt = beat => { const i = SHOTS.findIndex(s => beat >= s.s - 1e-9 && beat < s.s + s.l - 1e-9); return i < 0 ? SHOTS.length - 1 : i; };
+// the shot covering `beat`; in a gap between shots (a silence) hold the previous shot
+const shotIndexAt = beat => { let i = 0; for (let k = 0; k < SHOTS.length; k++) if (SHOTS[k].s <= beat + 1e-9) i = k; return i; };
 
 const cracks = new Map();
 function crackFor(beat) {
@@ -138,6 +139,7 @@ function composite(f) {
 const acc = document.createElement('canvas'); acc.width = W * PR; acc.height = H * PR;
 const ag = acc.getContext('2d');
 window.renderOut = function (f, n = 1) {
+  if (SILENCES.some(([a, b]) => f / BF >= a - 1e-9 && f / BF < b - 1e-9)) { ag.globalAlpha = 1; ag.fillStyle = '#000'; ag.fillRect(0, 0, acc.width, acc.height); return acc.toDataURL('image/png'); }
   const sh = SHOTS[shotIndexAt(f / BF)];
   const f0 = sh.s * BF, f1 = (sh.s + sh.l) * BF - 0.01;
   for (let j = 0; j < n; j++) {
