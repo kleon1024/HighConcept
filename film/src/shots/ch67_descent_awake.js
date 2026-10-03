@@ -82,6 +82,22 @@ function merge(geos) {
   g.setAttribute('uv', new THREE.BufferAttribute(U, 2)); g.setIndex(new THREE.BufferAttribute(I, 1));
   return g;
 }
+// a gold point as camera-facing glow sprites (stays round at any size, unlike clamped point sprites)
+function goldPoint(size = 0.1) {
+  const tex = canvasTexture('gold-point', 256, 256, (g, w, h) => {
+    const gr = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2);
+    gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.08, 'rgba(255,240,200,0.9)'); gr.addColorStop(0.25, 'rgba(255,190,90,0.35)');
+    gr.addColorStop(0.55, 'rgba(200,120,40,0.08)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  });
+  const grp = new THREE.Group(), sp = [];
+  for (const [k, c] of [[1, 3.0], [4, 1.0]]) {
+    const m = new THREE.SpriteMaterial({ map: tex, color: col('#ffe2a8').multiplyScalar(c), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false });
+    const s = new THREE.Sprite(m); s.scale.setScalar(size * k); s.userData.c = c; s.renderOrder = 10; grp.add(s); sp.push(s);
+  }
+  grp.opacity = o => sp.forEach(s => { s.material.opacity = o; });
+  return grp;
+}
 const gauss2 = (x, y, sx, sy) => Math.exp(-(x * x) / (sx * sx) - (y * y) / (sy * sy));
 
 // perceptual colormap (magma)
@@ -125,7 +141,7 @@ function lossLandscape(S, { res = 1 } = {}) {
   }
   g.setAttribute('color', new THREE.BufferAttribute(C, 3)); g.computeVertexNormals();
   const uni = { uFold: { value: 0 }, uMin: { value: lossWorld(LB, lc(LB)) }, uLine: { value: 1 }, uLineCol: { value: col('#5fe6ff').multiplyScalar(0.9) }, uGlow: { value: 0 } };
-  const m = patch(new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.55, metalness: 0.0, clearcoat: 0.35, clearcoatRoughness: 0.3 }), 'loss-surface', {
+  const m = patch(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.5, metalness: 0.0 }), 'loss-surface', {
     uniforms: uni,
     vHead: 'uniform float uFold; uniform vec3 uMin;',
     vMain: `{ vec2 r = transformed.xz - uMin.xz; float d = length(r);
@@ -215,7 +231,13 @@ function androidHead() {
   });
   const head = new THREE.Mesh(g, ceramic); head.castShadow = true; head.receiveShadow = true;
   // chrome cranial plate: same sculpt, slightly larger, only over crown and back
-  const plate = new THREE.Mesh(g, patch(mats.chrome({ roughness: 0.28, envMapIntensity: 0.6 }), 'android-plate', {
+  // plate geometry: only the triangles near the plate region (exact edge is cut in the shader)
+  const pg = new THREE.BufferGeometry(); pg.setAttribute('position', g.attributes.position); pg.setAttribute('normal', g.attributes.normal);
+  { const idx = g.index.array, keep = [], Pp = g.attributes.position;
+    const inPlate = i => { const x = Pp.getX(i), y = Pp.getY(i), z = Pp.getZ(i); return !(z > 0.1 && (x / 0.53) ** 2 + ((y + 0.12) / 0.82) ** 2 < 1) && !(y < -0.8 && z > -0.25); };
+    for (let t = 0; t < idx.length; t += 3) if (inPlate(idx[t]) || inPlate(idx[t + 1]) || inPlate(idx[t + 2])) keep.push(idx[t], idx[t + 1], idx[t + 2]);
+    pg.setIndex(keep); }
+  const plate = new THREE.Mesh(pg, patch(mats.chrome({ roughness: 0.34, envMapIntensity: 0.5 }), 'android-plate', {
     vMain: 'transformed *= 1.012;',
     fDiscard: 'if (vObj.z > 0.05 && pow(vObj.x / 0.57, 2.0) + pow((vObj.y + 0.12) / 0.86, 2.0) < 1.0) discard; if (vObj.y < -0.75 && vObj.z > -0.3) discard;',
   }));
@@ -344,11 +366,11 @@ function dreamField(S) {
   // ground + grass + fence + moon
   const ground = new THREE.Mesh(new THREE.CircleGeometry(60, 64), new THREE.MeshStandardMaterial({ color: col('#0b1a18'), roughness: 0.95 }));
   ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; S.add(ground);
-  const blade = new THREE.PlaneGeometry(0.035, 0.32, 1, 4); blade.translate(0, 0.16, 0);
+  const blade = new THREE.PlaneGeometry(0.042, 0.32, 1, 3); blade.translate(0, 0.16, 0);
   const bp = blade.attributes.position;
   for (let i = 0; i < bp.count; i++) { const hh = bp.getY(i) / 0.32; bp.setX(i, bp.getX(i) * (1 - hh * 0.9)); bp.setZ(i, 0.12 * hh * hh); }
   blade.computeVertexNormals();
-  const NG = 9000, r = rng(31);
+  const NG = 6500, r = rng(31);
   const grass = new THREE.InstancedMesh(blade, new THREE.MeshStandardMaterial({ color: col('#ffffff'), roughness: 0.75, side: THREE.DoubleSide }), NG);
   const M = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler();
   for (let i = 0; i < NG; i++) {
@@ -364,7 +386,7 @@ function dreamField(S) {
   for (const z of [-2.2, -0.9, 0.9, 2.2]) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.86, 0.11), wood); p.position.set(0, 0.43, z); fence.add(p); const cap = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.08, 4), wood); cap.position.set(0, 0.9, z); cap.rotation.y = Math.PI / 4; fence.add(cap); }
   for (const y of [0.34, 0.68]) for (const [z0, z1] of [[-2.35, -0.85], [-0.95, 0.95], [0.85, 2.35]]) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.1, z1 - z0), wood); b.position.set(0.07, y, (z0 + z1) / 2); b.rotation.x = (y - 0.5) * 0.04; fence.add(b); }
   fence.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-  const moon = new THREE.Mesh(new THREE.SphereGeometry(4, 48, 32), mats.glow('#e8f6ff', 1.6)); moon.position.set(-5, 5.5, -26); moon.scale.setScalar(0.28); S.add(moon);
+  const moon = new THREE.Mesh(new THREE.SphereGeometry(4, 48, 32), mats.glow('#e8f6ff', 1.3, { fog: false })); moon.position.set(-10, 7.5, -26); moon.scale.setScalar(0.2); S.add(moon);
   return { ground, grass, fence, moon };
 }
 
@@ -653,12 +675,12 @@ export const shots = {
     }
     // edges as instanced cylinders (HDR colour by sign and magnitude)
     const eg = new THREE.CylinderGeometry(1, 1, 1, 6, 1, true);
-    const em = new THREE.InstancedMesh(eg, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }), edges.length);
+    const em = new THREE.InstancedMesh(eg, new THREE.MeshBasicMaterial({ color: 0xffffff }), edges.length);
     const M = new THREE.Matrix4(), q = new THREE.Quaternion(), cyan = col('#3fd8ff'), amber = col('#ffae3a');
     edges.forEach((e, i) => {
       const d = e.b.p.clone().sub(e.a.p), len = d.length(), rad = 0.0035 + 0.016 * Math.pow(Math.abs(e.w), 1.6);
       q.setFromUnitVectors(v3(0, 1, 0), d.normalize()); M.compose(e.a.p.clone().add(e.b.p).multiplyScalar(0.5), q, v3(rad, len, rad)); em.setMatrixAt(i, M);
-      e.base = (e.w > 0 ? cyan : amber).clone().multiplyScalar(0.08 + 0.75 * e.w * e.w);
+      e.base = (e.w > 0 ? cyan : amber).clone().multiplyScalar(0.12 + 0.7 * e.w * e.w);
       em.setColorAt(i, e.base);
     });
     S.add(em);
@@ -676,9 +698,9 @@ export const shots = {
       scene: S, cam: C,
       update(u, t) {
         const wf = lerp(-0.6, NL - 0.2, u);
-        all.forEach((nd, i) => { const a = act(nd.layer, wf) * nd.gain; coreM.setColorAt(i, col('#0b2f3a').lerp(col('#9ff4ff'), a).multiplyScalar(0.4 + 2.6 * a)); halo.alpha[i] = 0.25 * a; });
+        all.forEach((nd, i) => { const a = act(nd.layer, wf) * nd.gain; coreM.setColorAt(i, col('#0b2f3a').lerp(col('#9ff4ff'), a).multiplyScalar(0.4 + 2.6 * a)); halo.alpha[i] = 0.4 * a; });
         coreM.instanceColor.needsUpdate = true; halo.dirty();
-        edges.forEach((e, i) => { const d = wf - e.layer, on = d > 0 && d < 1.3 ? Math.sin(Math.PI * clamp(d / 1.3)) : 0; em.setColorAt(i, e.base.clone().multiplyScalar(1 + 1.3 * on)); });
+        edges.forEach((e, i) => { const d = wf - e.layer, on = d > 0 && d < 1.3 ? Math.sin(Math.PI * clamp(d / 1.3)) : 0; em.setColorAt(i, e.base.clone().multiplyScalar(1 + 1.6 * on)); });
         em.instanceColor.needsUpdate = true;
         strong.forEach((e, i) => { const d = clamp(wf - e.layer); pulses.setV(i, e.a.p.clone().lerp(e.b.p, d)); pulses.alpha[i] = d > 0 && d < 1 ? Math.abs(e.w) : 0; });
         pulses.dirty();
@@ -694,7 +716,7 @@ export const shots = {
     const S = new THREE.Scene(), C = camera(30);
     backdrop(S, 'data', { stars: 0 });
     S.fog = new THREE.Fog(col('#02080c'), 8, 20);
-    const L = rig(S, 'data', { key: v3(3.5, 4.5, 4), keyI: 1.8, rimI: 2.0, fillI: 0.2, target: v3(0, -0.2, 0) });
+    const L = rig(S, 'data', { key: v3(3.5, 4.5, 4), keyI: 1.8, rimI: 1.2, fillI: 0.2, target: v3(0, -0.2, 0) });
     S.environmentIntensity = 0.45;
     L.key.shadow.camera.left = L.key.shadow.camera.bottom = -3; L.key.shadow.camera.right = L.key.shadow.camera.top = 3; L.key.shadow.radius = 8;
     const A = androidHead();
@@ -702,7 +724,7 @@ export const shots = {
     A.grp.rotation.z = Math.PI / 2 - 0.08; // lying on its left cheek, top of the head to frame-left
     A.grp.rotation.y = -0.45;
     A.grp.position.y = 0;
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshStandardMaterial({ color: col('#0a1a20'), roughness: 0.92 }));
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshLambertMaterial({ color: col('#0a1a20') }));
     floor.rotation.x = -Math.PI / 2; floor.position.y = -0.74; floor.receiveShadow = true; S.add(floor);
     const dreamL = new THREE.PointLight(col('#5fe0ff'), 0, 2.5, 2); S.add(dreamL);
     const motes = new Dust(36, { size: 0.012, color: '#8feaff', intensity: 2 }); S.add(motes);
@@ -719,8 +741,8 @@ export const shots = {
         for (const [i, X, Y, Z, w] of A.eyeV) P.setZ(i, Z + faceField(X, Y, dx) * w);
         P.needsUpdate = true; A.g.computeVertexNormals();
         const flick = 0.5 + 0.5 * Math.sin(t * 61) * Math.sin(t * 23 + 1);
-        A.uni.uRem.value = 0.4 + 1.0 * flick;
-        A.grp.updateMatrixWorld(); dreamL.position.copy(eyeW).applyMatrix4(A.grp.matrixWorld); dreamL.intensity = 0.06 + 0.1 * flick;
+        A.uni.uRem.value = 0.2 + 0.5 * flick;
+        A.grp.updateMatrixWorld(); dreamL.position.copy(eyeW).applyMatrix4(A.grp.matrixWorld); dreamL.intensity = 0;
         md.forEach((m, i) => { const ph = (t * 0.3 + m.ph) % 1; motes.set(i, m.p.x + ph * 0.3, m.p.y + ph * 0.5, m.p.z); motes.alpha[i] = 0.5 * Math.sin(Math.PI * ph); });
         motes.dirty();
         const camP = v3(lerp(0.45, 0.3, u), lerp(0.5, 0.45, u), lerp(4.2, 3.85, u)).add(drift(t, 0.006, 3));
@@ -740,7 +762,7 @@ export const shots = {
     L.key.shadow.camera.left = L.key.shadow.camera.bottom = -4; L.key.shadow.camera.right = L.key.shadow.camera.top = 4;
     const F = dreamField(S);
     const sh = makeSheep(); S.add(sh.sheep);
-    const seed = seedPoint(1); seed.opacity(0); S.add(seed);
+    const seed = goldPoint(0.35); seed.opacity(0); S.add(seed);
     const n = p.n || 0;
     const phiR = [[0.04, 0.27], [0.3, 0.42], [0.44, 0.5], [0.5, 0.53]][n];
     // dissolve particles
@@ -756,6 +778,7 @@ export const shots = {
     return {
       scene: S, cam: C,
       update(u, t) {
+        F.moon.visible = n === 0;
         const phi = lerp(phiR[0], phiR[1], n === 3 ? easeOut(u) : u);
         poseSheep(sh, phi); sh.sheep.updateMatrixWorld();
         sh.uni.uInv.value.copy(sh.sheep.matrixWorld).invert();
@@ -781,8 +804,8 @@ export const shots = {
           parts.dirty();
           seed.position.copy(G); seed.opacity(smooth(range(u, 0.25, 0.7)));
           const z = smooth(range(u, 0.45, 1));
-          const camP = v3(lerp(0.4, G.x, z), lerp(1.2, G.y + 0.2, z), lerp(6.2, G.z + 9.5, z));
-          look(C, camP.add(drift(t, 0.01, 5)), v3(lerp(0, G.x, z), lerp(1.25, G.y, z), lerp(0, G.z, z)));
+          const camP = G.clone().add(v3(lerp(1.7, 0, z), lerp(0.0, 0.2, z), lerp(3.4, 9.5, z)));
+          look(C, camP.add(drift(t, 0.01, 5)), G.clone().add(v3(lerp(-0.05, 0, z), 0, 0)));
           F.ground.material.color.set('#0b1a18').multiplyScalar(1 - 0.85 * z); F.grass.visible = z < 0.98;
           exposure = lerp(1.0, 0.75, z);
           L.key.intensity = 1.0 * (1 - z); L.rim.intensity = 2.2 * (1 - z); L.fill.intensity = 0.35 * (1 - z);
@@ -801,7 +824,7 @@ export const shots = {
     rig(S, 'data', { key: v3(-3, 9, 2), keyI: 1.6, rimI: 1.8, fillI: 0.5, shadow: false });
     const land = lossLandscape(S, { res: 0.8 });
     const m = lossWorld(LB, lc(LB));
-    const seed = seedPoint(1.6); S.add(seed);
+    const seed = goldPoint(0.4); S.add(seed);
     C.up.set(0, 0, -1);
     return {
       scene: S, cam: C,
@@ -826,7 +849,7 @@ export const shots = {
     const L = rig(S, 'awake', { key: v3(-3, 5, 7), keyI: 2.4, rimI: 2.0, fillI: 0.4, shadow: false });
     const E = makeEye(); S.add(E.grp);
     const cube = neckerCube(); cube.grp.rotation.set(0.62, 0.78, 0); S.add(cube.grp); cube.grp.position.z = 2.2;
-    const seed = seedPoint(1.0); seed.position.z = 2.2; S.add(seed);
+    const seed = goldPoint(0.22); seed.position.z = 2.2; S.add(seed);
     const spec = new THREE.PointLight(col('#fff0d0'), 0, 12, 1.5); spec.position.set(-1.6, 1.8, 4.5); S.add(spec);
     return {
       scene: S, cam: C,
@@ -838,7 +861,7 @@ export const shots = {
         cube.grp.rotation.y = 0.78 + 0.15 * u;
         cube.set(flip, 1 - shrink * 0.6, 0.007);
         cube.grp.visible = shrink < 0.999;
-        seed.opacity(1 - grow * 0.85 + shrink * 0.8); seed.scale.setScalar(1);
+        seed.opacity(clamp(1 - grow * 0.85 + shrink * 0.8));
         // eye opens
         const lit = smooth(range(u, 0.38, 0.6)), open = easeInOut(range(u, 0.48, 0.86));
         E.set(open);
@@ -852,7 +875,7 @@ export const shots = {
         const push = easeInOut(range(u, 0.4, 1));
         const camP = v3(lerp(0.0, 0.05, push), lerp(0.1, 0.06, push), lerp(6.2, 2.7, push)).add(drift(t, 0.01, 9));
         look(C, camP, v3(0, lerp(0.0, 0.03, push), 0));
-        return { bloom: 0.5, threshold: 0.9, exposure: lerp(1.0, 1.05, lit) };
+        return { bloom: 0.4, threshold: 0.95, exposure: lerp(1.0, 1.05, lit) };
       },
     };
   },

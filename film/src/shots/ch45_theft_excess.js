@@ -157,7 +157,7 @@ function spectrumCardTexture() {
     g.globalAlpha = 0.18; g.fillStyle = gr; g.fillRect(0, h * 0.78, w, h * 0.06); g.globalAlpha = 1;
     // scale
     g.strokeStyle = '#8a7a60'; g.fillStyle = '#b8a888'; g.lineWidth = 2; g.font = '28px Georgia, serif'; g.textAlign = 'center';
-    for (let nm = 400; nm <= 700; nm += 10) { const X = x(nm); g.beginPath(); g.moveTo(X, h * 0.88); g.lineTo(X, h * (nm % 50 ? 0.91 : 0.94)); g.stroke(); if (nm % 50 === 0) g.fillText(String(nm), X, h * 0.985); }
+    for (let nm = 400; nm <= 700; nm += 10) { const X = x(nm); g.beginPath(); g.moveTo(X, h * 0.88); g.lineTo(X, h * (nm % 50 ? 0.91 : 0.94)); g.stroke(); }
     g.beginPath(); g.moveTo(0, h * 0.88); g.lineTo(w, h * 0.88); g.stroke();
   });
 }
@@ -1264,8 +1264,7 @@ export const shots = {
       [589.0, 589.6].forEach((nm, i) => { const l = new THREE.Mesh(new THREE.PlaneGeometry(0.01, 0.4), mats.glow('#ffc830', 3.5, { transparent: true })); l.position.set(xnm(nm) + (i ? 0.035 : -0.035), 0.06, 0.02); lines.add(l); });
       const halo = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.55), new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, uniforms: {}, vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0);}', fragmentShader: 'varying vec2 vUv; void main(){ vec2 q=(vUv-0.5)*vec2(2.0,2.0); float a=exp(-q.x*q.x*30.0)*exp(-q.y*q.y*4.0); gl_FragColor=vec4(vec3(1.0,0.6,0.1)*a*0.35,1.0);}' }));
       halo.position.set(xnm(589.3), 0.06, 0.025); lines.add(halo);
-      const lab = canvasTexture('na-label', 512, 128, (g, w, h) => { g.fillStyle = '#000'; g.fillRect(0, 0, w, h); g.fillStyle = '#ffd890'; g.font = 'italic 64px Georgia, serif'; g.textAlign = 'center'; g.fillText('Na  D₁ D₂', w / 2, 84); });
-      const lm = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.125), new THREE.MeshBasicMaterial({ map: lab, transparent: true, blending: THREE.AdditiveBlending, color: col('#ffffff').multiplyScalar(1.4) })); lm.position.set(xnm(589.3), 0.25 + 0.02, 0.02); card.add(lm);
+      // (no on-screen text)
       // dispersed beam from prism to the doublet on the card
       const target = card.localToWorld(v3(xnm(589.3), 0.06, 0)); card.updateMatrixWorld(true);
       const from = v3(3.5, 2.1, 0.3), tgt = v3(6.4, 2.1, 1.6).add(v3(xnm(589.3) * Math.cos(-1.1), 0.06, -xnm(589.3) * Math.sin(-1.1)));
