@@ -1,0 +1,14 @@
+{
+  "name": "c2-persona-styleframe",
+  "private": true,
+  "version": "1.0.0",
+  "dependencies": {
+    "@fontsource/abril-fatface": "^5.3.0",
+    "@fontsource/anton": "^5.3.0",
+    "@fontsource/archivo-black": "^5.3.0",
+    "@fontsource/bebas-neue": "^5.3.0",
+    "@fontsource/noto-serif-sc": "^5.3.1",
+    "@fontsource/zcool-qingke-huangyou": "^5.3.0",
+    "@fontsource/zhi-mang-xing": "^5.3.0"
+  }
+}
