@@ -1,6 +1,7 @@
 import React from "react";
 import { C, clamp01, eInOut, eOut, FONT_CN, FONT_EN, FONT_UI, Kinetic, lerp, range, useSpring, useT } from "../theme";
 import { Abs, Alga, BLUE, Burst, Dots, GLOW, hash, implantAt, Membrane, Mouse, Neuron, Pill, Q, Say, Svg } from "./kit";
+import { Inset } from "../media";
 
 // ───────────── 1 · cold open: light on → the mouse spins; light off → it stops dead
 const onTimeAt = (t: number, on: number[][]) => on.reduce((s, [a, b]) => s + clamp01((t - a) / (b - a)) * (b - a), 0);
@@ -18,10 +19,11 @@ export const Cold: React.FC = () => {
   const kick = isOn ? Math.exp(-(t - lastOn) / 0.12) : 0.5 * Math.exp(-(t - lastOff) / 0.1);
   const shake = [Math.sin(t * 97) * 14 * kick, Math.cos(t * 83) * 14 * kick];
   const CX = 540, CY = 860, R = 170, ot = onTimeAt(t, q.on);
-  const m = spinMouse(ot, CX, CY, R);
+  const firstOn = q.on[0][0], asking = t < firstOn;
+  const m0 = spinMouse(ot, CX, CY, R), m = asking ? { ...m0, a: m0.a + Math.sin(t * 9) * 4 } : m0;   // sniffing while it waits
   const [ix, iy] = implantAt(m.x, m.y, m.a);
   // the slam word: 开灯 / 关灯, only for the opening strobe
-  const strobe = t < q.remote;
+  const strobe = !asking && t < q.remote;
   const slamAt = isOn ? lastOn : lastOff, slam = sp(slamAt, { damping: 9, stiffness: 260 });
   const alga = sp(q.alga, { damping: 10 });
   return (
@@ -42,6 +44,12 @@ export const Cold: React.FC = () => {
           {/* the alga that made it possible */}
           {t > q.alga && <g opacity={clamp01(alga * 3)}><Alga x={880} y={560} s={0.38 * Math.min(1.15, alga)} rot={-20} t={t} eye={isOn ? 1 : 0} /></g>}
         </Svg>
+        {asking && <>
+          <div style={{ position: "absolute", left: 0, right: 0, top: 200, textAlign: "center", fontFamily: FONT_CN, fontWeight: 700, fontSize: 46, color: "#C9C9D6", opacity: eOut(range(t, q.ask, q.ask + 0.3)) }}>它的脑袋上，插着一根光纤</div>
+          <div style={{ position: "absolute", left: 0, right: 0, top: 285, display: "flex", justifyContent: "center" }}>
+            <Kinetic text="开灯会怎样？" at={q.q} size={150} color="#FFFFFF" stagger={0.06} style={{ textShadow: "0 6px 30px rgba(0,0,0,0.9)" }} />
+          </div>
+        </>}
         {strobe && t >= 0 && (
           <div style={{ position: "absolute", left: 0, right: 0, top: 190, display: "flex", justifyContent: "center" }}>
             <div style={{ fontFamily: FONT_CN, fontWeight: 900, fontSize: 210, color: isOn ? "#FFFFFF" : "#8A8A99", scale: `${lerp(1.7, 1, Math.min(1, slam))}`, opacity: clamp01(slam * 4), letterSpacing: 20 }}>{isOn ? "开灯" : "关灯"}</div>
@@ -262,6 +270,7 @@ export const Pond: React.FC = () => {
       </div>}
       <Say at={q.zoom + 0.5} out={q.swim - 0.1} text="莱茵衣藻：全身只有一个细胞" sub="CHLAMYDOMONAS REINHARDTII" color={ink} y={1300} size={52} />
       <Say at={q.swim + 0.1} out={q.sci - 0.2} text="它没有眼睛，却能“看见”光、游向光" color={ink} y={1300} size={50} />
+      <Inset src="media/chlamy.jpg" at={q.zoom + 0.6} out={q.sci - 0.2} x={540} y={1400} w={470} h={420} label="电镜下的真实衣藻" credit="图：Dartmouth Electron Microscope Facility · 公有领域" ink={ink} />
       <Say at={q.sci} out={q.eyespot - 0.2} text="两位德国科学家追问：它靠什么感光？" color={ink} y={1300} size={50} />
       {t > q.sci && t < q.eyespot + 0.3 && (
         <div style={{ position: "absolute", left: 70, right: 70, top: 1420, display: "flex", gap: 30, opacity: 1 - range(t, q.eyespot - 0.3, q.eyespot) }}>

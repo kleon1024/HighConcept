@@ -1,0 +1,66 @@
+[
+ {
+  "file": "icl_night.jpg",
+  "commons": "File:The ICL at Night.jpg",
+  "author": "John Hardin",
+  "license": "CC BY 4.0",
+  "used_in": "IceCube intro",
+  "orig_w": 6022
+ },
+ {
+  "file": "dom.jpg",
+  "commons": "File:ICECUBE dom taklampa.jpg",
+  "author": "Amble",
+  "license": "CC BY-SA 3.0",
+  "used_in": "IceCube intro",
+  "orig_w": 2136
+ },
+ {
+  "file": "halzen.jpg",
+  "commons": "File:Francis Halzen (2025).jpg",
+  "author": "INFN",
+  "license": "CC0",
+  "used_in": "IceCube prize card",
+  "orig_w": 568
+ },
+ {
+  "file": "chlamy.jpg",
+  "commons": "File:Chlamydomonas6-1.jpg",
+  "author": "Dartmouth Electron Microscope Facility",
+  "license": "Public domain",
+  "used_in": "optogenetics pond",
+  "orig_w": 1024
+ },
+ {
+  "file": "rp_fundus.jpg",
+  "commons": "File:Fundus of patient with retinitis pigmentosa, mid stage.jpg",
+  "author": "Christian Hamel",
+  "license": "CC BY 2.0",
+  "used_in": "optogenetics sight",
+  "orig_w": 871
+ },
+ {
+  "file": "deisseroth.jpg",
+  "commons": "File:Karl Deisseroth by Christopher Michel 04.jpg",
+  "author": "Christopher Michel",
+  "license": "CC BY-SA 4.0",
+  "used_in": "optogenetics prize",
+  "orig_w": 7094
+ },
+ {
+  "file": "hegemann.jpg",
+  "commons": "File:Peter Hegemann.jpg",
+  "author": "Millencolin",
+  "license": "CC BY-SA 4.0",
+  "used_in": "optogenetics prize",
+  "orig_w": 318
+ },
+ {
+  "file": "nagel.jpg",
+  "commons": "File:Prof. Dr. Georg Nagel.png",
+  "author": "Millencolin",
+  "license": "CC0",
+  "used_in": "optogenetics prize",
+  "orig_w": 272
+ }
+]

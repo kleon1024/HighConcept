@@ -1,4 +1,4 @@
-"""Sound-effect layer: Mixkit one-shots (music/sounds/sfx, fetched by fetch_sounds.sh) placed on the video's cues.
+"""Sound-effect layer: one-shots from the local library (music/sfxlib.py) placed on the video's cues.
 
 Each effect is levelled by its active loudness, so `db` is its place in the mix, comparable to engine.Part.level.
 `align='peak'` lines up an effect's loudest moment with the cue (whooshes into a cut); `'onset'` starts it on the cue.
@@ -7,8 +7,7 @@ import os
 import numpy as np
 import soundfile as sf
 from scipy.signal import fftconvolve, resample_poly
-
-SFX_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sounds', 'sfx')
+from sfxlib import resolve
 
 class Sfx:
     def __init__(self, dur, sr=48000):
@@ -17,7 +16,7 @@ class Sfx:
 
     def _load(self, name):
         if name not in self.cache:
-            x, r = sf.read(os.path.join(SFX_DIR, name + '.wav'), always_2d=True)
+            x, r = sf.read(resolve(name), always_2d=True)                          # an alias or a library id
             if x.shape[1] == 1: x = np.repeat(x, 2, axis=1)
             if r != self.sr: x = resample_poly(x, self.sr, r, axis=0)
             m = np.abs(x).max(1); x = x[max(0, np.argmax(m > 0.02 * m.max()) - int(0.003 * self.sr)):]   # trim lead-in silence

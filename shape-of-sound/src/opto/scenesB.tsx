@@ -1,7 +1,9 @@
 import React from "react";
 import { C, clamp01, eInOut, eOut, FONT_CN, FONT_EN, FONT_UI, Kinetic, lerp, range, useSpring, useT } from "../theme";
-import { Abs, Alga, AMBER, BLUE, Burst, Dots, GLOW, implantAt, Mouse, Neuron, Pill, Q, Say, Scope, Svg } from "./kit";
+import { Abs, AMBER, BLUE, Burst, Dots, GLOW, implantAt, Mouse, Neuron, Pill, Q, Say, Scope, Svg } from "./kit";
 import { spinMouse } from "./scenesA";
+import { Inset } from "../media";
+import { Img, staticFile } from "remotion";
 
 // ───────────── 6 · 2005: put the algal gate into neurons
 export const Transplant: React.FC = () => {
@@ -202,6 +204,7 @@ export const Sight: React.FC = () => {
         </g>}
       </Svg>
       <Say at={q.retina} out={q.inject - 0.2} text={"视网膜色素变性：\n感光细胞已大量死亡"} color="#FFFFFF" y={1220} size={48} />
+      <Inset src="media/rp_fundus.jpg" at={q.retina + 0.3} out={q.inject - 0.2} x={70} y={1390} w={420} h={360} label="真实眼底照片" credit="图：Christian Hamel · CC BY 2.0" ink="#FFFFFF" />
       <Say at={q.inject + 0.1} out={q.goggles - 0.2} text={"医生把一种藻类感光蛋白的基因\n注射进他的一只眼睛"} color="#FFFFFF" y={1220} size={46} />
       <Say at={q.goggles + 0.1} out={q.see - 0.2} text={"再戴上特制眼镜：\n把画面变成琥珀色光，投进眼底"} color="#FFFFFF" y={1220} size={46} />
       <div style={{ position: "absolute", left: 0, right: 0, top: 1480, display: "flex", justifyContent: "center" }}>{t > q.see && <Kinetic text="他“看见”了桌上的笔记本" at={q.see + 0.1} size={68} color={AMBER} stagger={0.04} />}</div>
@@ -214,9 +217,9 @@ export const Sight: React.FC = () => {
 export const Nobel: React.FC = () => {
   const t = useT(), sp = useSpring(), q = Q.nobel, ink = C.ink;
   const people = [
-    { cn: "彼得·黑格曼", en: "PETER HEGEMANN", aff: "德国 · 柏林洪堡大学", col: "#7ED957" },
-    { cn: "格奥尔格·纳格尔", en: "GEORG NAGEL", aff: "德国 · 维尔茨堡大学", col: BLUE },
-    { cn: "卡尔·戴瑟罗斯", en: "KARL DEISSEROTH", aff: "美国 · 斯坦福大学", col: C.yellow },
+    { cn: "彼得·黑格曼", en: "PETER HEGEMANN", aff: "德国 · 柏林洪堡大学", col: "#7ED957", photo: "media/hegemann.jpg", pos: "45% 28%" },
+    { cn: "格奥尔格·纳格尔", en: "GEORG NAGEL", aff: "德国 · 维尔茨堡大学", col: BLUE, photo: "media/nagel.jpg", pos: "50% 30%" },
+    { cn: "卡尔·戴瑟罗斯", en: "KARL DEISSEROTH", aff: "美国 · 斯坦福大学", col: C.yellow, photo: "media/deisseroth.jpg", pos: "64% 24%" },
   ];
   return (
     <Abs>
@@ -228,12 +231,9 @@ export const Nobel: React.FC = () => {
         const s = sp(q.people[k], { damping: 12 });
         return (
           <div key={k} style={{ position: "absolute", left: 70, right: 70, top: 320 + k * 200, height: 170, display: "flex", alignItems: "center", gap: 30, background: "#FFFFFF", borderRadius: 32, boxShadow: `0 0 0 5px ${ink}`, padding: "0 30px", boxSizing: "border-box", opacity: clamp01(s * 3), translate: `${(1 - Math.min(1, s)) * -140}px 0px` }}>
-            <svg width={110} height={110} style={{ flexShrink: 0 }}>
-              <circle cx={55} cy={55} r={50} fill={p.col} stroke={ink} strokeWidth={5} />
-              {k === 0 && <g transform="translate(55 62) scale(0.2)"><Alga x={0} y={0} t={t} /></g>}
-              {k === 1 && <g><rect x={26} y={30} width={22} height={50} rx={9} fill="#FFFFFF" stroke={ink} strokeWidth={4} /><rect x={62} y={30} width={22} height={50} rx={9} fill="#FFFFFF" stroke={ink} strokeWidth={4} /></g>}
-              {k === 2 && <g><polygon points="55,12 30,70 80,70" fill="#FFFFFF" opacity={0.8} /><circle cx={55} cy={72} r={18} fill="#FFFFFF" stroke={ink} strokeWidth={4} /></g>}
-            </svg>
+            <div style={{ width: 120, height: 120, borderRadius: 60, overflow: "hidden", flexShrink: 0, boxShadow: `0 0 0 6px ${p.col}, 0 0 0 10px ${ink}` }}>
+              <Img src={staticFile(p.photo)} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: p.pos }} />
+            </div>
             <div>
               <div style={{ fontFamily: FONT_CN, fontWeight: 900, fontSize: 52, color: ink }}>{p.cn}</div>
               <div style={{ fontFamily: FONT_UI, fontWeight: 700, fontSize: 24, color: ink, opacity: 0.65, letterSpacing: 2, marginTop: 6 }}>{p.en} · {p.aff}</div>
@@ -248,6 +248,7 @@ export const Nobel: React.FC = () => {
       </div>
       <Say at={q.a + 1.6} text="从池塘里的一个细胞，到照进大脑的一束光" color={ink} y={1440} size={40} weight={700} center />
       <div style={{ position: "absolute", left: 0, right: 0, top: 1650, textAlign: "center", fontFamily: FONT_CN, fontWeight: 700, fontSize: 24, color: ink, opacity: 0.5 * eOut(range(t, 6.0, 6.4)) }}>资料：诺贝尔奖官方公告 · Nature Neuroscience 2005 · Nature Medicine 2021</div>
+      <div style={{ position: "absolute", left: 0, right: 0, top: 1615, textAlign: "center", fontFamily: FONT_UI, fontWeight: 500, fontSize: 20, color: ink, opacity: 0.55 * eOut(range(t, q.people[2], q.people[2] + 0.4)) }}>照片：Millencolin（CC BY-SA 4.0 / CC0）· Christopher Michel（CC BY-SA 4.0）</div>
     </Abs>
   );
 };

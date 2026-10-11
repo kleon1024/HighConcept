@@ -1,6 +1,7 @@
 import React from "react";
 import { Sequence, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { Audio } from "@remotion/media";
+import { Credit, Photo } from "../media";
 import { C, clamp01, eIn, eInOut, eOut, FONT_CN, FONT_EN, FONT_UI, Kinetic, lerp, range, useSpring, useT } from "../theme";
 import J from "./icecube.json";
 
@@ -81,6 +82,43 @@ const Burst: React.FC<{ x: number; y: number; at: number; t: number; color: stri
   const p = range(t, at, at + 0.55);
   if (p <= 0 || p >= 1) return null;
   return <circle cx={x} cy={y} r={10 + r * eOut(p)} fill="none" stroke={color} strokeWidth={w * (1 - p) + 1} opacity={1 - p} />;
+};
+
+// ───────────── 0 · intro: a real place, a real sensor, then the twist — it is passing through you
+const Intro: React.FC = () => {
+  const t = useT(), sp = useSpring(), q = Q.intro;
+  const you = t >= q.you, rain = eOut(range(t, q.you, q.you + 0.4));
+  const num = sp(q.eyes, { damping: 10, stiffness: 180 });
+  return (
+    <Abs style={{ background: "#000" }}>
+      <Photo src="media/icl_night.jpg" at={0} out={q.dom} zoom={[1.0, 1.07]} focus={[62, 60]} shade={0.45} dur={2} credit="图：John Hardin · CC BY 4.0" />
+      <Photo src="media/dom.jpg" at={q.dom} out={q.you} zoom={[0.98, 1.06]} focus={[50, 40]} shade={0} dur={1.4} fit="contain" bg="#FFFFFF" box={{ height: 1300, top: 160 }} credit="图：Amble · CC BY-SA 3.0" creditColor={C.ink} />
+      {t < q.dom && <>
+        <Say at={0.1} text="南极冰下两公里，埋着" color="#FFFFFF" y={230} size={58} center />
+        <div style={{ position: "absolute", left: 0, right: 0, top: 320, display: "flex", justifyContent: "center", alignItems: "baseline", gap: 16, opacity: clamp01(num * 3), scale: `${lerp(1.4, 1, Math.min(1, num))}` }}>
+          <span style={{ fontFamily: FONT_EN, fontSize: 210, color: C.yellow, lineHeight: 1 }}>5160</span>
+          <span style={{ fontFamily: FONT_CN, fontWeight: 900, fontSize: 92, color: "#FFFFFF" }}>只“眼睛”</span>
+        </div>
+      </>}
+      {t >= q.dom && t < q.you && <>
+        <div style={{ position: "absolute", left: 0, right: 0, top: 1480, display: "flex", justifyContent: "center" }}>
+          <Kinetic text="日夜守候一种“幽灵”" at={q.ghost} size={96} color={C.ink} stagger={0.04} />
+        </div>
+      </>}
+      {you && <>
+        <svg width={VW} height={VH} style={{ position: "absolute" }}>
+          {STREAKS.slice(0, 70).map((s, i) => {
+            const y = ((s.ph + t * s.sp) % (VH + 800)) - 400, x = s.x + y * 0.18;
+            return <line key={i} x1={x} y1={y} x2={x + s.len * 0.18} y2={y + s.len} stroke={s.yel ? C.yellow : ICE} strokeWidth={s.w} strokeLinecap="round" opacity={rain * 0.5} />;
+          })}
+        </svg>
+        <div style={{ position: "absolute", left: 0, right: 0, top: 760, display: "flex", flexDirection: "column", alignItems: "center", gap: 30 }}>
+          <Kinetic text="而此刻，" at={q.youText} size={72} color="#FFFFFF" stagger={0.05} />
+          <Kinetic text="它正穿过你。" at={q.youText + 0.25} size={140} color="#FFFFFF" stagger={0.07} />
+        </div>
+      </>}
+    </Abs>
+  );
 };
 
 // ───────────── 1 · hook: 100 trillion neutrinos pass through you every second
@@ -530,8 +568,6 @@ const Nobel: React.FC = () => {
   const t = useT(), sp = useSpring(), q = Q.nobel;
   const disc = sp(0.1, { damping: 10 });
   const cx = 540, cy = 590;
-  const iso = (x: number, y: number, z: number): [number, number] => [cx + (x - y) * 0.866 * 0.17, cy - 40 + (x + y) * 0.5 * 0.17 - z * 0.17];
-  const hexI = HEXR.map(([x, y]) => [x * Math.cos(t * 0.4) - y * Math.sin(t * 0.4), x * Math.sin(t * 0.4) + y * Math.cos(t * 0.4)]);
   return (
     <Abs>
       <Dots color="#FFFFFF" opacity={0.06} />
@@ -539,11 +575,12 @@ const Nobel: React.FC = () => {
         <g style={{ transformOrigin: `${cx}px ${cy}px`, scale: `${disc}` }}>
           <circle cx={cx} cy={cy} r={230} fill={C.yellow} />
           <circle cx={cx} cy={cy} r={196} fill="none" stroke={C.ink} strokeWidth={5} strokeDasharray="4 14" style={{ transformOrigin: `${cx}px ${cy}px`, rotate: `${t * 30}deg` }} />
-          {[0, -1000].map(z => <polygon key={z} points={hexI.map(([x, y]) => iso(x, y, z).join(",")).join(" ")} fill="none" stroke={C.ink} strokeWidth={5} strokeLinejoin="round" />)}
-          {hexI.map(([x, y], i) => { const a = iso(x, y, 0), b = iso(x, y, -1000); return <line key={i} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={C.ink} strokeWidth={4} />; })}
-          {[[-200, 100], [150, -150], [60, 220], [-40, -60]].map(([x, y], i) => { const a = iso(x, y, 0), b = iso(x, y, -1000); return <line key={"s" + i} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={C.ink} strokeWidth={3} strokeDasharray="2 8" strokeLinecap="round" />; })}
+          <defs><clipPath id="portrait"><circle cx={cx} cy={cy} r={182} /></clipPath></defs>
+          <image href={staticFile("media/halzen.jpg")} x={cx - 258} y={cy - 232} width={494} height={663} preserveAspectRatio="none" clipPath="url(#portrait)" />
+          <circle cx={cx} cy={cy} r={182} fill="none" stroke={C.ink} strokeWidth={6} />
         </g>
       </svg>
+      <Credit text="照片：INFN · CC0" y={830} x={110} align="right" />
       <div style={{ position: "absolute", left: 0, right: 0, top: 870, display: "flex", flexDirection: "column", alignItems: "center" }}>
         <div style={{ fontFamily: FONT_CN, fontWeight: 900, fontSize: 40, color: C.ink, background: C.yellow, padding: "12px 34px", borderRadius: 50, opacity: eOut(range(t, 0.3, 0.6)), scale: `${Math.min(1.1, sp(0.3))}` }}>2026 诺贝尔物理学奖</div>
         <div style={{ height: 34 }} />
@@ -564,7 +601,8 @@ const Nobel: React.FC = () => {
 
 export const IceCube: React.FC = () => (
   <Abs style={{ background: C.ink }}>
-    <Section s={SEC.hook} first><Hook /></Section>
+    <Section s={SEC.intro} first><Intro /></Section>
+    <Section s={SEC.hook}><Hook /></Section>
     <Section s={SEC.ghost}><Ghost /></Section>
     <Section s={SEC.messenger}><Messenger /></Section>
     <Section s={SEC.idea}><Idea /></Section>

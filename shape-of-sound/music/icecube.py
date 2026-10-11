@@ -61,17 +61,25 @@ def bars(s0, s1, drums='full', arp=True, pad=PAD, mar=False):
                 note(MAR, t + k * 0.25, 0.2, E + 12 + ch[(i * 2 + k) % 3], 80)
         t += 0.5; i += 1
 
+# ── 0 intro: a low drone under the photos, a bell on the sensor, then the band drops out for the twist
+i0q = Q['intro']
+chord(STR, 0.0, i0q['you'] + 0.3, [E - 24, E - 12, E - 5], 70)
+chord(PAD, 0.0, i0q['you'], [E - 12, E - 5, E, E + 3], 58)
+note(BELL, i0q['dom'], 2.0, E + 19, 92); note(CEL, i0q['dom'] + 0.05, 1.0, E + 24, 80)
+for k in range(4): note(CEL, i0q['youText'] + k * 0.18, 0.5, E + 24 + [0, 3, 7, 12][k], 70)
+
 # ── 1 hook: halo, the count rushes upward, a hit on "100 万亿", one bell for the single collision
-h = Q['hook']
-chord(PAD, 0.0, 6.0, [E - 12, E, E + 3, E + 7], 64)
+h, h0 = Q['hook'], S['hook']['start']
+chord(PAD, h0, 6.0, [E - 12, E, E + 3, E + 7], 64)
 n_tick = 22
 for k in range(n_tick):
-    x = k / (n_tick - 1); s = h['count'][0] + (h['count'][1] - h['count'][0]) * (1 - (1 - x) ** 1.7)
+    x = k / (n_tick - 1); s = h0 + h['count'][0] + (h['count'][1] - h['count'][0]) * (1 - (1 - x) ** 1.7)
     note(CEL, s, 0.12, E + 12 + [0, 3, 5, 7, 10][k % 5] + 12 * (k // 5) // 2, 70 + k)
-note(DR, h['count'][1], 1.5, CRASH, 112); note(DR, h['count'][1], 0.1, KICK, 120)
-chord(BRASS, h['count'][1], 0.6, [E - 12, E - 5, E, E + 3], 108); note(BASS, h['count'][1], 1.5, E - 24, 110)
-bars(h['count'][1] + 0.5, S['hook']['end'], drums='heart', arp=True)
-note(BELL, h['spark'], 2.0, E + 19, 110); note(CEL, h['spark'], 1.2, E + 24, 100)
+hc = h0 + h['count'][1]
+note(DR, hc, 1.5, CRASH, 112); note(DR, hc, 0.1, KICK, 120)
+chord(BRASS, hc, 0.6, [E - 12, E - 5, E, E + 3], 108); note(BASS, hc, 1.5, E - 24, 110)
+bars(hc + 0.5, S['hook']['end'], drums='heart', arp=True)
+note(BELL, h0 + h['spark'], 2.0, E + 19, 110); note(CEL, h0 + h['spark'], 1.2, E + 24, 100)
 
 # ── 2 ghost: marimba ostinato, two thuds, the neutrino glides through
 g, g0 = Q['ghost'], S['ghost']['start']
@@ -143,12 +151,17 @@ x *= ramp[:, None]
 
 # ── sound effects (Mixkit one-shots) on the picture's cues
 fx = Sfx(DUR, SR)
-for s, (name, db) in zip(J['sections'][1:], [('whoosh_air', -25), ('sweep_air', -25), ('swoosh_wind', -28), ('whoosh_fast', -25), ('sweep_magic', -25), ('light_sweep', -25)]):
+for s, (name, db) in zip(J['sections'][2:], [('whoosh_air', -25), ('sweep_air', -25), ('swoosh_wind', -28), ('whoosh_fast', -25), ('sweep_magic', -25), ('light_sweep', -25)]):
     fx.play(s['start'], name, db, align='peak')                                    # a whoosh peaking on every cut
-fx.play(h['count'][1], 'riser', -27, align='peak')                                 # the count rushing up …
-for k in range(8): fx.play(h['count'][0] + (h['count'][1] - h['count'][0]) * (1 - (1 - k / 8) ** 1.7), 'click_ui', -25, rate=1 + 0.07 * k)
-fx.play(h['count'][1], 'impact_zoom', -20)                                         # … lands on "100 万亿"
-fx.play(h['spark'], 'sparkle', -22); fx.play(h['spark'], 'crystal', -28)          # the one that hits you
+fx.play(0.0, 'deep_hit', -22); fx.play(0.05, 'deep_air', -27)                     # intro: open on a low hit
+fx.play(i0q['eyes'], 'pop_whoosh', -26)
+fx.play(i0q['dom'], 'whoosh_fast', -25, align='peak'); fx.play(i0q['dom'], 'shutter', -26)   # cut to the sensor
+fx.play(i0q['you'], 'deep_hit', -19); fx.play(i0q['you'], 'heartbeat', -24, rate=0.9)        # the twist
+fx.play(S['hook']['start'], 'whoosh_ghost', -27, align='peak')
+fx.play(hc, 'riser', -27, align='peak')                                            # the count rushing up …
+for k in range(8): fx.play(h0 + h['count'][0] + (h['count'][1] - h['count'][0]) * (1 - (1 - k / 8) ** 1.7), 'click_ui', -25, rate=1 + 0.07 * k)
+fx.play(hc, 'impact_zoom', -20)                                                    # … lands on "100 万亿"
+fx.play(h0 + h['spark'], 'sparkle', -22); fx.play(h0 + h['spark'], 'crystal', -28)  # the one that hits you
 fx.play(g0 + g['nu'], 'pop_whoosh', -24)
 for k, s in enumerate(g['chips']): fx.play(g0 + s, 'pop_dry', -26, rate=1 + 0.12 * k)
 for s, r in ((g['light'][1], 0.85), (g['proton'][1], 0.72)): fx.play(g0 + s, 'impact_zoom', -27, rate=r)   # stopped at the surface

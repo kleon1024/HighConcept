@@ -179,7 +179,9 @@ x *= gate[:, None]
 fx = Sfx(DUR, SR)
 cuts = [('whoosh_air', -25), ('sweep_air', -25), ('swoosh_wind', -26), ('whoosh_fast', -25), ('swoosh_fast', -25), ('sweep_air', -25), ('swoosh_wind', -25), ('whoosh_air', -30), ('light_sweep', -26)]
 for sec, (name, db) in zip(J['sections'][1:], cuts): fx.play(sec['start'], name, db, align='peak')   # a whoosh peaking on every cut
-# 1 cold open: a real switch on every on/off, the hum of the light, the spin
+# 1 cold open: the question (a low hit, a clock, a riser into the first switch), then a real switch on every on/off
+fx.play(0.0, 'deep_hit', -21); fx.play(c['q'], 'clock_tick', -24, maxlen=c['on'][0][0] - c['q'] - 0.05)
+fx.play(c['on'][0][0], 'metal_sweep', -28, align='peak')
 for a, b in c['on']:
     fx.play(a, 'switch', -17); fx.play(a, 'static_up', -24); fx.play(a + 0.05, 'whoosh_swirl', -25, maxlen=b - a + 0.3)
     fx.play(b, 'switch', -19, rate=0.92)
