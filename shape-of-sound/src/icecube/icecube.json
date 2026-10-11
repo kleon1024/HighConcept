@@ -1,0 +1,25 @@
+{
+  "fps": 30,
+  "width": 1080,
+  "height": 1920,
+  "bpm": 120,
+  "duration": 50,
+  "sections": [
+    { "id": "hook", "start": 0, "end": 6, "bg": "#0E0E12" },
+    { "id": "ghost", "start": 6, "end": 12, "bg": "#FF3D7F" },
+    { "id": "messenger", "start": 12, "end": 18, "bg": "#1B1F5E" },
+    { "id": "idea", "start": 18, "end": 22, "bg": "#FFD23F" },
+    { "id": "detector", "start": 22, "end": 38, "bg": "#EAF6FF" },
+    { "id": "discover", "start": 38, "end": 44, "bg": "#6C3CFF" },
+    { "id": "nobel", "start": 44, "end": 50, "bg": "#0E0E12" }
+  ],
+  "cues": {
+    "hook": { "count": [0.5, 2.0], "line": 2.2, "calm": 3.2, "life": 4.1, "spark": 4.6 },
+    "ghost": { "nu": 0.3, "chips": [1.0, 1.3, 1.6], "light": [2.6, 3.3], "proton": [2.9, 3.6], "neutrino": [3.2, 4.6] },
+    "messenger": { "light": [0.9, 1.8], "ray": [1.4, 3.0], "nu": [2.4, 4.0] },
+    "idea": { "hit": 2.0, "pin": 2.3 },
+    "detector": { "drop0": 0.5, "dropStep": 0.3, "iso": 4.2, "dark": 8.0, "nu": 9.6, "hit": 10.6, "muEnd": 12.4, "arrow": 14.2, "source": 15.0 },
+    "discover": { "nodes": [0.6, 2.4, 4.2] },
+    "nobel": { "name": 0.6, "close": 3.4 }
+  }
+}
