@@ -8,18 +8,18 @@
     {
       "id": "cold",
       "start": 0,
-      "end": 8,
+      "end": 10,
       "bg": "#0E0E12"
     },
     {
       "id": "title",
-      "start": 8,
-      "end": 10,
+      "start": 10,
+      "end": 12,
       "bg": "#2D5BFF"
     },
     {
       "id": "problem",
-      "start": 10,
+      "start": 12,
       "end": 18,
       "bg": "#15122E"
     },
@@ -62,26 +62,38 @@
   ],
   "cues": {
     "cold": {
-      "ask": 0.1,
-      "q": 0.4,
-      "on": [
-        [
-          1.6,
-          2.6
-        ],
-        [
-          3.1,
-          3.9
-        ],
-        [
-          6.0,
-          6.8
-        ]
+      "ask": 0.05,
+      "q": 0.3,
+      "shots": [
+        {
+          "kind": "wake",
+          "start": 1.4,
+          "on": 1.8,
+          "end": 2.6,
+          "label": "叫醒它",
+          "note": "激活觉醒神经元 · 2007"
+        },
+        {
+          "kind": "freeze",
+          "start": 2.6,
+          "on": 3.0,
+          "end": 3.8,
+          "label": "吓住它",
+          "note": "唤起一段恐惧记忆 · 2012"
+        },
+        {
+          "kind": "spin",
+          "start": 3.8,
+          "on": 4.2,
+          "end": 5.0,
+          "label": "让它转圈",
+          "note": "刺激一侧运动皮层 · 2007"
+        }
       ],
-      "remote": 4.1,
-      "nots": 5.0,
-      "alga": 6.0,
-      "prize": 6.9
+      "nots": 5.1,
+      "light": 6.1,
+      "alga": 7.2,
+      "prize": 8.6
     },
     "title": {
       "title": 0.05,
@@ -91,13 +103,13 @@
     "problem": {
       "count": [
         0.1,
-        1.3
+        1.2
       ],
-      "net": 1.8,
-      "need": 2.6,
-      "electrode": 4.4,
-      "drug": 6.0,
-      "end": 8.0
+      "net": 1.5,
+      "need": 2.0,
+      "electrode": 3.2,
+      "drug": 4.5,
+      "end": 6.0
     },
     "neuron": {
       "gates": 0.3,

@@ -85,7 +85,7 @@ export const Pill: React.FC<{ children: React.ReactNode; bg: string; color: stri
 );
 
 // ───────────── top-down mouse; heading 0 = facing up. `glow` lights the fibre implant.
-export const Mouse: React.FC<{ x: number; y: number; a: number; s?: number; glow?: number; opacity?: number }> = ({ x, y, a, s = 1, glow = 0, opacity = 1 }) => (
+export const Mouse: React.FC<{ x: number; y: number; a: number; s?: number; glow?: number; opacity?: number; asleep?: boolean }> = ({ x, y, a, s = 1, glow = 0, opacity = 1, asleep = false }) => (
   <g transform={`translate(${x} ${y}) rotate(${a}) scale(${s})`} opacity={opacity}>
     <path d="M0 105 C 30 160, -40 200, 10 260" stroke="#F2A7B8" strokeWidth={9} fill="none" strokeLinecap="round" />
     <ellipse cx={0} cy={25} rx={62} ry={92} fill="#E9E7F2" stroke={C.ink} strokeWidth={5} />
@@ -93,7 +93,9 @@ export const Mouse: React.FC<{ x: number; y: number; a: number; s?: number; glow
     <circle cx={36} cy={-100} r={22} fill="#F7B6C8" stroke={C.ink} strokeWidth={4} />
     <ellipse cx={0} cy={-80} rx={42} ry={54} fill="#E9E7F2" stroke={C.ink} strokeWidth={5} />
     <circle cx={0} cy={-132} r={7} fill="#F27A9B" />
-    <circle cx={-16} cy={-98} r={5} fill={C.ink} /><circle cx={16} cy={-98} r={5} fill={C.ink} />
+    {asleep
+      ? <path d="M-23 -98 Q -16 -92 -9 -98 M9 -98 Q 16 -92 23 -98" stroke={C.ink} strokeWidth={4} fill="none" strokeLinecap="round" />
+      : <><circle cx={-16} cy={-98} r={5} fill={C.ink} /><circle cx={16} cy={-98} r={5} fill={C.ink} /></>}
     {glow > 0 && <circle cx={0} cy={-70} r={30 + 40 * glow} fill={GLOW} opacity={0.55 * glow} />}
     <circle cx={0} cy={-70} r={14} fill={glow > 0.2 ? "#DDEBFF" : "#9AA0B5"} stroke={C.ink} strokeWidth={4} />
   </g>

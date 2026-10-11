@@ -4,77 +4,94 @@ import { Abs, Alga, BLUE, Burst, Dots, GLOW, hash, implantAt, Membrane, Mouse, N
 import { Inset } from "../media";
 
 // ───────────── 1 · cold open: light on → the mouse spins; light off → it stops dead
-const onTimeAt = (t: number, on: number[][]) => on.reduce((s, [a, b]) => s + clamp01((t - a) / (b - a)) * (b - a), 0);
 export const spinMouse = (ot: number, cx: number, cy: number, r: number, turns = 1.25) => {
   const p = -Math.PI / 2 - 2 * Math.PI * turns * ot;
   return { x: cx + r * Math.cos(p), y: cy + r * Math.sin(p), a: (p * 180) / Math.PI };
 };
+type Shot = (typeof Q.cold.shots)[number];
 export const Cold: React.FC = () => {
   const t = useT(), sp = useSpring(), q = Q.cold;
-  const seg = q.on.find(([a, b]) => t >= a && t < b);
-  const isOn = !!seg;
-  const lastOn = Math.max(-9, ...q.on.filter(([a]) => a <= t).map(([a]) => a));
-  const lastOff = Math.max(-9, ...q.on.filter(([, b]) => b <= t).map(([, b]) => b));
-  const flash = isOn ? Math.exp(-(t - lastOn) / 0.22) : 0;
-  const kick = isOn ? Math.exp(-(t - lastOn) / 0.12) : 0.5 * Math.exp(-(t - lastOff) / 0.1);
+  const shot = q.shots.find((h: Shot) => t >= h.start && t < h.end) as Shot | undefined;
+  const asking = t < q.shots[0].start, after = t >= q.shots[q.shots.length - 1].end;
+  const isOn = !!shot && t >= shot.on;
+  const lt = shot ? t - shot.on : 0;                                   // time since this shot's light came on
+  const flash = isOn ? Math.exp(-lt / 0.22) : 0, kick = isOn ? Math.exp(-lt / 0.12) : 0;
   const shake = [Math.sin(t * 97) * 14 * kick, Math.cos(t * 83) * 14 * kick];
-  const CX = 540, CY = 860, R = 170, ot = onTimeAt(t, q.on);
-  const firstOn = q.on[0][0], asking = t < firstOn;
-  const m0 = spinMouse(ot, CX, CY, R), m = asking ? { ...m0, a: m0.a + Math.sin(t * 9) * 4 } : m0;   // sniffing while it waits
-  const [ix, iy] = implantAt(m.x, m.y, m.a);
-  // the slam word: 开灯 / 关灯, only for the opening strobe
-  const strobe = !asking && t < q.remote;
-  const slamAt = isOn ? lastOn : lastOff, slam = sp(slamAt, { damping: 9, stiffness: 260 });
+  const CX = 540, CY = 860;
+  // where the mouse is and what it is doing in each shot
+  let m = { x: CX, y: CY + 40, a: 0 }, asleep = false, ghosts: { x: number; y: number; a: number }[] = [], marks = 0, zz = 0, hop = 1;
+  if (asking || !shot) { m = { x: CX, y: CY + 40, a: Math.sin(t * 9) * 4 }; }
+  else if (shot.kind === "wake") {
+    asleep = !isOn; zz = isOn ? 0 : 1; m = { x: CX, y: CY + 40, a: -20 };
+    if (isOn) { hop = 1 + 0.22 * Math.sin(Math.min(1, lt / 0.25) * Math.PI); m.a = -20 + 20 * eOut(range(lt, 0, 0.2)); marks = 1 - range(lt, 0.3, 0.7); }
+  } else if (shot.kind === "freeze") {
+    const walk = isOn ? shot.on - shot.start : t - shot.start;          // it walks until the light hits, then stops dead
+    m = { x: CX, y: CY + 160 - walk * 260, a: 0 };
+    if (isOn) { m.x += Math.sin(t * 90) * 3; m.y += Math.cos(t * 77) * 2; marks = 1; }
+  } else {
+    const ot = isOn ? lt : 0, sm = spinMouse(ot, CX, CY, 170);
+    m = sm; if (isOn) ghosts = [6, 5, 4, 3, 2, 1].map(k => spinMouse(Math.max(0, ot - k * 0.035), CX, CY, 170));
+  }
+  const [ix, iy] = implantAt(m.x, m.y, m.a, 0.9 * hop);
+  const slam = shot && isOn ? sp(shot.on, { damping: 9, stiffness: 260 }) : 0;
   const alga = sp(q.alga, { damping: 10 });
+  const sceneOut = eInOut(range(t, q.nots - 0.25, q.nots + 0.1));    // the arena dims away for the reveal
   return (
     <Abs>
       <Abs style={{ background: BLUE, opacity: isOn ? 0.28 + 0.6 * flash : 0 }} />
       <Dots color="#FFFFFF" opacity={0.07} />
-      <div style={{ position: "absolute", inset: 0, translate: `${shake[0]}px ${shake[1]}px` }}>
+      <div style={{ position: "absolute", inset: 0, translate: `${shake[0]}px ${shake[1]}px`, opacity: 1 - sceneOut }}>
         <Svg>
           <defs><radialGradient id="arena"><stop offset="0" stopColor={isOn ? "#2A3E8F" : "#1C1C26"} /><stop offset="1" stopColor="#101016" /></radialGradient></defs>
           <circle cx={CX} cy={CY} r={300} fill="url(#arena)" stroke="#FFFFFF" strokeOpacity={0.25} strokeWidth={4} />
           {[...Array(36)].map((_, i) => { const a = (i / 36) * Math.PI * 2; return <line key={i} x1={CX + Math.cos(a) * 300} y1={CY + Math.sin(a) * 300} x2={CX + Math.cos(a) * (i % 3 ? 286 : 272)} y2={CY + Math.sin(a) * (i % 3 ? 286 : 272)} stroke="#FFFFFF" strokeOpacity={0.3} strokeWidth={3} />; })}
-          {/* fibre from above */}
           {isOn && <path d={`M${CX + 280} -10 Q ${CX + 160} ${CY - 360} ${ix} ${iy}`} stroke={GLOW} strokeWidth={22} fill="none" opacity={0.35} />}
           <path d={`M${CX + 280} -10 Q ${CX + 160} ${CY - 360} ${ix} ${iy}`} stroke={isOn ? "#DDEBFF" : "#6B6F80"} strokeWidth={6} fill="none" />
-          {/* motion ghosts while spinning */}
-          {isOn && [6, 5, 4, 3, 2, 1].map(k => { const g = spinMouse(Math.max(0, ot - k * 0.035), CX, CY, R); return <Mouse key={k} x={g.x} y={g.y} a={g.a} s={0.9} opacity={0.32 * (1 - k / 7)} />; })}
-          <Mouse x={m.x} y={m.y} a={m.a} s={0.9} glow={isOn ? 1 : 0} />
-          {/* the alga that made it possible */}
-          {t > q.alga && <g opacity={clamp01(alga * 3)}><Alga x={880} y={560} s={0.38 * Math.min(1.15, alga)} rot={-20} t={t} eye={isOn ? 1 : 0} /></g>}
+          {ghosts.map((g, k) => <Mouse key={k} x={g.x} y={g.y} a={g.a} s={0.9} opacity={0.3 * (1 - (k + 1) / 7)} />)}
+          <Mouse x={m.x} y={m.y} a={m.a} s={0.9 * hop} glow={isOn ? 1 : 0} asleep={asleep} />
+          {/* asleep: Z's drifting up */}
+          {zz > 0 && [0, 1, 2].map(k => { const ph = ((t * 0.9 + k / 3) % 1); return <text key={k} x={m.x + 70 + ph * 60} y={m.y - 150 - ph * 120} fontFamily={FONT_EN} fontSize={34 + k * 10} fill="#C9C9D6" opacity={(1 - ph) * zz}>Z</text>; })}
+          {/* startled / frozen: shock marks */}
+          {marks > 0 && [-1, 0, 1].map(k => <line key={k} x1={m.x + k * 46} y1={m.y - 190} x2={m.x + k * 70} y2={m.y - 240} stroke={C.yellow} strokeWidth={8} strokeLinecap="round" opacity={marks} />)}
         </Svg>
-        {asking && <>
-          <div style={{ position: "absolute", left: 0, right: 0, top: 200, textAlign: "center", fontFamily: FONT_CN, fontWeight: 700, fontSize: 46, color: "#C9C9D6", opacity: eOut(range(t, q.ask, q.ask + 0.3)) }}>它的脑袋上，插着一根光纤</div>
-          <div style={{ position: "absolute", left: 0, right: 0, top: 285, display: "flex", justifyContent: "center" }}>
-            <Kinetic text="开灯会怎样？" at={q.q} size={150} color="#FFFFFF" stagger={0.06} style={{ textShadow: "0 6px 30px rgba(0,0,0,0.9)" }} />
-          </div>
-        </>}
-        {strobe && t >= 0 && (
-          <div style={{ position: "absolute", left: 0, right: 0, top: 190, display: "flex", justifyContent: "center" }}>
-            <div style={{ fontFamily: FONT_CN, fontWeight: 900, fontSize: 210, color: isOn ? "#FFFFFF" : "#8A8A99", scale: `${lerp(1.7, 1, Math.min(1, slam))}`, opacity: clamp01(slam * 4), letterSpacing: 20 }}>{isOn ? "开灯" : "关灯"}</div>
-          </div>
-        )}
       </div>
-      <Say at={q.remote} text="实验示意：蓝光照进小鼠一侧大脑的运动区" color="#FFFFFF" y={250} size={30} weight={700} center />
-      <div style={{ position: "absolute", left: 0, right: 0, top: 1220, display: "flex", justifyContent: "center" }}>
-        <Kinetic text="这只小鼠，正被一束光遥控" at={q.remote} size={66} color="#FFFFFF" stagger={0.035} />
-      </div>
-      {/* not electrodes, not drugs */}
-      <div style={{ position: "absolute", left: 0, right: 0, top: 1340, display: "flex", justifyContent: "center", gap: 70, opacity: eOut(range(t, q.nots, q.nots + 0.3)) }}>
-        {["不是电极", "不是药物"].map((w, k) => (
-          <div key={w} style={{ position: "relative", fontFamily: FONT_CN, fontWeight: 900, fontSize: 58, color: "#C9C9D6" }}>
-            {w}
-            <div style={{ position: "absolute", left: -10, right: -10, top: "52%", height: 8, background: C.red, borderRadius: 4, transformOrigin: "0 50%", scale: `${eOut(range(t, q.nots + 0.35 + k * 0.3, q.nots + 0.6 + k * 0.3))} 1`, rotate: "-6deg" }} />
-          </div>
-        ))}
-      </div>
-      <div style={{ position: "absolute", left: 0, right: 0, top: 1460, display: "flex", justifyContent: "center" }}>
-        <Kinetic text="而是池塘里一种绿藻的基因" at={q.alga} size={62} color="#00E0B0" stagger={0.035} />
-      </div>
-      <div style={{ position: "absolute", left: 0, right: 0, top: 1590, display: "flex", justifyContent: "center", opacity: clamp01(sp(q.prize) * 3), scale: `${Math.min(1.1, sp(q.prize))}` }}>
-        <Pill bg={C.yellow} color={C.ink} size={40}>2026 诺贝尔生理学或医学奖</Pill>
-      </div>
+      {/* the question */}
+      {asking && <>
+        <div style={{ position: "absolute", left: 0, right: 0, top: 210, textAlign: "center", fontFamily: FONT_CN, fontWeight: 700, fontSize: 52, color: "#C9C9D6", opacity: eOut(range(t, q.ask, q.ask + 0.3)) }}>一束光</div>
+        <div style={{ position: "absolute", left: 0, right: 0, top: 290, display: "flex", justifyContent: "center" }}>
+          <Kinetic text="能遥控大脑吗？" at={q.q} size={130} color="#FFFFFF" stagger={0.05} style={{ textShadow: "0 6px 30px rgba(0,0,0,0.9)" }} />
+        </div>
+      </>}
+      {/* each shot: what the light just did */}
+      {shot && isOn && (
+        <div style={{ position: "absolute", left: 0, right: 0, top: 190, display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <div style={{ fontFamily: FONT_CN, fontWeight: 900, fontSize: 180, color: "#FFFFFF", scale: `${lerp(1.6, 1, Math.min(1, slam))}`, opacity: clamp01(slam * 4), letterSpacing: 10, lineHeight: 1.05 }}>{shot.label}</div>
+          <div style={{ fontFamily: FONT_CN, fontWeight: 700, fontSize: 34, color: "#DDEBFF", opacity: eOut(range(lt, 0.15, 0.35)), marginTop: 18 }}>开灯 → {shot.note}</div>
+        </div>
+      )}
+      {shot && !isOn && <div style={{ position: "absolute", left: 0, right: 0, top: 1250, textAlign: "center", fontFamily: FONT_UI, fontWeight: 700, fontSize: 34, letterSpacing: 6, color: "#8A8A99" }}>{q.shots.indexOf(shot) + 1} / {q.shots.length}</div>}
+      {/* the reveal */}
+      {after && <>
+        <div style={{ position: "absolute", left: 0, right: 0, top: 360, display: "flex", justifyContent: "center", gap: 70, opacity: eOut(range(t, q.nots, q.nots + 0.3)) }}>
+          {["不是电极", "不是药物"].map((w, k) => (
+            <div key={w} style={{ position: "relative", fontFamily: FONT_CN, fontWeight: 900, fontSize: 72, color: "#C9C9D6" }}>
+              {w}
+              <div style={{ position: "absolute", left: -10, right: -10, top: "52%", height: 9, background: C.red, borderRadius: 4, transformOrigin: "0 50%", scale: `${eOut(range(t, q.nots + 0.3 + k * 0.3, q.nots + 0.55 + k * 0.3))} 1`, rotate: "-6deg" }} />
+            </div>
+          ))}
+        </div>
+        <div style={{ position: "absolute", left: 0, right: 0, top: 520, display: "flex", justifyContent: "center" }}>
+          <Kinetic text="是一束光" at={q.light} size={190} color={GLOW} stagger={0.07} />
+        </div>
+        <Svg>{t > q.alga && <g opacity={clamp01(alga * 3)}><Alga x={540} y={1090} s={0.75 * Math.min(1.12, alga)} t={t} eye={1} /></g>}</Svg>
+        <div style={{ position: "absolute", left: 0, right: 0, top: 1360, display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
+          <Say at={q.alga + 0.1} text="开关的零件，来自" color="#FFFFFF" y={0} size={50} weight={700} center />
+          <div style={{ position: "absolute", top: 76, left: 0, right: 0, display: "flex", justifyContent: "center" }}><Kinetic text="池塘里的一种绿藻" at={q.alga + 0.35} size={84} color="#00E0B0" stagger={0.04} /></div>
+        </div>
+        <div style={{ position: "absolute", left: 0, right: 0, top: 1600, display: "flex", justifyContent: "center", opacity: clamp01(sp(q.prize) * 3), scale: `${Math.min(1.1, sp(q.prize))}` }}>
+          <Pill bg={C.yellow} color={C.ink} size={40}>2026 诺贝尔生理学或医学奖</Pill>
+        </div>
+      </>}
     </Abs>
   );
 };
@@ -161,8 +178,8 @@ export const Problem: React.FC = () => {
         {t > q.drug && t < q.end && <text x={190} y={680} fontFamily={FONT_CN} fontWeight={900} fontSize={40} fill="#FFFFFF" opacity={1 - range(t, q.end - 0.4, q.end)}>药物</text>}
       </Svg>
       <Say at={q.need} out={q.end - 0.3} text={"要弄清谁管什么，\n就得能单独开关它们"} color="#FFFFFF" y={1330} size={56} />
-      <Say at={q.electrode + 0.3} out={q.drug - 0.2} text="电极：一戳一大片，分不清谁是谁" color={C.yellow} y={1500} size={46} />
-      <Say at={q.drug + 0.3} out={q.end - 0.3} text="药物：太慢，要几分钟才起效" color={C.pink} y={1500} size={46} />
+      <Say at={q.electrode + 0.3} out={q.end - 0.3} text="电极：一戳一大片，分不清谁是谁" color={C.yellow} y={1500} size={46} />
+      <Say at={q.drug + 0.2} out={q.end - 0.3} text="药物：太慢，要几分钟才起效" color={C.pink} y={1580} size={46} />
     </Abs>
   );
 };

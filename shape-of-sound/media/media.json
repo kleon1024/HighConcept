@@ -62,5 +62,29 @@
   "license": "CC0",
   "used_in": "optogenetics prize",
   "orig_w": 272
+ },
+ {
+  "file": "opto_lab.jpg",
+  "commons": "File:Optogenetics imetronic.JPG",
+  "direct": "https://upload.wikimedia.org/wikipedia/commons/7/75/Optogenetics_imetronic.JPG",
+  "author": "Bd008",
+  "license": "CC BY-SA 4.0",
+  "used_in": "optogenetics opening"
+ },
+ {
+  "file": "pond.jpg",
+  "direct": "https://live.staticflickr.com/4083/4835834487_8784975e2f_b.jpg",
+  "source_page": "https://www.flickr.com/photos/danxoneil/4835834487",
+  "author": "danxoneil (Flickr)",
+  "license": "CC BY 2.0",
+  "used_in": "optogenetics pond"
+ },
+ {
+  "file": "neuron_real.jpg",
+  "commons": "File:Нейрон коры с множеством дендритных шипиков.jpg",
+  "orig_w": 1024,
+  "author": "Sergb95",
+  "license": "CC BY-SA 4.0",
+  "used_in": "optogenetics problem"
  }
 ]
