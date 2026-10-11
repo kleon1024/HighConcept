@@ -179,36 +179,54 @@ function clipTo(d, parent) {
    L0  BACKGROUND
    ==================================================================== */
 const bg = document.getElementById('bgRoot');
+const SKY_L = 760, SKY_R = 430;               // sky torn edge: y at x=0 / x=1080
+const skyEdge = (x) => SKY_L + (SKY_R - SKY_L) * (x / 1080);
 
 // radial burst rays from behind the hero
 (function rays() {
-  const cx = 560, cy = 700, g = el('g', {}, bg);
+  const cx = 540, cy = 690, g = el('g', {}, bg);
   const N = 44;
-  for (let i = 0; i < N; i++) {
-    if (i % 2) continue;
+  for (let i = 0; i < N; i += 2) {
     const a0 = (i / N) * Math.PI * 2 + 0.05, a1 = ((i + 1) / N) * Math.PI * 2 + 0.05 + R(-0.02, 0.03);
-    el('path', { d: P([[cx, cy], [cx + Math.cos(a0) * 2400, cy + Math.sin(a0) * 2400], [cx + Math.cos(a1) * 2400, cy + Math.sin(a1) * 2400]]), fill: BLK, opacity: 0.16 }, g);
+    el('path', { d: P([[cx, cy], [cx + Math.cos(a0) * 2400, cy + Math.sin(a0) * 2400], [cx + Math.cos(a1) * 2400, cy + Math.sin(a1) * 2400]]), fill: BLK, opacity: 0.17 }, g);
   }
 })();
 
-// black halftone in red middle zone (from left & right edges)
-halftone(bg, { x0: 0, y0: 560, x1: 1080, y1: 1200, step: 20, rmax: 9.5,
-  fn: (x, y) => clamp(1.1 - Math.hypot(x - 1080, y - 1150) / 520) + clamp(0.9 - Math.hypot(x, y - 1050) / 380), fill: BLK });
+// black halftone in red middle zone (corners)
+halftone(bg, { x0: 0, y0: 420, x1: 1080, y1: 1200, step: 20, rmax: 9.5,
+  fn: (x, y) => clamp(1.1 - Math.hypot(x - 1080, y - 1100) / 470) + clamp(0.95 - Math.hypot(x, y - 1060) / 330), fill: BLK });
+
+// white speed streaks (motion direction: up-right)
+(function streaks() {
+  const g = el('g', {}, bg);
+  const ang = -0.52;
+  [[-40, 1010, 520, 9], [20, 1080, 420, 6], [700, 980, 380, 7], [760, 1040, 300, 5], [-60, 930, 300, 5], [820, 900, 260, 6]].forEach(([x, y, len, w]) => {
+    const ex = x + Math.cos(ang) * len, ey = y + Math.sin(ang) * len;
+    el('path', { d: P([[x, y], [ex, ey - w * 0.5], [ex, ey + w * 0.5]]), fill: WHT }, g);
+  });
+})();
+
+// big white burst behind the hero (cut-out paper), its top swallowed by the sky
+(function heroBurst() {
+  const d = burst(505, 712, 14, 372, 250, -0.12, 0.2);
+  el('path', { d, fill: BLK, transform: 'translate(20,20)' }, bg);
+  el('path', { d, fill: WHT }, bg);
+  const g = el('g', { 'clip-path': clipTo(d) }, bg);
+  halftone(g, { x0: 100, y0: 320, x1: 920, y1: 1140, step: 16, rmax: 7.6,
+    fn: (x, y) => clamp((Math.hypot(x - 505, y - 712) - 190) / 180), fill: RED });
+})();
 
 // SKY panel (black) with a torn lower edge + white paper under-layer
-const skyPts = [[0, 0, 0], [1080, 0, 0], [1080, 545, 14], [0, 905, 0]];
-const skyUnder = torn([[0, 0, 0], [1080, 0, 0], [1080, 572, 18], [0, 935, 0]], 22);
+const skyUnder = torn([[0, 0, 0], [1080, 0, 0], [1080, SKY_R + 30, 18], [0, SKY_L + 32, 0]], 22);
 el('path', { d: skyUnder, fill: WHT }, bg);
-const skyD = torn(skyPts, 18);
+const skyD = torn([[0, 0, 0], [1080, 0, 0], [1080, SKY_R, 14], [0, SKY_L, 0]], 18);
 el('path', { d: skyD, fill: BLK }, bg);
-// red halftone rising toward torn edge (screen-tone sky)
-(function () {
+(function skyTone() {
   const g = el('g', { 'clip-path': clipTo(skyD) }, bg);
-  halftone(g, { x0: 0, y0: 200, x1: 1080, y1: 920, step: 17, rmax: 7.8,
-    fn: (x, y) => { const edge = 905 - (x / 1080) * 360; return clamp(1 - (edge - y) / 330); }, fill: RED });
-  // diagonal hatch slashes in sky
+  halftone(g, { x0: 0, y0: 120, x1: 1080, y1: 800, step: 17, rmax: 7.8,
+    fn: (x, y) => clamp(1 - (skyEdge(x) - y) / 300), fill: RED });
   for (let i = 0; i < 7; i++) {
-    const x = R(-100, 900), y = R(40, 520), w = R(140, 420);
+    const x = R(-100, 900), y = R(40, 470), w = R(140, 420);
     el('path', { d: P([[x, y], [x + w, y - w * 0.32], [x + w, y - w * 0.32 + R(3, 7)], [x, y + R(3, 7)]]), fill: WHT, opacity: 0.85 }, g);
   }
 })();
@@ -217,26 +235,31 @@ el('path', { d: skyD, fill: BLK }, bg);
 function sparkle(g, x, y, s, fill = WHT) {
   el('path', { d: `M${x},${y - s}L${x + s * 0.22},${y - s * 0.22}L${x + s},${y}L${x + s * 0.22},${y + s * 0.22}L${x},${y + s}L${x - s * 0.22},${y + s * 0.22}L${x - s},${y}L${x - s * 0.22},${y - s * 0.22}Z`, fill }, g);
 }
-[[120, 420, 16], [470, 120, 12], [560, 300, 20], [300, 90, 9], [990, 640, 14], [640, 470, 10], [210, 560, 9], [395, 470, 13]].forEach(s => sparkle(bg, ...s));
+[[470, 120, 12], [600, 210, 20], [300, 92, 9], [420, 470, 11], [36, 470, 13], [655, 60, 8]].forEach(s => sparkle(bg, ...s));
 
-// MOON: fat crescent, white with red halftone terminator + black slash
+// MOON: fat crescent, white with red halftone terminator
 (function moon() {
-  const cx = 848, cy = 318, r = 236;
+  const cx = 852, cy = 312, r = 238;
   const defs = document.querySelector('#bg defs');
   const m = el('mask', { id: 'moonMask', maskUnits: 'userSpaceOnUse', x: 0, y: 0, width: 1080, height: 1920 }, defs);
   el('rect', { x: 0, y: 0, width: 1080, height: 1920, fill: '#000' }, m);
   el('circle', { cx, cy, r, fill: '#fff' }, m);
-  el('circle', { cx: cx - 128, cy: cy - 92, r: 212, fill: '#000' }, m);
-  // offset paper shadow
+  el('circle', { cx: cx - 132, cy: cy - 96, r: 214, fill: '#000' }, m);
   const sh = el('g', { mask: 'url(#moonMask)', transform: 'translate(16,14)' }, bg);
   el('rect', { x: 0, y: 0, width: 1080, height: 1920, fill: RED }, sh);
   const g = el('g', { mask: 'url(#moonMask)' }, bg);
   el('circle', { cx, cy, r, fill: WHT }, g);
   halftone(g, { x0: cx - r, y0: cy - r, x1: cx + r, y1: cy + r, step: 13, rmax: 6.4,
-    fn: (x, y) => clamp(1 - (Math.hypot(x - (cx - 128), y - (cy - 92)) - 212) / 120), fill: RED });
-  // crater cut shapes
-  el('circle', { cx: cx + 120, cy: cy + 120, r: 26, fill: 'url(#toneK)' }, g);
-  el('circle', { cx: cx + 175, cy: cy + 30, r: 14, fill: 'url(#toneK)' }, g);
+    fn: (x, y) => clamp(1 - (Math.hypot(x - (cx - 132), y - (cy - 96)) - 214) / 120), fill: RED });
+  el('circle', { cx: cx + 118, cy: cy + 128, r: 26, fill: 'url(#toneK)' }, g);
+  el('circle', { cx: cx + 182, cy: cy + 40, r: 14, fill: 'url(#toneK)' }, g);
+})();
+
+// one long blade-slash across the frame along the leap diagonal
+(function slash() {
+  const g = el('g', {}, bg);
+  el('path', { d: P([[-60, 1180], [1140, 300], [1140, 318], [-60, 1196]]), fill: BLK, opacity: 0.9, transform: 'translate(8,10)' }, g);
+  el('path', { d: P([[-60, 1186], [1140, 296], [1140, 304]]), fill: WHT }, g);
 })();
 
 // lantern string across the sky
@@ -255,36 +278,13 @@ function lantern(g, x, y, s, label, opt = {}) {
   t.textContent = label;
   return lg;
 }
-(function string() {
-  const g = el('g', {}, bg);
-  const pts = [[-20, 250], [130, 296], [280, 318], [430, 300], [580, 248]];
-  el('path', { d: `M${pts[0]}Q140,320 300,320T600,240`, fill: 'none', stroke: WHT, 'stroke-width': 3 }, g);
-  lantern(g, 98, 330, 1.25, '百', { rot: -4 });
-  lantern(g, 236, 352, 1.05, '鬼', { rot: 6, body: RED, ink: WHT, rib: WHT, tassel: WHT });
-  lantern(g, 372, 350, 1.18, '夜', { rot: -8 });
-  lantern(g, 510, 308, 0.95, '行', { rot: 5, body: RED, ink: WHT, rib: WHT, tassel: WHT });
-})();
 
-// hitodama (spirit flames) floating
-function wisp(g, x, y, s, rot, fill = WHT) {
-  el('path', { d: 'M0,0 C22,0 30,24 14,40 C2,52 -26,46 -24,22 C-22,6 -14,-6 -30,-36 C-6,-26 -12,-4 0,0Z', fill,
-    transform: `translate(${x},${y}) rotate(${rot}) scale(${s})` }, g);
-}
 
-// big white burst behind the hero (cut-out paper)
-(function heroBurst() {
-  const d = burst(560, 690, 15, 365, 255, -0.2, 0.22);
-  el('path', { d, fill: BLK, transform: 'translate(18,18)' }, bg);
-  el('path', { d, fill: WHT }, bg);
-  const g = el('g', { 'clip-path': clipTo(d) }, bg);
-  halftone(g, { x0: 160, y0: 300, x1: 960, y1: 1080, step: 16, rmax: 7.6,
-    fn: (x, y) => clamp((Math.hypot(x - 560, y - 690) - 170) / 200), fill: RED });
-})();
-
-// red/black slanted strip behind title region
+// black slanted band behind the title
 (function titleBand() {
-  const band = torn([[0, 1140, 0], [1080, 990, 20], [1080, 1395, 0], [0, 1560, 20]], 20);
+  const band = torn([[0, 1140, 0], [1080, 990, 0], [1080, 1395, 0], [0, 1560, 20]], 20);
   el('path', { d: band, fill: WHT, transform: 'translate(0,16)' }, bg);
+  el('path', { d: P([[0, 1122], [1080, 972], [1080, 984], [0, 1134]]), fill: WHT }, bg);
   el('path', { d: band, fill: BLK }, bg);
   const g = el('g', { 'clip-path': clipTo(band) }, bg);
   el('rect', { x: 0, y: 900, width: 1080, height: 800, fill: 'url(#hatchW)', opacity: 0.11 }, g);
@@ -292,7 +292,7 @@ function wisp(g, x, y, s, rot, fill = WHT) {
     fn: (x, y) => clamp(1 - (x + (1560 - y) * 1.4) / 620), fill: RED });
 })();
 
-// red zone below title band: black halftone + white speed slashes
+// red zone below title band: black halftone
 halftone(bg, { x0: 0, y0: 1380, x1: 1080, y1: 1920, step: 20, rmax: 9,
   fn: (x, y) => clamp((y - 1500) / 380) * clamp(1.2 - x / 1000), fill: BLK });
 
@@ -300,73 +300,80 @@ halftone(bg, { x0: 0, y0: 1380, x1: 1080, y1: 1920, step: 20, rmax: 9,
    L1  HERO FIGURE (local coords, mid-leap toward the moon)
    ==================================================================== */
 const mid = document.getElementById('midRoot');
+const HERO_T = 'translate(-41,150) scale(1.3)';
 
 (function hero() {
   const wrap = el('g', { filter: 'url(#sticker)' }, mid);
-  const g = el('g', { transform: 'translate(-34,198) scale(1.32)' }, wrap);
+  const g = el('g', { transform: HERO_T }, wrap);
 
-  // scarf (red, streaming behind) - under everything
-  el('path', { d: limb([[566, 214], [480, 186], [400, 204], [318, 168], [228, 188], [128, 146]], [30, 28, 26, 22, 16, 2]), fill: RED, stroke: BLK, 'stroke-width': 3 }, g);
-  el('path', { d: limb([[540, 212], [470, 226], [400, 252], [318, 250], [236, 286]], [22, 20, 16, 12, 2]), fill: RED, stroke: BLK, 'stroke-width': 3 }, g);
+  // scarf (two red strips streaming back)
+  el('path', { d: limb([[575, 205], [500, 172], [430, 150], [350, 126], [270, 128], [196, 104]], [30, 28, 26, 22, 14, 2]), fill: RED, stroke: BLK, 'stroke-width': 3 }, g);
+  el('path', { d: limb([[548, 212], [470, 202], [390, 196], [310, 214], [236, 204]], [22, 20, 16, 10, 2]), fill: RED, stroke: BLK, 'stroke-width': 3 }, g);
 
   // back arm (flung back for balance)
-  el('path', { d: limb([[505, 244], [430, 286], [350, 266]], [36, 28, 22]), fill: BLK }, g);
-  el('circle', { cx: 342, cy: 263, r: 17, fill: BLK }, g);
+  el('path', { d: limb([[532, 238], [452, 262], [380, 230]], [40, 32, 26]), fill: BLK }, g);
+  el('circle', { cx: 452, cy: 262, r: 16, fill: BLK }, g);
+  el('circle', { cx: 372, cy: 226, r: 17, fill: BLK }, g);
+  [[-118, 26], [-150, 32], [-170, 38], [168, 35], [148, 28]].forEach(([a, len]) => {
+    const r = a * Math.PI / 180, x0 = 370, y0 = 226;
+    el('path', { d: limb([[x0, y0], [x0 + Math.cos(r) * len, y0 + Math.sin(r) * len]], [11, 5]), fill: BLK }, g);
+  });
 
-  // back leg (trailing)
-  el('path', { d: limb([[452, 405], [418, 520], [338, 598]], [52, 40, 30]), fill: BLK }, g);
-  el('path', { d: limb([[346, 590], [300, 628], [262, 650]], [38, 26, 4]), fill: BLK }, g);
+  // back leg (trailing, extended)
+  el('path', { d: limb([[448, 405], [398, 500]], [56, 44]), fill: BLK }, g);
+  el('circle', { cx: 398, cy: 500, r: 22, fill: BLK }, g);
+  el('path', { d: limb([[398, 500], [305, 556]], [44, 32]), fill: BLK }, g);
+  el('path', { d: limb([[312, 550], [262, 576], [222, 588]], [42, 28, 4]), fill: BLK }, g);
+  el('path', { d: P([[300, 574], [250, 592], [230, 590], [282, 566]]), fill: RED }, g); // red sole
 
   // coat
-  const coat = [[575, 200], [562, 226], [590, 248], [582, 300], [544, 365], [514, 415],
-    [440, 468], [340, 535], [255, 605], [196, 672],
-    [285, 585], [345, 522], [372, 492],
-    [270, 514], [160, 550], [34, 574],
-    [150, 502], [260, 456], [318, 430],
-    [220, 394], [80, 362],
-    [215, 330], [335, 320], [420, 292],
-    [468, 250], [496, 214], [512, 168], [538, 206]];
+  const coat = [[590, 196], [576, 224], [604, 250], [606, 292], [566, 352], [528, 414], [486, 440], [440, 448],
+    [380, 452], [300, 470], [205, 494], [110, 522], [210, 466], [300, 442], [355, 428],
+    [275, 414], [170, 402], [55, 404], [170, 378], [270, 368], [345, 362],
+    [275, 326], [160, 286], [285, 300], [370, 316],
+    [430, 320], [470, 280], [515, 226], [520, 200], [532, 166], [552, 200]];
   const coatD = P(coat);
   el('path', { d: coatD, fill: BLK }, g);
-  // red lining on the flaring tails (with tone)
-  const lining = el('g', {}, g);
-  el('path', { d: P([[425, 480], [330, 548], [232, 636], [298, 572], [356, 512]]), fill: RED }, lining);
-  el('path', { d: P([[330, 488], [230, 525], [96, 566], [210, 508], [300, 470]]), fill: RED }, lining);
-  el('path', { d: P([[290, 418], [190, 395], [112, 368], [220, 380]]), fill: RED }, lining);
-  // white fold slashes on coat
-  const cc = el('g', { 'clip-path': (() => { const id = 'coatClip'; const cp = el('clipPath', { id }, document.querySelector('#bg defs')); el('path', { d: coatD, transform: 'translate(-34,198) scale(1.32)' }, cp); return 'url(#coatClip)'; })() }, wrap);
-  // (fold lines drawn in local coords inside a second transformed group)
-  const fl = el('g', { transform: 'translate(-34,198) scale(1.32)' }, cc);
-  [[[548, 262], [470, 330], [380, 372], [260, 410]], [[530, 330], [450, 400], [360, 450], [240, 500]], [[560, 300], [520, 360], [470, 420]]].forEach(l => {
-    el('path', { d: 'M' + l.join('L'), fill: 'none', stroke: WHT, 'stroke-width': 3.2, 'stroke-linejoin': 'miter' }, fl);
-  });
+  // red lining along the underside of each tail
+  el('path', { d: P([[436, 446], [380, 452], [300, 470], [205, 494], [118, 519], [205, 476], [300, 452], [384, 437]]), fill: RED }, g);
+  el('path', { d: P([[350, 426], [275, 414], [170, 402], [64, 404], [170, 389], [276, 399], [344, 411]]), fill: RED }, g);
+  el('path', { d: P([[340, 359], [275, 326], [168, 289], [280, 314], [348, 346]]), fill: RED }, g);
+  // short white fold slashes
+  [['M520,300 L470,350'], ['M556,330 L520,380'], ['M420,430 L300,452'], ['M330,384 L210,388'], ['M360,334 L280,316']].forEach(([d]) =>
+    el('path', { d, stroke: WHT, 'stroke-width': 3, fill: 'none' }, g));
+  el('path', { d: 'M607,262 L604,296 L572,346', stroke: WHT, 'stroke-width': 3.2, fill: 'none' }, g);
+
+  // red waist sash + fluttering ends (secondary motion)
+  el('path', { d: limb([[440, 352], [382, 366], [318, 352], [246, 376]], [18, 16, 12, 2]), fill: RED, stroke: BLK, 'stroke-width': 2.5 }, g);
+  el('path', { d: limb([[436, 356], [388, 388], [330, 394], [272, 420]], [14, 12, 9, 2]), fill: RED, stroke: BLK, 'stroke-width': 2.5 }, g);
+  el('path', { d: P([[446, 334], [530, 388], [518, 410], [432, 356]]), fill: RED, stroke: BLK, 'stroke-width': 2.5 }, g);
+  el('path', { d: P([[436, 340], [452, 330], [460, 352], [444, 362]]), fill: WHT, stroke: BLK, 'stroke-width': 2 }, g);
 
   // front leg (knee driven up)
-  const g2 = el('g', { transform: 'translate(-34,198) scale(1.32)' }, wrap);
-  el('path', { d: limb([[480, 392], [578, 428], [562, 532]], [52, 42, 32]), fill: BLK }, g2);
-  el('circle', { cx: 578, cy: 428, r: 21, fill: BLK }, g2);
-  el('path', { d: limb([[556, 524], [596, 550], [640, 566]], [40, 30, 4]), fill: BLK }, g2);
-  // white rim lights on legs
-  el('path', { d: 'M600,440 L586,520', stroke: WHT, 'stroke-width': 3.5 }, g2);
-  el('path', { d: 'M512,384 L574,406', stroke: WHT, 'stroke-width': 3 }, g2);
+  el('path', { d: limb([[478, 395], [575, 420]], [56, 46]), fill: BLK }, g);
+  el('circle', { cx: 575, cy: 420, r: 23, fill: BLK }, g);
+  el('path', { d: limb([[575, 420], [582, 518]], [44, 32]), fill: BLK }, g);
+  el('path', { d: limb([[576, 512], [620, 532], [662, 544]], [42, 30, 4]), fill: BLK }, g);
+  el('path', { d: P([[590, 536], [640, 550], [662, 546], [612, 530]]), fill: RED }, g); // red sole
+  el('path', { d: 'M518,384 L572,398 M600,436 L598,504', stroke: WHT, 'stroke-width': 3.2 }, g);
 
   // front arm reaching for the moon
-  el('path', { d: limb([[578, 250], [656, 214], [726, 152]], [38, 30, 22]), fill: BLK }, g2);
-  el('circle', { cx: 656, cy: 214, r: 15, fill: BLK }, g2);
-  el('circle', { cx: 738, cy: 140, r: 17, fill: BLK }, g2);
-  [[-112, 30], [-78, 40], [-55, 44], [-33, 40], [-10, 32]].forEach(([a, len]) => {
-    const r = a * Math.PI / 180, x0 = 738, y0 = 140;
-    el('path', { d: limb([[x0, y0], [x0 + Math.cos(r) * len, y0 + Math.sin(r) * len]], [10, 5]), fill: BLK }, g2);
+  el('path', { d: limb([[590, 250], [662, 212], [735, 150]], [42, 34, 26]), fill: BLK }, g);
+  el('circle', { cx: 662, cy: 212, r: 17, fill: BLK }, g);
+  el('circle', { cx: 748, cy: 138, r: 20, fill: BLK }, g);
+  [[-118, 34], [-82, 44], [-58, 48], [-35, 44], [-12, 36]].forEach(([a, len]) => {
+    const r = a * Math.PI / 180, x0 = 748, y0 = 138;
+    el('path', { d: limb([[x0, y0], [x0 + Math.cos(r) * len, y0 + Math.sin(r) * len]], [12, 5]), fill: BLK }, g);
   });
-  el('path', { d: 'M600,236 L700,170', stroke: WHT, 'stroke-width': 3 }, g2);
+  el('path', { d: 'M612,236 L708,178', stroke: WHT, 'stroke-width': 3.2 }, g);
 
-  // neck + head + hair
-  el('path', { d: limb([[588, 186], [570, 224]], [28, 28]), fill: BLK }, g2);
-  el('ellipse', { cx: 598, cy: 150, rx: 44, ry: 50, transform: 'rotate(25 598 150)', fill: BLK }, g2);
-  [[[572, 118], [490, 92], [560, 146]], [[560, 150], [478, 160], [562, 176]], [[580, 108], [534, 58], [600, 108]], [[566, 172], [508, 200], [574, 190]]].forEach(t => el('path', { d: P(t), fill: BLK }, g2));
+  // neck, head, hair
+  el('path', { d: limb([[594, 188], [578, 226]], [30, 30]), fill: BLK }, g);
+  el('ellipse', { cx: 610, cy: 148, rx: 48, ry: 54, transform: 'rotate(25 610 148)', fill: BLK }, g);
+  [[[584, 112], [492, 80], [570, 140]], [[572, 148], [478, 158], [574, 176]], [[596, 100], [548, 42], [614, 98]], [[578, 172], [512, 206], [588, 192]]].forEach(t => el('path', { d: P(t), fill: BLK }, g));
 
   // fox mask (original design) - 3/4 view facing up-right
-  const mk = el('g', {}, g2);
+  const mk = el('g', { transform: 'translate(612,146) scale(1.1) translate(-598,-150)' }, g);
   el('path', { d: P([[590, 114], [600, 76], [626, 104], [648, 84], [650, 120], [698, 146], [664, 172], [630, 188], [598, 182], [586, 150]]), fill: WHT, stroke: BLK, 'stroke-width': 3 }, mk);
   el('path', { d: P([[602, 88], [614, 106], [598, 110]]), fill: RED }, mk);
   el('path', { d: P([[646, 94], [646, 118], [632, 112]]), fill: RED }, mk);
@@ -378,53 +385,79 @@ const mid = document.getElementById('midRoot');
   el('path', { d: P([[604, 140], [612, 128], [616, 146]]), fill: RED }, mk);
 })();
 
+// lantern string hangs IN FRONT of the scarf (layered depth)
+(function string() {
+  const g = el('g', {}, mid);
+  el('path', { d: 'M-20,250 Q140,320 300,320 T600,240', fill: 'none', stroke: WHT, 'stroke-width': 3 }, g);
+  lantern(g, 98, 330, 1.25, '百', { rot: -4 });
+  lantern(g, 236, 352, 1.05, '鬼', { rot: 6, body: RED, ink: WHT, rib: WHT, tassel: WHT });
+  lantern(g, 372, 350, 1.18, '夜', { rot: -8 });
+  lantern(g, 510, 308, 0.95, '行', { rot: 5, body: RED, ink: WHT, rib: WHT, tassel: WHT });
+})();
+
 // ONI mask cut-out (original design)
 function oniMask(parent, x, y, s, rot) {
   const g = el('g', { transform: `translate(${x},${y}) rotate(${rot}) scale(${s})`, filter: 'url(#sticker)' }, parent);
-  // horns
-  el('path', { d: 'M48,62 C18,30 14,-10 34,-56 C44,-12 62,18 84,44Z', fill: BLK }, g);
-  el('path', { d: 'M152,62 C182,30 186,-10 166,-56 C156,-12 138,18 116,44Z', fill: BLK }, g);
-  el('path', { d: 'M40,0 L52,10 M30,-24 L44,-14', stroke: WHT, 'stroke-width': 3 }, g);
-  el('path', { d: 'M160,0 L148,10 M170,-24 L156,-14', stroke: WHT, 'stroke-width': 3 }, g);
+  // wild mane
+  el('path', { d: P([[22, 96], [20, 44], [44, 60], [50, 12], [74, 44], [88, 0], [100, 34], [112, 0], [126, 44], [150, 12], [156, 60], [180, 44], [178, 96]]), fill: BLK }, g);
+  // curved ivory horns with bands
+  for (const flip of [1, -1]) {
+    const hg = el('g', { transform: flip < 0 ? 'translate(200,0) scale(-1,1)' : '' }, g);
+    el('path', { d: 'M86,40 C72,4 50,-34 10,-72 C30,-20 36,18 50,56Z', fill: WHT, stroke: BLK, 'stroke-width': 5, 'stroke-linejoin': 'round' }, hg);
+    el('path', { d: 'M76,18 L44,30 M64,-6 L36,4 M48,-30 L28,-24', stroke: BLK, 'stroke-width': 4 }, hg);
+  }
   // face
-  el('path', { d: 'M100,24 C162,24 194,66 192,126 C190,190 150,240 100,244 C50,240 10,190 8,126 C6,66 38,24 100,24Z', fill: WHT, stroke: BLK, 'stroke-width': 5 }, g);
-  // tone shading on cheeks
+  el('path', { d: 'M100,30 C162,30 194,70 192,128 C190,190 150,240 100,244 C50,240 10,190 8,128 C6,70 38,30 100,30Z', fill: WHT, stroke: BLK, 'stroke-width': 5 }, g);
   el('path', { d: 'M18,140 C24,196 60,232 100,240 C70,214 50,180 44,136Z', fill: 'url(#toneK)' }, g);
   // brows
-  el('path', { d: 'M30,82 L92,108 L88,120 L26,100Z', fill: BLK }, g);
-  el('path', { d: 'M170,82 L108,108 L112,120 L174,100Z', fill: BLK }, g);
+  el('path', { d: 'M30,84 L92,108 L88,122 L26,102Z', fill: BLK }, g);
+  el('path', { d: 'M170,84 L108,108 L112,122 L174,102Z', fill: BLK }, g);
   // eyes
-  el('path', { d: 'M40,118 L88,128 L76,146 L46,140Z', fill: RED, stroke: BLK, 'stroke-width': 4 }, g);
-  el('path', { d: 'M160,118 L112,128 L124,146 L154,140Z', fill: RED, stroke: BLK, 'stroke-width': 4 }, g);
-  el('circle', { cx: 70, cy: 134, r: 6, fill: BLK }, g);
-  el('circle', { cx: 130, cy: 134, r: 6, fill: BLK }, g);
+  el('path', { d: 'M40,120 L88,130 L76,148 L46,142Z', fill: RED, stroke: BLK, 'stroke-width': 4 }, g);
+  el('path', { d: 'M160,120 L112,130 L124,148 L154,142Z', fill: RED, stroke: BLK, 'stroke-width': 4 }, g);
+  el('circle', { cx: 70, cy: 136, r: 6, fill: BLK }, g);
+  el('circle', { cx: 130, cy: 136, r: 6, fill: BLK }, g);
   // nose
-  el('path', { d: 'M100,138 L84,170 L116,170Z', fill: BLK }, g);
+  el('path', { d: 'M100,140 L84,172 L116,172Z', fill: BLK }, g);
   // mouth with fangs
-  el('path', { d: 'M40,180 Q100,166 160,180 L148,216 Q100,232 52,216Z', fill: BLK }, g);
-  el('path', { d: 'M52,184 Q100,176 148,184 L140,198 Q100,190 60,198Z', fill: RED }, g);
-  el('path', { d: 'M54,214 L62,188 L72,216Z M146,214 L138,188 L128,216Z', fill: WHT }, g);
-  el('path', { d: 'M82,182 L88,198 L94,182Z M106,182 L112,198 L118,182Z', fill: WHT }, g);
+  el('path', { d: 'M40,182 Q100,168 160,182 L148,218 Q100,234 52,218Z', fill: BLK }, g);
+  el('path', { d: 'M52,186 Q100,178 148,186 L140,200 Q100,192 60,200Z', fill: RED }, g);
+  el('path', { d: 'M54,216 L62,186 L72,218Z M146,216 L138,186 L128,218Z', fill: WHT }, g);
+  el('path', { d: 'M82,184 L88,200 L94,184Z M106,184 L112,200 L118,184Z', fill: WHT }, g);
   // forehead mark
-  el('path', { d: 'M100,46 L110,70 L100,88 L90,70Z', fill: RED, stroke: BLK, 'stroke-width': 3 }, g);
+  el('path', { d: 'M100,50 L110,72 L100,90 L90,72Z', fill: RED, stroke: BLK, 'stroke-width': 3 }, g);
   return g;
 }
-oniMask(mid, 800, 640, 1.02, 14);
+oniMask(mid, 868, 676, 0.84, 14);
 
 // speech bubble spike
 (function bubble() {
   const g = el('g', { filter: 'url(#shadowOnly)' }, mid);
-  const cx = 214, cy = 545;
+  const cx = 222, cy = 560;
   const pts = [];
   const N = 22;
   for (let i = 0; i < N; i++) {
     const a = (i / N) * Math.PI * 2;
-    const r = i % 2 ? R(118, 132) : R(150, 176);
+    const r = i % 2 ? R(118, 130) : R(148, 172);
     pts.push([cx + Math.cos(a) * r * 1.12, cy + Math.sin(a) * r * 0.62]);
   }
-  // tail toward the hero
-  pts.splice(1, 0, [cx + 250, cy + 70], [cx + 128, cy + 30]);
+  pts.splice(1, 0, [cx + 236, cy + 92], [cx + 128, cy + 34]);
   el('path', { d: P(pts), fill: WHT, stroke: BLK, 'stroke-width': 6 }, g);
+})();
+
+// star-burst sticker 今夜限定
+(function starSticker() {
+  const cx = 178, cy = 1052;
+  const d = burst(cx, cy, 12, 104, 70, 0.1, 0.16);
+  el('path', { d, fill: RED, transform: 'translate(10,10)' }, mid);
+  el('path', { d, fill: BLK, stroke: WHT, 'stroke-width': 6 }, mid);
+})();
+// freeze-frame call-out leader line to the fox mask
+(function callout() {
+  const g = el('g', {}, mid);
+  el('path', { d: 'M768,300 L846,196 L958,196', fill: 'none', stroke: BLK, 'stroke-width': 9 }, g);
+  el('path', { d: 'M768,300 L846,196 L958,196', fill: 'none', stroke: WHT, 'stroke-width': 4 }, g);
+  el('circle', { cx: 768, cy: 300, r: 9, fill: RED, stroke: WHT, 'stroke-width': 4 }, g);
 })();
 
 /* ====================================================================
@@ -432,12 +465,12 @@ oniMask(mid, 800, 640, 1.02, 14);
    ==================================================================== */
 const fg = document.getElementById('fgRoot');
 
-// shards flying from the leap
+// shards flying off the leap
 (function shards() {
-  const list = [[960, 150, 1], [1010, 520, 0], [420, 960, 1], [140, 980, 0], [700, 1010, 1], [80, 690, 1], [995, 900, 1], [560, 160, 0]];
-  list.forEach(([x, y, w]) => {
-    const s = R(26, 54), a = R(0, 6.28);
-    const pts = [[x, y], [x + Math.cos(a) * s * 1.8, y + Math.sin(a) * s * 1.8], [x + Math.cos(a + 2.2) * s * 0.7, y + Math.sin(a + 2.2) * s * 0.7]];
+  const list = [[958, 120, 1, 0.4], [1006, 600, 0, 2.2], [150, 1000, 0, 4.1], [700, 1000, 1, 5.2], [64, 860, 1, 0.9], [668, 70, 0, 3.6], [470, 1010, 1, 1.4]];
+  list.forEach(([x, y, w, a]) => {
+    const s = R(26, 50);
+    const pts = [[x, y], [x + Math.cos(a) * s * 1.9, y + Math.sin(a) * s * 1.9], [x + Math.cos(a + 2.2) * s * 0.7, y + Math.sin(a + 2.2) * s * 0.7]];
     el('path', { d: P(pts), fill: w ? WHT : BLK, stroke: w ? BLK : WHT, 'stroke-width': 3 }, fg);
   });
 })();
@@ -445,13 +478,12 @@ const fg = document.getElementById('fgRoot');
 const yb = (x) => 1852 - 0.13 * x; // parade baseline
 
 (function paradeStrip() {
-  const strip = torn([[-20, 1692, 16], [1100, 1546, 0], [1100, 1742, 16], [-20, 1888, 0]], 18);
+  const strip = torn([[-20, 1692, 9], [1100, 1546, 0], [1100, 1742, 10], [-20, 1888, 0]], 22);
   el('path', { d: strip, fill: BLK, transform: 'translate(14,-16)' }, fg);
   el('path', { d: strip, fill: WHT }, fg);
   const g = el('g', { 'clip-path': clipTo(strip) }, fg);
   halftone(g, { x0: 0, y0: 1520, x1: 1080, y1: 1900, step: 14, rmax: 6.2,
     fn: (x, y) => clamp((y - (yb(x) - 120)) / 150) * 0.9, fill: RED });
-  // ground line
   el('path', { d: `M-20,${yb(-20) + 8}L1100,${yb(1100) + 8}`, stroke: BLK, 'stroke-width': 5 }, g);
   el('path', { d: `M-20,${yb(-20) + 18}L1100,${yb(1100) + 18}`, stroke: BLK, 'stroke-width': 2 }, g);
 })();
@@ -477,7 +509,6 @@ const yokai = {
     for (const y of [44, 58, 72, 104]) el('path', { d: `M${14 + Math.abs(y - 73) * 0.35},${y} Q60,${y + 6} ${106 - Math.abs(y - 73) * 0.35},${y}`, fill: 'none', stroke: WHT, 'stroke-width': 2 }, g);
     el('path', { d: 'M12,84 L40,78 L50,90 L60,78 L72,90 L82,78 L108,84 L84,98 L70,92 L60,100 L48,92 L36,98Z', fill: WHT }, g);
     el('path', { d: 'M56,96 Q74,128 52,150 Q62,124 50,98Z', fill: RED }, g);
-    el('circle', { cx: 72, cy: 54, r: 12, fill: WHT });
     el('circle', { cx: 74, cy: 54, r: 12, fill: WHT }, g);
     el('circle', { cx: 77, cy: 56, r: 5, fill: BLK }, g);
     el('rect', { x: 32, y: 118, width: 56, height: 12, fill: BLK }, g);
@@ -512,7 +543,7 @@ const yokai = {
     el('path', { d: 'M140,26 C126,36 126,60 140,68 L160,68 C174,60 174,36 160,26Z', fill: RED, stroke: BLK, 'stroke-width': 4 }, g);
     el('path', { d: 'M137,44 Q150,48 163,44', stroke: BLK, 'stroke-width': 2, fill: 'none' }, g);
   },
-  jack(g) { // pumpkin-head wanderer (the hidden one) – tiny accent in the eyes
+  jack(g) { // pumpkin-head wanderer (the hidden one) - the single accent lives in its carved face
     el('path', { d: 'M24,74 L96,74 L112,168 L92,156 L80,170 L64,154 L48,170 L36,156 L10,168Z', fill: BLK }, g);
     el('path', { d: 'M60,4 Q64,-6 74,-4 L66,14Z', fill: BLK }, g);
     el('path', { d: 'M60,12 C20,8 14,34 18,48 C22,72 44,80 60,78 C76,80 98,72 102,48 C106,34 100,8 60,12Z', fill: BLK }, g);
@@ -521,15 +552,15 @@ const yokai = {
     el('path', { d: 'M30,54 L40,62 L48,54 L56,64 L64,54 L72,64 L80,54 L90,58 L80,70 L40,70Z', fill: ACC }, g);
     el('path', { d: limb([[94, 90], [116, 100], [120, 82]], [14, 12, 10]), fill: BLK }, g);
   },
-  yurei(g) { // floating ghost with raised limp hands
-    el('path', { d: 'M38,18 C46,-4 84,-4 90,22 L98,96 L72,80 L46,92 L30,80Z', fill: BLK }, g);
-    el('path', { d: 'M54,16 L64,4 L74,16Z', fill: WHT }, g);
-    el('path', { d: 'M30,60 L92,58 L104,112 Q86,126 80,150 Q70,124 58,146 Q52,120 36,132 Q38,104 30,60Z', fill: BLK }, g);
-    el('path', { d: 'M86,66 L124,58 L130,70 L126,84 L120,74 L90,84Z', fill: BLK }, g);
-    el('path', { d: 'M86,86 L120,82 L124,96 L118,106 L114,94 L88,100Z', fill: BLK }, g);
-    el('path', { d: 'M40,64 L62,110 L70,64Z', fill: WHT, opacity: 0.9 }, g);
+  sheet(g) { // floating sheet ghost wearing the white triangle headband
+    el('path', { d: 'M60,0 C96,0 108,30 108,62 L112,140 Q100,128 92,150 Q82,128 72,154 Q62,130 50,152 Q40,128 30,148 Q22,128 10,140 L14,62 C14,30 26,0 60,0Z', fill: BLK }, g);
+    el('path', { d: 'M50,24 L60,8 L70,24Z', fill: WHT }, g);
+    el('ellipse', { cx: 46, cy: 50, rx: 7, ry: 10, fill: WHT }, g);
+    el('ellipse', { cx: 74, cy: 50, rx: 7, ry: 10, fill: WHT }, g);
+    el('ellipse', { cx: 60, cy: 78, rx: 7, ry: 10, fill: RED }, g);
+    el('path', { d: 'M100,70 L132,62 L136,74 L130,86 L126,76 L104,86Z', fill: BLK }, g);
   },
-  hitotsume(g) { // one-eyed child carrying a lantern
+  hitotsume(g) { // one-eyed child
     el('circle', { cx: 56, cy: 50, r: 34, fill: BLK }, g);
     el('ellipse', { cx: 58, cy: 46, rx: 15, ry: 18, fill: WHT }, g);
     el('circle', { cx: 62, cy: 49, r: 8, fill: BLK }, g);
@@ -547,25 +578,22 @@ function placeYokai(name, x, s, lift = 0, rot = 0) {
   yokai[name](g);
 }
 placeYokai('hitotsume', 24, 0.92);
-placeYokai('yurei', 150, 0.98, 26, -4);
-placeYokai('jack', 288, 0.9);
-placeYokai('chochin', 420, 0.92, 34, 6);
-placeYokai('kasa', 560, 0.98, 16, -10);
-placeYokai('oni', 700, 1.0);
-placeYokai('fox', 850, 1.0);
+placeYokai('sheet', 158, 0.96, 30, -6);
+placeYokai('jack', 300, 0.9);
+placeYokai('chochin', 428, 0.92, 34, 6);
+placeYokai('kasa', 566, 0.98, 16, -10);
+placeYokai('oni', 704, 1.0);
+placeYokai('fox', 852, 1.0);
 
 // bottom ticker bar
-(function ticker() {
-  const g = el('g', {}, fg);
-  el('path', { d: P([[-10, 1868], [1090, 1842], [1090, 1930], [-10, 1930]]), fill: BLK }, g);
-})();
+el('path', { d: P([[-10, 1868], [1090, 1842], [1090, 1930], [-10, 1930]]), fill: BLK }, fg);
 
 /* ====================================================================
    L2 / L4  TYPOGRAPHY  (ransom-note pieces)
    ==================================================================== */
 const T = document.getElementById('type');
 const T2 = document.getElementById('type2');
-function piece(parent, { ch, x, y, size, font = 'sans9', bg, fg, rot = 0, back, backRot = 0, pad = 0.12, sx = 1, clip, shadow, border, glyphRot = 0, ls = 0, glyphDy = 0 }) {
+function piece(parent, { ch, x, y, size, font = 'sans9', bg, fg, rot = 0, back, backRot = 0, pad = 0.12, sx = 1, clip, shadow, glyphRot = 0 }) {
   const p = document.createElement('div');
   p.className = 'piece';
   p.style.left = x + 'px'; p.style.top = y + 'px';
@@ -590,32 +618,30 @@ function piece(parent, { ch, x, y, size, font = 'sans9', bg, fg, rot = 0, back, 
   f.style.padding = `${size * pad}px ${size * pad * 1.05}px`;
   f.style.background = bg;
   f.style.color = fg;
-  f.style.letterSpacing = ls + 'px';
-  if (border) f.style.outline = border;
   f.style.clipPath = clip || `polygon(${R(0, 6)}% ${R(0, 7)}%, ${R(94, 100)}% ${R(0, 5)}%, 100% ${R(93, 100)}%, ${R(0, 5)}% 100%)`;
   const span = document.createElement('span');
   span.textContent = ch;
   span.style.display = 'inline-block';
-  span.style.transform = `rotate(${glyphRot}deg) scaleX(${sx}) translateY(${glyphDy}px)`;
+  span.style.transform = `rotate(${glyphRot}deg) scaleX(${sx})`;
   f.appendChild(span);
   inner.appendChild(f);
   return p;
 }
 
-// HERO TITLE 百鬼夜行 — diagonal staircase rising toward the moon
-piece(T2, { ch: '百', x: 66, y: 1232, size: 212, font: 'serif9', bg: WHT, fg: BLK, rot: -9, back: RED, backRot: 5, shadow: `12px 14px 0 ${BLK}` });
-piece(T2, { ch: '鬼', x: 300, y: 1088, size: 268, font: 'sans9', bg: RED, fg: WHT, rot: 6, back: WHT, backRot: -4, shadow: `14px 16px 0 ${BLK}`, glyphRot: -3 });
-piece(T2, { ch: '夜', x: 612, y: 1110, size: 196, font: 'serif9', bg: BLK, fg: WHT, rot: -5, back: WHT, backRot: 7, shadow: `10px 12px 0 ${RED}` });
-piece(T2, { ch: '行', x: 806, y: 1000, size: 178, font: 'sans9', bg: WHT, fg: RED, rot: 10, back: BLK, backRot: -6, shadow: `10px 12px 0 ${BLK}`, glyphRot: 4 });
+// HERO TITLE 百鬼夜行 - diagonal staircase rising toward the moon
+piece(T2, { ch: '百', x: 80, y: 1204, size: 212, font: 'serif9', bg: WHT, fg: BLK, rot: -9, back: RED, backRot: 5, shadow: `12px 14px 0 ${BLK}` });
+piece(T2, { ch: '鬼', x: 304, y: 1058, size: 268, font: 'sans9', bg: RED, fg: WHT, rot: 6, back: WHT, backRot: -4, shadow: `14px 16px 0 ${BLK}`, glyphRot: -3 });
+piece(T2, { ch: '夜', x: 610, y: 1080, size: 196, font: 'serif9', bg: BLK, fg: WHT, rot: -5, back: WHT, backRot: 7, shadow: `10px 12px 0 ${RED}` });
+piece(T2, { ch: '行', x: 794, y: 972, size: 178, font: 'sans9', bg: WHT, fg: RED, rot: 10, back: BLK, backRot: -6, shadow: `10px 12px 0 ${BLK}`, glyphRot: 4 });
 
 // Latin line on a white tape
 (function latin() {
   const d = document.createElement('div');
   d.className = 'abs anton';
-  Object.assign(d.style, { left: '338px', top: '1408px', fontSize: '84px', lineHeight: '1', color: BLK, background: WHT,
-    padding: '10px 26px 8px 30px', transform: 'rotate(-8deg) skewX(-10deg)', letterSpacing: '1px',
-    clipPath: 'polygon(2% 0, 100% 4%, 98% 100%, 0 92%)', filter: `drop-shadow(10px 10px 0 ${BLK})` });
-  d.innerHTML = 'NIGHT PARADE <span style="color:#E60012">·</span> 2026';
+  Object.assign(d.style, { left: '400px', top: '1384px', fontSize: '72px', lineHeight: '1', color: BLK, background: WHT,
+    padding: '10px 24px 8px 28px', transform: 'rotate(-8deg) skewX(-10deg)', letterSpacing: '1px', whiteSpace: 'nowrap',
+    clipPath: 'polygon(2% 0, 100% 4%, 98% 100%, 0 92%)', filter: `drop-shadow(10px 10px 0 ${RED})` });
+  d.innerHTML = `NIGHT PARADE <span style="color:${RED}">·</span> 2026`;
   T2.appendChild(d);
 })();
 
@@ -627,22 +653,41 @@ piece(T2, { ch: '行', x: 806, y: 1000, size: 178, font: 'sans9', bg: WHT, fg: R
     { bg: RED, fg: WHT, font: 'serif9' }, { bg: WHT, fg: RED, font: 'sans9' }, { bg: BLK, fg: WHT, font: 'serif7' },
     { bg: WHT, fg: BLK, font: 'sans9' }, { bg: RED, fg: BLK, font: 'sans9' }, { bg: BLK, fg: RED, font: 'serif9' },
   ];
-  let x = 74;
+  const sizes = [54, 48, 40, 56, 50, 46, 54, 48, 58];
+  let x = 336;
   [...s].forEach((c, i) => {
     const st = styles[i];
-    const size = [56, 50, 40, 58, 52, 48, 56, 50, 60][i];
-    const yy = 1528 - i * 7 + R(-6, 6);
+    const size = sizes[i];
+    const yy = 1546 - (x - 336) * 0.075 - size * 0.5 + R(-4, 4);
     piece(T2, { ch: c, x, y: yy, size, font: st.font, bg: st.bg, fg: st.fg, rot: R(-12, 12), pad: 0.14,
       shadow: st.bg === 'transparent' ? 'none' : `5px 6px 0 ${i % 2 ? BLK : WHT}` });
-    x += size * 1.2 + (c === '，' ? -14 : 4);
+    x += size * 1.22 + (c === '，' ? -16 : 3);
   });
+})();
+
+// sticker text
+(function stickerText() {
+  const d = document.createElement('div');
+  d.className = 'abs sans9';
+  Object.assign(d.style, { left: '118px', top: '1004px', width: '124px', transform: 'rotate(-12deg)', textAlign: 'center', lineHeight: '1' });
+  d.innerHTML = `<div style="font-size:44px;color:${WHT};letter-spacing:-1px">今夜</div><div class="serif9" style="font-size:44px;color:${RED};margin-top:2px">限定</div>`;
+  T.appendChild(d);
+})();
+// call-out tag
+(function calloutTag() {
+  const d = document.createElement('div');
+  d.className = 'abs';
+  Object.assign(d.style, { left: '826px', top: '134px', transform: 'rotate(-6deg)', transformOrigin: '0 100%' });
+  d.innerHTML = `<div style="display:inline-block;background:${BLK};color:${WHT};padding:6px 12px 5px;line-height:1;transform:skewX(-12deg);box-shadow:6px 6px 0 ${RED}">
+    <span class="bebas" style="font-size:30px;letter-spacing:2px">LEADER</span> <span class="sans9" style="font-size:26px;color:${RED}">狐</span></div>`;
+  T.appendChild(d);
 })();
 
 // speech bubble text
 (function bubbleText() {
   const d = document.createElement('div');
   d.className = 'abs';
-  Object.assign(d.style, { left: '74px', top: '484px', width: '290px', transform: 'rotate(-7deg)', textAlign: 'center' });
+  Object.assign(d.style, { left: '82px', top: '500px', width: '290px', transform: 'rotate(-7deg)', textAlign: 'center' });
   d.innerHTML = `<div class="sans9" style="font-size:66px;line-height:1;color:${BLK};letter-spacing:-2px">别<span style="color:${RED}" class="serif9">回</span>头<span style="color:${RED}">！</span></div>
   <div class="bebas" style="font-size:28px;line-height:1;color:${BLK};margin-top:6px;letter-spacing:3px">DON'T LOOK BACK</div>`;
   T.appendChild(d);
@@ -659,22 +704,12 @@ piece(T2, { ch: '行', x: 806, y: 1000, size: 178, font: 'sans9', bg: WHT, fg: R
   T.appendChild(d);
 })();
 
-// vertical serif note on the right edge
-(function vert() {
-  const d = document.createElement('div');
-  d.className = 'abs serif9';
-  Object.assign(d.style, { right: '74px', top: '596px', writingMode: 'vertical-rl', fontSize: '30px', letterSpacing: '6px', color: WHT,
-    background: BLK, padding: '14px 6px', lineHeight: 1 });
-  d.textContent = '面具之下皆是鬼';
-  // (kept off — oni mask sits here)
-})();
-
 // bottom ticker text (decorative, inside the unsafe bottom band)
 (function tickerText() {
   const d = document.createElement('div');
-  d.className = 'abs bebas';
-  Object.assign(d.style, { left: '-20px', top: '1868px', width: '1200px', fontSize: '32px', lineHeight: '1', color: WHT, whiteSpace: 'nowrap',
-    transform: 'rotate(-1.35deg)', transformOrigin: '0 0', letterSpacing: '4px' });
+  d.className = 'abs';
+  Object.assign(d.style, { left: '-20px', top: '1870px', width: '1200px', fontSize: '30px', lineHeight: '1', color: WHT, whiteSpace: 'nowrap',
+    transform: 'rotate(-1.35deg)', transformOrigin: '0 0', letterSpacing: '4px', fontFamily: "'Bebas Neue', 'Noto Sans SC'", fontWeight: 900 });
   d.innerHTML = Array(6).fill(`<span style="color:${RED}">▲</span> 百鬼夜行 NIGHT PARADE `).join('');
   T2.appendChild(d);
 })();

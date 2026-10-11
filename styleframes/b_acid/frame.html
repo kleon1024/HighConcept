@@ -24,7 +24,7 @@
   #vig{position:absolute;inset:0;pointer-events:none;
     background:radial-gradient(90% 62% at 50% 46%, rgba(0,0,0,0) 55%, rgba(0,0,0,.55) 100%);}
   text{font-kerning:normal}
-  .mono{font-family:'JetBrains Mono',monospace}
+  .mono{font-family:'JetBrains Mono','Noto Sans SC',monospace}
   .unb{font-family:'Unbounded','Noto Sans SC',sans-serif}
   .cjk{font-family:'Noto Sans SC',sans-serif;font-weight:900}
 </style>
@@ -47,9 +47,9 @@
         <stop offset=".16" stop-color="#7f9ff0"/>
         <stop offset=".34" stop-color="#d6eaff"/>
         <stop offset=".46" stop-color="#ffffff"/>
-        <stop offset=".488" stop-color="#ffffff"/>
-        <stop offset=".50" stop-color="#0e0820"/>
-        <stop offset=".555" stop-color="#24163f"/>
+        <stop offset=".49" stop-color="#ffffff"/>
+        <stop offset=".497" stop-color="#05030c"/>
+        <stop offset=".56" stop-color="#160c2c"/>
         <stop offset=".69" stop-color="#5d3a8c"/>
         <stop offset=".83" stop-color="#ff9ed8"/>
         <stop offset=".93" stop-color="#fff2fb"/>
@@ -65,6 +65,7 @@
         <stop offset="1" stop-color="#ffffff"/>
       </linearGradient>
       <linearGradient id="chromeMask" gradientUnits="userSpaceOnUse" x1="0" y1="260" x2="0" y2="900">
+        <!-- stops are rebuilt by script below -->
         <stop offset="0" stop-color="#5a6cb8"/>
         <stop offset=".10" stop-color="#d4e6ff"/>
         <stop offset=".17" stop-color="#ffffff"/>
@@ -81,6 +82,27 @@
         <stop offset=".86" stop-color="#ffffff"/>
         <stop offset=".92" stop-color="#6070b8"/>
         <stop offset="1" stop-color="#dfe9ff"/>
+      </linearGradient>
+      <linearGradient id="chromeHorn" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#ffffff"/>
+        <stop offset=".14" stop-color="#9fb8ff"/>
+        <stop offset=".30" stop-color="#2a2f6a"/>
+        <stop offset=".40" stop-color="#d9ecff"/>
+        <stop offset=".50" stop-color="#ffffff"/>
+        <stop offset=".515" stop-color="#0a0818"/>
+        <stop offset=".60" stop-color="#2b1b4f"/>
+        <stop offset=".76" stop-color="#a77fe0"/>
+        <stop offset=".88" stop-color="#ffd0ef"/>
+        <stop offset="1" stop-color="#ffffff"/>
+      </linearGradient>
+      <linearGradient id="chromeThorn" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#e8f4ff"/>
+        <stop offset=".3" stop-color="#5a6cb8"/>
+        <stop offset=".46" stop-color="#ffffff"/>
+        <stop offset=".5" stop-color="#0c0a1c"/>
+        <stop offset=".7" stop-color="#3d2b6b"/>
+        <stop offset=".9" stop-color="#ff9ed8"/>
+        <stop offset="1" stop-color="#ffffff"/>
       </linearGradient>
       <linearGradient id="chromeBB" x1="0" y1="0" x2="0.3" y2="1">
         <stop offset="0" stop-color="#6a7cc4"/>
@@ -118,6 +140,13 @@
         <stop offset=".18" stop-color="#fff" stop-opacity=".9"/>
         <stop offset="1" stop-color="#fff" stop-opacity="1"/>
       </linearGradient>
+      <linearGradient id="echoFade" gradientUnits="userSpaceOnUse" x1="0" y1="950" x2="0" y2="1040">
+        <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+        <stop offset="1" stop-color="#fff" stop-opacity="1"/>
+      </linearGradient>
+      <mask id="echoMask"><rect x="0" y="0" width="1080" height="1300" fill="url(#echoFade)"/></mask>
+      <clipPath id="sliceA"><rect x="0" y="1170" width="1080" height="9"/></clipPath>
+      <clipPath id="sliceB"><rect x="0" y="744" width="1080" height="6"/></clipPath>
       <mask id="gridMask"><rect x="0" y="1525" width="1080" height="400" fill="url(#gridFade)"/></mask>
       <linearGradient id="reflFade" gradientUnits="userSpaceOnUse" x1="0" y1="1525" x2="0" y2="1640">
         <stop offset="0" stop-color="#fff" stop-opacity=".45"/>
@@ -202,12 +231,13 @@
       </filter>
       <filter id="liquid" x="-5%" y="-15%" width="110%" height="130%">
         <feTurbulence type="fractalNoise" baseFrequency="0.006 0.012" numOctaves="1" seed="3" result="t"/>
-        <feDisplacementMap in="SourceGraphic" in2="t" scale="10" xChannelSelector="R" yChannelSelector="G"/>
+        <feDisplacementMap in="SourceGraphic" in2="t" scale="7" xChannelSelector="R" yChannelSelector="G"/>
       </filter>
     </defs>
 
     <g id="L_bg"></g>
     <g id="L_grid"></g>
+    <g id="L_echo"></g>
     <g id="L_ring"></g>
     <g id="L_lanterns"></g>
     <g id="L_mask"></g>
@@ -216,6 +246,9 @@
     <g id="L_band"></g>
     <g id="L_micro"></g>
     <g id="L_spark"></g>
+    <!-- glitch slices: hint of the RGB-split / slice-shift cut language -->
+    <g clip-path="url(#sliceA)"><use href="#L_title" x="24"/></g>
+    <g clip-path="url(#sliceB)"><use href="#L_mask" x="-18"/></g>
   </svg>
 
   <svg class="layer" id="grain" viewBox="0 0 1080 1920">
@@ -251,7 +284,7 @@ function thorn(x0,y0,ang,len,w,curl,n=26){
     const t=i/n;
     const a=pts[Math.max(0,i-1)], b=pts[Math.min(n,i+1)];
     let tx=b[0]-a[0], ty=b[1]-a[1]; const l=Math.hypot(tx,ty)||1; tx/=l; ty/=l;
-    const ww=w*Math.pow(1-t,1.15)*(0.55+0.45*Math.sin(Math.PI*Math.min(1,t*1.6+0.35)));
+    const ww=w*Math.pow(1-t,0.95)*(0.6+0.4*Math.sin(Math.PI*Math.min(1,t*1.6+0.35)));
     L.push([pts[i][0]-ty*ww, pts[i][1]+tx*ww]);
     Rr.push([pts[i][0]+ty*ww, pts[i][1]-tx*ww]);
   }
@@ -292,23 +325,23 @@ const HZ=1525;                  // horizon line
 /* ---------- warped wireframe floor ---------- */
 (function(){
   const f=430;
-  const d=(x,z)=> 0.30*Math.sin(0.62*x+1.25*z)*Math.exp(-(z-0.9)/4.5)
+  const d=(x,z)=> 0.42*Math.sin(0.55*x+1.1*z)*Math.exp(-(z-0.8)/6)
                  + 0.62*Math.exp(-(x*x)/14-((z-2.1)**2)/0.9);
   const P=(x,z)=>[CX + f*x/z, HZ + f*(1-d(x,z))/z];
   let s='';
-  const zs=[]; for(let z=0.82; z<70; z*=1.13) zs.push(z);
+  const zs=[]; for(let z=0.78; z<70; z*=1.1) zs.push(z);
   for(const z of zs){
     let pts=[]; for(let x=-30;x<=30;x+=0.25){ pts.push(P(x,z)); }
     pts=pts.filter(p=>p[0]>-200&&p[0]<1280);
     s+=`<polyline points="${pts.map(p=>f1(p[0])+','+f1(p[1])).join(' ')}"/>`;
   }
-  for(let x=-30;x<=30;x+=1.25){
-    let pts=[]; for(let z=0.82; z<70; z*=1.03) pts.push(P(x,z));
+  for(let x=-30;x<=30;x+=0.9){
+    let pts=[]; for(let z=0.78; z<70; z*=1.03) pts.push(P(x,z));
     pts=pts.filter(p=>p[1]<1990&&p[0]>-300&&p[0]<1380);
     if(pts.length>1) s+=`<polyline points="${pts.map(p=>f1(p[0])+','+f1(p[1])).join(' ')}"/>`;
   }
   $('L_grid').innerHTML =
-    `<g mask="url(#gridMask)" fill="none" stroke="url(#gridStroke)" stroke-width="1.3" opacity=".9">${s}</g>`+
+    `<g mask="url(#gridMask)" fill="none" stroke="url(#gridStroke)" stroke-width="1.4" opacity="1">${s}</g>`+
     `<g mask="url(#gridMask)" fill="none" stroke="#C6FF00" stroke-width="3" opacity=".12" filter="url(#blur6)">${s}</g>`+
     `<rect x="0" y="${HZ-1}" width="1080" height="2.5" fill="#ffd0ea"/>`+
     `<rect x="0" y="${HZ-6}" width="1080" height="12" fill="#ff2e93" opacity=".7" filter="url(#blur6)"/>`;
@@ -335,7 +368,7 @@ const HZ=1525;                  // horizon line
   }
   ['000','030','060','090','120','150','180','210','240','270','300','330'].forEach((lab,i)=>{
     const t=i*30*Math.PI/180, r=RR+82;
-    if([0,2,3,6,9,10].includes(i)) return; // keep clear for horns, thorn wings, lanterns and the title
+    if([0,1,2,3,6,9,10,11].includes(i)) return; // keep clear for horns, thorn wings, lanterns and the title
     s+=mono(f1(CX+Math.sin(t)*r), f1(CY-Math.cos(t)*r+4), lab+'°',{size:11,anchor:'middle',fill:'#C6FF00',op:.9,ls:1});
   });
 
@@ -358,20 +391,27 @@ const HZ=1525;                  // horizon line
       const bx=CX+Math.sin(t)*RR, by=CY-Math.cos(t)*RR;
       const outward=Math.atan2(by-CY,bx-CX);
       specs.forEach(([dAng,len,w,curl,off])=>{
-        const ang=outward+dAng*side;
-        th+=`<path d="${thorn(bx+Math.cos(outward)*off, by+Math.sin(outward)*off, ang, len, w, curl*side)}"/>`;
+        const ang=outward+dAng*side, c=curl*side;
+        const x0=bx+Math.cos(outward)*off, y0=by+Math.sin(outward)*off;
+        th+=`<path d="${thorn(x0, y0, ang, len, w, c)}"/>`;
+        if(len>90){
+          // secondary hooked barb on the convex side — the tribal signature
+          const t=0.38, dx=Math.cos(ang), dy=Math.sin(ang);
+          const px=x0+dx*len*t - dy*c*len*t*t, py=y0+dy*len*t + dx*c*len*t*t;
+          const sg=Math.sign(c)||1;
+          th+=`<path d="${thorn(px, py, ang-0.95*sg, len*0.42, w*0.5, c*1.2)}"/>`;
+        }
       });
     });
   };
   // big wing at 3 / 9 o'clock: interlocking hooked thorns
-  sprout(84,[[-0.55,128,22,-0.62,-10],[-0.05,104,16,0.55,-10],[0.62,70,11,-0.7,-8]]);
-  sprout(100,[[0.55,118,20,0.62,-10],[1.1,74,12,-0.6,-8]]);
+  sprout(84,[[-0.55,134,30,-0.62,-14],[-0.02,112,22,0.55,-14],[0.62,76,15,-0.7,-12]]);
+  sprout(100,[[0.55,124,28,0.62,-14],[1.1,80,15,-0.6,-12]]);
   // small barbs further round the halo
-  sprout(132,[[0.35,66,11,0.6,-8],[-0.35,46,8,-0.6,-6]]);
-  sprout(55,[[-0.3,60,10,-0.6,-8]]);
+  sprout(55,[[-0.3,66,13,-0.6,-10]]);
 
   s+=`<g filter="url(#bevelM)">`+
-     `<g fill="url(#chromeBB)">${th}</g>`+
+     `<g fill="url(#chromeThorn)">${th}</g>`+
      `<g fill="none" stroke-width="24" stroke-linecap="butt">${ring}</g>`+
      `</g>`;
   // crisp rim lines on the tube
@@ -418,53 +458,80 @@ function lantern(cx,cy,w,h,color,glowId,label,tilt=0){
   let s='';
   s+=lantern(146,318,118,168,'#C6FF00','lanternGlow','鬼',-6);
   s+=lantern(946,318,84,120,'#8FE9FF','lanternGlowIce','祭',8);
-  s+=mono(146,438,'LANTERN_A // 0x2F',{size:10,anchor:'middle',fill:'#C6FF00',op:.8});
-  s+=mono(946,418,'LANTERN_B // 0x31',{size:10,anchor:'middle',fill:'#8FE9FF',op:.8});
+  s+=mono(146,490,'LANTERN_A // 0x2F',{size:10,anchor:'middle',fill:'#C6FF00',op:.8});
+  s+=mono(946,450,'LANTERN_B // 0x31',{size:10,anchor:'middle',fill:'#8FE9FF',op:.8});
   $('L_lanterns').innerHTML=s;
 })();
 
-/* ---------- oni mask, chrome line-art (left half drawn, mirrored) ---------- */
+/* rebuild the mask chrome as repeating sky/horizon/ground bands (period ~110px) */
+(function(){
+  const g=document.getElementById('chromeMask'); g.innerHTML='';
+  const band=[[0,'#7f8cc4'],[.28,'#e4eeff'],[.47,'#ffffff'],[.5,'#0a0816'],[.58,'#2a2248'],[.8,'#b2a8e0'],[.93,'#ffe2f4'],[1,'#7f8cc4']];
+  const P=8; let st='';
+  for(let k=0;k<P;k++) band.forEach(([o,c],j)=>{ if(k>0&&j===0) return; st+=`<stop offset="${((k+o)/P).toFixed(4)}" stop-color="${c}"/>`; });
+  g.innerHTML=st;
+})();
+
+/* ---------- oni (hannya) mask, chrome line-art (left half drawn, mirrored) ---------- */
 (function(){
   const half = {
-    face:  'M0,-168 C-70,-174 -140,-164 -176,-110 C-206,-62 -212,0 -197,52 C-182,112 -142,170 -82,210 C-52,228 -26,236 0,237',
-    brow:  'M-26,-46 C-72,-78 -124,-104 -182,-122 C-154,-96 -112,-72 -44,-30 Z',
-    eye:   'M-36,-14 C-74,-46 -128,-48 -162,-24 C-128,2 -78,6 -36,-14 Z',
-    nose:  'M-14,26 C-30,40 -40,56 -26,68 C-18,74 -8,70 -4,64',
-    lip:   'M-128,96 C-92,112 -50,108 0,116',
-    jaw:   'M-128,96 C-98,148 -52,172 0,172',
-    fangU: 'M-96,104 L-80,152 L-66,108',
-    fangL: 'M-60,168 L-46,124 L-34,170',
-    cheek: 'M-160,26 C-140,58 -134,84 -140,104',
-    cheek2:'M-182,-2 C-170,8 -160,14 -150,16',
-    wr1:   'M-70,-128 C-46,-118 -22,-114 0,-114',
-    wr2:   'M-54,-150 C-34,-144 -16,-142 0,-142',
-    horn:  'M-96,-158 C-118,-210 -168,-262 -236,-322 C-214,-262 -186,-216 -146,-142 Z',
-    hornR1:'M-112,-188 L-140,-170', hornR2:'M-140,-228 L-168,-214', hornR3:'M-172,-268 L-196,-258',
+    face:  'M0,-166 C-66,-172 -138,-166 -178,-112 C-210,-64 -214,-4 -200,48 C-186,104 -150,160 -92,204 C-60,226 -30,236 0,238',
+    brow:  'M-20,-36 C-60,-72 -118,-104 -200,-136 C-182,-116 -174,-104 -170,-90 C-124,-80 -86,-60 -40,-22 Z',
+    eye:   'M-30,-8 C-66,-42 -124,-52 -168,-38 C-136,-6 -84,6 -30,-8 Z',
+    nose:  'M-12,22 C-28,38 -40,54 -28,68 C-20,76 -8,72 -4,64',
+    lip:   'M-142,86 C-100,112 -54,110 0,118',
+    jaw:   'M-142,86 C-112,150 -58,180 0,180',
+    fangU: 'M-108,100 L-88,160 L-72,106',
+    fangU2:'M-46,112 L-37,142 L-27,114',
+    fangL: 'M-66,174 L-52,124 L-38,178',
+    cheek: 'M-170,20 C-150,54 -142,82 -150,108',
+    wr1:   'M-74,-126 C-48,-116 -22,-112 0,-112',
+    wr2:   'M-56,-148 C-36,-142 -16,-140 0,-140',
+    horn:  'M-142,-142 C-190,-180 -236,-240 -232,-300 C-228,-336 -212,-356 -198,-374 C-206,-344 -200,-316 -188,-292 C-170,-254 -126,-214 -94,-160 Z',
+    hornR1:'M-123,-195 L-172,-176', hornR2:'M-150,-229 L-202,-214', hornR3:'M-179,-267 L-225,-265',
+    mouth: 'M-142,86 C-100,112 -54,110 0,118 C54,110 100,112 142,86 C112,150 58,180 0,180 C-58,180 -112,150 -142,86Z',
   };
-  const both = (d) => `<path d="${d}"/><path d="${d}" transform="scale(-1,1)"/>`;
-  const strokes = ['face','nose','lip','jaw','fangU','fangL','cheek','cheek2','wr1','wr2','hornR1','hornR2','hornR3'];
-  const T = `translate(${CX},${CY+18}) scale(1.06)`;
+  const both = (d, extra='') => `<path d="${d}" ${extra}/><path d="${d}" ${extra} transform="scale(-1,1)"/>`;
+  const T = `translate(${CX},${CY+16}) scale(1.06)`;
+  const Tx = (dx) => `translate(${CX+dx},${CY+16}) scale(1.06)`;
+  const fullFace = `${half.face} C30,236 60,226 92,204 C150,160 186,104 200,48 C214,-4 210,-64 178,-112 C138,-166 66,-172 0,-166Z`;
+  // tribal tattoo marks (thorns) on cheeks + brow flicks + forehead flame
+  const marks = [
+    thorn(-118,24,1.72,92,9,0.38), thorn(-150,30,1.95,58,6,0.5),
+    thorn(-172,-96,-2.45,54,8,0.55),
+  ];
+  const flame = thorn(0,-86,-Math.PI/2,74,13,0) ;
 
   let s='';
+  // scan-contour: dashed wire outline around the mask
+  s+=`<g transform="translate(${CX},${CY+16}) scale(1.13)" fill="none" stroke="#8FE9FF" stroke-width="1.1" stroke-dasharray="3 6" opacity=".75"><path d="${fullFace}"/></g>`;
   // dark face plate so the chrome line-art reads against the holo blobs
-  s+=`<g transform="${T}"><path d="${half.face} C26,236 52,228 82,210 C142,170 182,112 197,52 C212,0 206,-62 176,-110 C140,-164 70,-174 0,-168Z" fill="#07040f" opacity=".82"/></g>`;
+  s+=`<g transform="${T}"><path d="${fullFace}" fill="#07040f" opacity=".86"/></g>`;
   // RGB-split ghosts of the mask
-  const lineArt = (stroke, w, extra='') => `<g transform="${T}" fill="none" stroke="${stroke}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" ${extra}>${strokes.map(k=>both(half[k])).join('')}${both(half.brow)}${both(half.eye)}${both(half.horn)}<path d="M0,-132 L12,-112 L0,-92 L-12,-112Z"/></g>`;
-  s+=`<g opacity=".8" style="mix-blend-mode:screen">${lineArt('#ff2e93',8,'transform-origin="0 0"').replace(`translate(${CX},`,`translate(${CX-7},`)}</g>`;
-  s+=`<g opacity=".8" style="mix-blend-mode:screen">${lineArt('#38d8ff',8).replace(`translate(${CX},`,`translate(${CX+7},`)}</g>`;
-  // eye glow
-  s+=`<g transform="${T}"><g filter="url(#glow)">${both('M-36,-14 C-74,-46 -128,-48 -162,-24 C-128,2 -78,6 -36,-14 Z').replace(/<path /g,'<path fill="#C6FF00" opacity=".9" ')}</g>`+
-     both('M-36,-14 C-74,-46 -128,-48 -162,-24 C-128,2 -78,6 -36,-14 Z').replace(/<path /g,'<path fill="url(#eyeGlow)" ')+
-     `<circle cx="-98" cy="-22" r="13" fill="#07040f"/><circle cx="98" cy="-22" r="13" fill="#07040f"/>`+
-     `<path d="M-128,96 C-92,112 -50,108 0,116 C50,108 92,112 128,96 C98,148 52,172 0,172 C-52,172 -98,148 -128,96Z" fill="#2a0620"/>`+
-     `<path d="M-128,96 C-92,112 -50,108 0,116 C50,108 92,112 128,96 C98,148 52,172 0,172 C-52,172 -98,148 -128,96Z" fill="#ff2e93" opacity=".35" filter="url(#glowSoft)"/>`+
+  const lines = ['face','nose','lip','jaw','cheek','wr1','wr2'];
+  const lineArt = (stroke, dx) => `<g transform="${Tx(dx)}" fill="none" stroke="${stroke}" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">${lines.map(k=>both(half[k])).join('')}${both(half.brow)}${both(half.eye)}${both(half.horn)}</g>`;
+  s+=`<g opacity=".75" style="mix-blend-mode:screen">${lineArt('#ff2e93',-6)}${lineArt('#2fd6ff',6)}</g>`;
+  // mouth + eyes (emissive)
+  s+=`<g transform="${T}">`+
+     `<path d="${half.mouth}" fill="#2a0620"/><path d="${half.mouth}" fill="#ff2e93" opacity=".45" filter="url(#glowSoft)"/>`+
+     `<g filter="url(#glow)">${both(half.eye,'fill="#C6FF00" opacity=".95"')}</g>`+
+     both(half.eye,'fill="url(#eyeGlow)"')+
+     `<ellipse cx="-104" cy="-24" rx="5.5" ry="15" fill="#07040f" transform="rotate(-12 -104 -24)"/><ellipse cx="104" cy="-24" rx="5.5" ry="15" fill="#07040f" transform="rotate(12 104 -24)"/>`+
+     `<g filter="url(#glowSoft)">${marks.map(d=>both(d,'fill="#C6FF00"')).join('')}<path d="${flame}" fill="#ff2e93"/></g>`+
      `</g>`;
-  // the chrome itself
+  const tubes = lines.map(k=>both(half[k])).join('')+both(half.eye);
+  // the chrome itself — horns & brows get a rounder bevel and their own diagonal reflection
+  s+=`<g filter="url(#bevelXL)"><g transform="${T}" fill="url(#chromeHorn)">${both(half.horn)}${both(half.brow)}</g>`+
+     `<g transform="${T}" fill="none" stroke="#0b0716" stroke-width="4" stroke-linecap="round">${both(half.hornR1)}${both(half.hornR2)}${both(half.hornR3)}</g></g>`;
   s+=`<g filter="url(#bevelM)">`+
-       `<g transform="${T}" fill="url(#chromeMask)">${both(half.horn)}${both(half.brow)}${both(half.fangU+' Z')}${both(half.fangL+' Z')}<path d="M0,-134 L14,-112 L0,-90 L-14,-112Z"/></g>`+
-       `<g transform="${T}" fill="none" stroke="url(#chromeMask)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">${['face','nose','lip','jaw','cheek','cheek2','wr1','wr2'].map(k=>both(half[k])).join('')}${both(half.eye)}</g>`+
-       `<g transform="${T}" fill="none" stroke="url(#chromeMask)" stroke-width="5" stroke-linecap="round">${both(half.hornR1)}${both(half.hornR2)}${both(half.hornR3)}</g>`+
+       `<g transform="${T}" fill="url(#chromeMask)">${both(half.fangU+'Z')}${both(half.fangU2+'Z')}${both(half.fangL+'Z')}<path d="M0,-132 L13,-112 L0,-92 L-13,-112Z"/></g>`+
+       `<g transform="${T}" fill="none" stroke-linecap="round" stroke-linejoin="round">`+
+         `<g stroke="#06040d" stroke-width="15">${tubes}</g>`+
+         `<g stroke="url(#chromeMask)" stroke-width="10.5">${tubes}</g>`+
+       `</g>`+
      `</g>`;
+  // crisp specular line riding each tube
+  s+=`<g transform="translate(-1.8,-2)"><g transform="${T}" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".8">${tubes}</g></g>`;
   $('L_mask').innerHTML=s;
 })();
 
@@ -474,28 +541,28 @@ function lantern(cx,cy,w,h,color,glowId,label,tilt=0){
   const txt='百鬼夜行';
   const T=(attrs, dx=0, dy=0)=>`<text class="cjk" x="${X+dx}" y="${Y+dy}" font-size="${FS}" text-anchor="middle" textLength="${TL}" lengthAdjust="spacingAndGlyphs" ${attrs}>${txt}</text>`;
   let s='';
-  // stacked, warped outline echoes rising into the halo
-  [[-150,.16],[-100,.26],[-50,.42]].forEach(([dy,op])=>{
-    s+=`<g filter="url(#warp)">${T(`fill="none" stroke="#C6FF00" stroke-width="1.6" opacity="${op}"`,0,dy)}</g>`;
+  // stacked outline echoes stepping up into the halo (repeated type)
+  let echo='';
+  [[-120,.35],[-60,.6]].forEach(([dy,op])=>{
+    echo+=T(`fill="none" stroke="#C6FF00" stroke-width="1.6" opacity="${op}"`,0,dy);
   });
+  $('L_echo').innerHTML=`<g mask="url(#echoMask)">${echo}</g>`;
   // deep extrusion
   let ex=''; for(let i=16;i>=1;i--) ex+=T(`fill="${i>13?'#05030a':'url(#extrude)'}"`, i*0.55, i*1.35);
   s+=`<g>${ex}</g>`;
   // RGB split
   s+=`<g style="mix-blend-mode:screen" opacity=".95">${T('fill="#ff2e93"',-9,-2)}${T('fill="#2fd6ff"',9,2)}</g>`;
   // dark keyline then liquid chrome face
-  s+=T('fill="none" stroke="#06040c" stroke-width="10" stroke-linejoin="round"');
+  s+=T('fill="#06040c" stroke="#06040c" stroke-width="10" stroke-linejoin="round"');
   s+=`<g filter="url(#bevelXL)"><g filter="url(#liquid)">${T('fill="url(#chromeTitle)"')}</g></g>`;
-  s+=T('fill="none" stroke="#ffffff" stroke-width="1.2" stroke-opacity=".55"');
+  s+=`<g style="mix-blend-mode:overlay" opacity=".5"><g filter="url(#liquid)">${T('fill="url(#holoH)"')}</g></g>`;
 
   // Latin line
   s+=`<g filter="url(#glowSoft)"><text class="unb" x="540" y="1352" font-size="56" font-weight="900" text-anchor="middle" textLength="900" lengthAdjust="spacingAndGlyphs" fill="#C6FF00">NIGHT PARADE · 2026</text></g>`;
   s+=mono(540,1392,'HYAKKI YAGYŌ — EASTERN HALLOWEEN — 31.10.2026 — 23:59 JST',{size:15,anchor:'middle',fill:'#9fe8ff',op:.9,ls:2.2});
   // tiny tags hugging the title block
-  s+=mono(72,1016,'[01]',{size:13,fill:'#C6FF00',op:1});
-  s+=mono(1008,1016,'ACID_GFX v2.6',{size:13,fill:'#C6FF00',op:1,anchor:'end'});
-  s+=mono(72,1290,'ONI·KITSUNE·KASA',{size:11,fill:'#ff7cc0',op:.95});
-  s+=mono(1008,1290,'FPS 60 / 4:2:2 / HDR',{size:11,fill:'#ff7cc0',op:.95,anchor:'end'});
+  s+=mono(72,1300,'[01] ONI·KITSUNE·KASA',{size:11,fill:'#ff7cc0',op:.95});
+  s+=mono(1008,1300,'ACID_GFX v2.6 / HDR',{size:11,fill:'#ff7cc0',op:.95,anchor:'end'});
   $('L_title').innerHTML=s;
 })();
 
@@ -557,9 +624,9 @@ function lantern(cx,cy,w,h,color,glowId,label,tilt=0){
   s+=`<text class="unb" x="-40" y="1722" font-size="24" font-weight="900" fill="#07040e" letter-spacing="1">${line}</text>`;
   s+=`<rect x="-80" y="1684" width="1240" height="2" fill="#07040e" opacity=".0"/>`;
   s+=`</g>`;
-  s+=`<g transform="rotate(3 540 1790)">`;
-  s+=`<rect x="-80" y="1772" width="1240" height="26" fill="none" stroke="#ff2e93" stroke-width="1.4"/>`;
-  s+=`<text class="mono" x="-40" y="1790" font-size="13" fill="#ff7cc0" letter-spacing="3">${'WARNING: SPIRITS CROSSING ▲ DO NOT LOOK BACK ▲ 一条戻橋 ▲ '.repeat(6)}</text>`;
+  s+=`<g transform="rotate(-1.5 540 1796)">`;
+  s+=`<rect x="-80" y="1783" width="1240" height="26" fill="none" stroke="#ff2e93" stroke-width="1.4"/>`;
+  s+=`<text class="mono" x="-40" y="1801" font-size="13" fill="#ff7cc0" letter-spacing="3">${'WARNING: SPIRITS CROSSING ▲ DO NOT LOOK BACK ▲ 一条戻橋 ▲ '.repeat(6)}</text>`;
   s+=`</g>`;
   $('L_band').innerHTML=s;
 })();
@@ -581,19 +648,21 @@ function lantern(cx,cy,w,h,color,glowId,label,tilt=0){
   s+=br(40,40,1,1)+br(1040,40,-1,1)+br(40,1880,1,-1)+br(1040,1880,-1,-1);
   // edge rulers
   for(let y=220;y<1500;y+=12){ const big=(y-220)%120===0; s+=`<line x1="40" y1="${y}" x2="${big?56:47}" y2="${y}" stroke="#9fe8ff" stroke-width="1" opacity="${big?.9:.45}"/>`; s+=`<line x1="1040" y1="${y}" x2="${big?1024:1033}" y2="${y}" stroke="#9fe8ff" stroke-width="1" opacity="${big?.9:.45}"/>`; }
-  // vertical side strips
-  s+=mono(66,980,'PROCESSION UNIT 001—108 /// ONI · KITSUNE · KASA-OBAKE · CHŌCHIN-OBAKE',{size:11,fill:'#9fe8ff',op:.8,rot:-90,ls:2.4});
-  s+=mono(1016,250,'LUNAR HALO R=360 · Δ0.0031 · PHASE 15/FULL · 満月',{size:11,fill:'#9fe8ff',op:.8,rot:90,ls:2.4});
+  // vertical side strips (kept clear of the thorn wings at 3/9 o'clock)
+  s+=mono(62,560,'PROCESSION UNIT 001—108 /// 百鬼',{size:11,fill:'#9fe8ff',op:.8,rot:-90,ls:2.4});
+  s+=mono(62,1000,'SEED 0x6D2B · Δ0.0031',{size:11,fill:'#9fe8ff',op:.8,rot:-90,ls:2.4});
+  s+=mono(1018,770,'LUNAR HALO R=360 · 満月',{size:11,fill:'#9fe8ff',op:.8,rot:90,ls:2.4});
   // halo annotations
   s+=cross(CX,CY-RR-46-34,7,'#C6FF00');
-  s+=mono(CX+16,CY-RR-46-30,'',{size:10});
-  s+=cross(200,250,8)+mono(214,254,'X0200 Y0250',{size:9,fill:'#9fe8ff',op:.7});
-  s+=cross(880,1120,8)+mono(866,1124,'X0880 Y1120',{size:9,fill:'#9fe8ff',op:.7,anchor:'end'});
-  s+=mono(CX,CY+RR+70,'',{size:10});
-  s+=`<path d="M${CX+RR+60},${CY-150} l26,-26 h70" fill="none" stroke="#C6FF00" stroke-width="1"/>`;
-  s+=mono(CX+RR+90,CY-182,'MASK_ID ONI-07',{size:10,fill:'#C6FF00',op:1});
-  s+=`<path d="M${CX-RR-50},${CY+170} l-20,24 h-50" fill="none" stroke="#ff7cc0" stroke-width="1"/>`;
-  s+=mono(CX-RR-120,CY+210,'CHROME/Cr-24',{size:10,fill:'#ff7cc0',op:1});
+  s+=cross(240,204,7)+mono(254,208,'X0240 Y0204',{size:9,fill:'#9fe8ff',op:.75});
+  s+=cross(840,212,7)+mono(826,216,'X0840 Y0212',{size:9,fill:'#9fe8ff',op:.75,anchor:'end'});
+  const rp=(deg,r)=>[CX+Math.sin(deg*Math.PI/180)*r, CY-Math.cos(deg*Math.PI/180)*r];
+  let [ax,ay]=rp(128,RR+50);
+  s+=`<circle cx="${f1(ax)}" cy="${f1(ay)}" r="3" fill="#C6FF00"/><path d="M${f1(ax)},${f1(ay)} l28,28 H1000" fill="none" stroke="#C6FF00" stroke-width="1"/>`;
+  s+=mono(1000,ay+44,'MASK_ID ONI-07',{size:10,fill:'#C6FF00',op:1,anchor:'end'});
+  [ax,ay]=rp(232,RR+50);
+  s+=`<circle cx="${f1(ax)}" cy="${f1(ay)}" r="3" fill="#ff7cc0"/><path d="M${f1(ax)},${f1(ay)} l-28,28 H80" fill="none" stroke="#ff7cc0" stroke-width="1"/>`;
+  s+=mono(80,ay+44,'CHROME / Cr-24',{size:10,fill:'#ff7cc0',op:1});
   // bottom block (decorative only, stays out of the way)
   s+=barcode(72,1828,180,30,3,'#e8f0ff');
   s+=mono(72,1872,'NO.0108 / 0666',{size:10,fill:'#e8f0ff',op:.7,ls:2});
