@@ -66,7 +66,7 @@ const tunnelGlow = new THREE.Mesh(new THREE.PlaneGeometry(2600, 2600), new THREE
 const wallRig = new THREE.Group(); scene.add(wallRig);
 const wallSpk = buildSpeaker({ res: 0.5, seg: 128, TW: 1024, TH: 256, liq: [0.03, 1 / 200, 0.25, 0.35] });
 wallSpk.setDamage({ cut: 1, open: 1, cracks: 1, holes: 3, light: 1 });
-wallSpk.mat.side = THREE.FrontSide;   // DoubleSide x15 cones costs ~14 s/frame in SwiftShader; the lit backdrop shows through the cuts instead
+wallSpk.mat.side = THREE.BackSide;    // the lathe faces the camera with its back side; DoubleSide x15 costs ~14 s/frame in SwiftShader
 const wallCells = [];
 for (let r = 0; r < 5; r++) for (let c = 0; c < 3; c++) {
   const g = wallSpk.group.clone(); g.scale.setScalar(0.47); g.position.set((c - 1) * 340, (2 - r) * 340, 0);
