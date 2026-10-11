@@ -6,7 +6,7 @@ Each effect is levelled by its active loudness, so `db` is its place in the mix,
 import os
 import numpy as np
 import soundfile as sf
-from scipy.signal import fftconvolve, resample_poly
+from scipy.signal import butter, fftconvolve, resample_poly, sosfilt
 from sfxlib import resolve
 
 class Sfx:
@@ -41,8 +41,9 @@ class Sfx:
         if b > a: self.buf[a:b] += x[a - i0:b - i0] * 10 ** (db / 20)
         self.log.append((round(t, 2), name, db))
 
-    def mix(self, ir=None, verb=0.15):
-        """The SFX bus, with a touch of the score's reverb so effects sit in the same space."""
+    def mix(self, ir=None, verb=0.15, lp=None):
+        """The SFX bus, with a touch of the score's reverb so effects sit in the same space; `lp` rounds off any fizz."""
+        if lp: self.buf = sosfilt(butter(2, lp, 'low', fs=self.sr, output='sos'), self.buf, axis=0)
         if os.environ.get('STEM_DIR'):
             os.makedirs(os.environ['STEM_DIR'], exist_ok=True); sf.write(os.path.join(os.environ['STEM_DIR'], '_sfx.wav'), self.buf.astype(np.float32), self.sr)
         if ir is None: return self.buf

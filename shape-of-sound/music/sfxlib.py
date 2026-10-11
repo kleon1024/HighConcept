@@ -6,7 +6,8 @@ Short names used by the scores are aliases in music/sfx_aliases.json.
 
   python3 music/sfxlib.py index              # scrape Mixkit categories into the catalog
   python3 music/sfxlib.py fetch [--max 12]   # download + analyse everything up to 12 s
-  python3 music/sfxlib.py search whoosh soft [--cat whoosh] [--max 3]
+  python3 music/sfxlib.py search whoosh [--cat whoosh] [--max 3] [--soft]   # --soft drops bells/chimes/glitter
+  python3 music/sfxlib.py analyse            # recompute duration/onset/peak/loudness/brightness/hf/tonal/ring
   python3 music/sfxlib.py audition 1489 2623 switch -o out/audition.wav   # ids or aliases, 0.6 s apart
   python3 music/sfxlib.py alias switch 2585
 """
@@ -68,9 +69,17 @@ def analyse(path):
     p = np.sqrt(np.mean(x ** 2, axis=1)); b = int(0.05 * sr); nb = max(1, len(p) // b)
     fr = 20 * np.log10(np.sqrt(np.mean(p[:nb * b].reshape(nb, -1) ** 2, axis=1)) + 1e-12)
     S = np.abs(np.fft.rfft(x.mean(1))); f = np.fft.rfftfreq(len(x), 1 / sr)
+    P = S ** 2; hf = float(P[f > 5000].sum() / (P.sum() + 1e-12))
+    # tonality: share of energy in sharp spectral peaks (bell/chime partials) — Welch PSD vs its running median
+    from scipy.signal import medfilt, welch
+    fw, pw = welch(x.mean(1), sr, nperseg=4096); sel = (fw > 150) & (fw < 12000); pw = pw[sel]
+    tonal = float(pw[pw > 8 * medfilt(pw, 31)].sum() / (pw.sum() + 1e-18))
+    # ring: seconds from the loudest moment until the envelope falls 30 dB (long for bells and chimes)
+    edb = 20 * np.log10(env + 1e-9); pk = int(np.argmax(env)); below = np.nonzero(edb[pk:] < edb[pk] - 30)[0]
+    ring = round((below[0] if len(below) else len(env) - pk) / sr, 2)
     return {'dur': round(len(x) / sr, 2), 'onset': round(float(np.argmax(m > 0.05 * m.max())) / sr, 3), 'peak': round(float(np.argmax(env)) / sr, 3),
             'active_db': round(float(10 * np.log10(np.mean(10 ** (fr[fr > fr.max() - 30] / 10)))), 1),
-            'brightness_hz': int((S * f).sum() / (S.sum() + 1e-12))}
+            'brightness_hz': int((S * f).sum() / (S.sum() + 1e-12)), 'hf': round(hf, 3), 'tonal': round(tonal, 3), 'ring': ring}
 
 def fetch_one(e):
     dst = os.path.join(LIB, f"{e['id']}.wav")
@@ -97,6 +106,16 @@ def cmd_fetch(a):
             else: cat[str(i)]['local'] = False; print('failed', i, err)
     save(CATALOG, cat); print(sum(1 for e in cat.values() if e.get('local')), 'effects available locally')
 
+def cmd_analyse(a):
+    cat = load(CATALOG, {}); ids = [k for k, e in cat.items() if e.get('local')]
+    with cf.ThreadPoolExecutor(8) as ex:
+        for k, an in zip(ids, ex.map(lambda k: analyse(os.path.join(LIB, k + '.wav')), ids)): cat[k].update(an)
+    save(CATALOG, cat); print(len(ids), 'analysed')
+
+def harsh(e):
+    """Glitter and fizz (much energy above 5 kHz), or bells and chimes (sharp partials, a bright tail that rings on)."""
+    return e.get('hf', 0) > 0.35 or (e.get('tonal', 0) > 0.5 and e.get('ring', 0) > 0.6 and e.get('brightness_hz', 0) > 1200)
+
 def resolve(key):
     al = load(ALIASES, {}); key = str(al.get(key, key))
     return os.path.join(LIB, key + '.wav')
@@ -104,10 +123,10 @@ def resolve(key):
 def cmd_search(a):
     cat = load(CATALOG, {}); words = [w.lower() for w in a.words]
     hits = [e for e in cat.values() if e.get('local') and all(any(w in t for t in e['tags']) for w in words)
-            and (not a.cat or a.cat in e['families']) and e.get('dur', 99) <= a.max]
+            and (not a.cat or a.cat in e['families']) and e.get('dur', 99) <= a.max and not (a.soft and harsh(e))]
     al = {str(v): k for k, v in load(ALIASES, {}).items()}
     for e in sorted(hits, key=lambda e: e['dur'])[:a.n]:
-        print(f"{e['id']:>5} {e['dur']:5.2f}s peak {e['peak']:4.2f}s {e['brightness_hz']:>5}Hz  {','.join(e['families']):14s} {e['title']}" + (f"  [{al[str(e['id'])]}]" if str(e['id']) in al else ''))
+        print(f"{e['id']:>5} {e['dur']:5.2f}s peak {e['peak']:4.2f}s {e['brightness_hz']:>5}Hz hf {e.get('hf', 0):.2f} ring {e.get('ring', 0):4.2f}{' HARSH' if harsh(e) else '      '}  {','.join(e['families']):14s} {e['title']}" + (f"  [{al[str(e['id'])]}]" if str(e['id']) in al else ''))
     print(len(hits), 'matches')
 
 def cmd_audition(a):
@@ -124,9 +143,9 @@ def cmd_alias(a):
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(); sp = ap.add_subparsers(dest='cmd', required=True)
-    sp.add_parser('index')
+    sp.add_parser('index'); sp.add_parser('analyse')
     f = sp.add_parser('fetch'); f.add_argument('--max', type=float, default=12)
-    s = sp.add_parser('search'); s.add_argument('words', nargs='*'); s.add_argument('--cat'); s.add_argument('--max', type=float, default=99); s.add_argument('-n', type=int, default=40)
+    s = sp.add_parser('search'); s.add_argument('words', nargs='*'); s.add_argument('--cat'); s.add_argument('--max', type=float, default=99); s.add_argument('-n', type=int, default=40); s.add_argument('--soft', action='store_true', help='skip bells, chimes and other harsh sounds')
     u = sp.add_parser('audition'); u.add_argument('keys', nargs='+'); u.add_argument('-o', default=os.path.join(HERE, '..', 'out', 'audition.wav'))
     l = sp.add_parser('alias'); l.add_argument('name'); l.add_argument('id')
     a = ap.parse_args(); globals()['cmd_' + a.cmd](a)

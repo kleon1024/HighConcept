@@ -65,7 +65,6 @@ export const Transplant: React.FC = () => {
       <Say at={q.pulse0} out={q.only - 0.3} text="蓝光闪一下，神经元就放电一次" color={ink} y={1400} size={52} />
       <div style={{ position: "absolute", left: 70, top: 1490 }}>{t > q.ms - 0.1 && <Kinetic text="精确到毫秒" at={q.ms} size={110} color={C.blue} stagger={0.06} out={q.only - 0.3} />}</div>
       <Say at={q.only} text="只有被“改装”的神经元听光指挥，其余不受影响" color={ink} y={1400} size={40} weight={700} />
-      <div style={{ position: "absolute", left: 70, top: 1500 }}>{t > q.crick - 0.1 && <Kinetic text="克里克的愿望，实现了" at={q.crick} size={84} color={ink} stagger={0.045} />}</div>
     </Abs>
   );
 };
@@ -74,7 +73,7 @@ export const Transplant: React.FC = () => {
 export const Switch: React.FC = () => {
   const t = useT(), sp = useSpring(), q = Q.switch;
   const fires = [...Array(q.fires)].map((_, k) => q.fire0 + k * q.fireStep);
-  const spont = [0.3, 0.75, 1.05, 4.15, 4.6].map(x => x + 0);   // the silenced neuron fires on its own outside the yellow light
+  const spont = q.spont;   // the silenced neuron fires on its own outside the yellow light
   const span: [number, number] = [q.fire0, q.fire0 + q.fires * q.fireStep];
   const lab = sp(q.labels, { damping: 10 });
   const ot = Math.max(0, t - q.spin), m = spinMouse(ot, 300, 1540, 105), [ix, iy] = implantAt(m.x, m.y, m.a, 0.5);
@@ -112,44 +111,6 @@ export const Switch: React.FC = () => {
       <Say at={q.labels + 0.4} out={q.mouse - 0.2} text="蓝光：放电" color={GLOW} y={1210} size={34} weight={900} x={50} />
       <Say at={q.labels + 0.6} out={q.mouse - 0.2} text="黄光：原本在放电的神经元，安静了" color={AMBER} y={1210} size={30} weight={900} x={590} />
       <Say at={q.mouse} text={"还记得开头\n那只小鼠吗？"} color="#FFFFFF" y={1330} size={54} x={540} />
-      <Say at={q.spin} text={"光纤把蓝光送进它\n一侧大脑的运动区"} color={GLOW} y={1500} size={40} x={540} />
-    </Abs>
-  );
-};
-
-// ───────────── 8 · what it opened up
-export const Reveal: React.FC = () => {
-  const t = useT(), sp = useSpring(), q = Q.reveal, ink = C.ink;
-  const cards = [
-    { title: "睡眠与觉醒", detail: "证明一群神经元能让小鼠从睡梦中醒来", col: C.violet },
-    { title: "记忆", detail: "用光重新唤起一段特定的记忆", col: C.yellow },
-    { title: "疾病环路", detail: "研究帕金森、抑郁、成瘾背后的神经回路", col: C.mint },
-  ];
-  const icon = (k: number, cx: number, cy: number) => {
-    if (k === 0) return <g><circle cx={cx} cy={cy} r={50} fill="#FFFFFF" /><circle cx={cx + 22} cy={cy - 14} r={44} fill={cards[0].col} /><text x={cx + 30} y={cy - 30} fontFamily={FONT_EN} fontSize={30} fill="#FFFFFF">z</text></g>;
-    if (k === 1) return <g>{[0, 1, 2, 3, 4].map(j => { const a = (j / 5) * Math.PI * 2 - Math.PI / 2 + t; return <line key={j} x1={cx} y1={cy} x2={cx + Math.cos(a) * 50} y2={cy + Math.sin(a) * 50} stroke={ink} strokeWidth={6} strokeLinecap="round" />; })}<circle cx={cx} cy={cy} r={22} fill="#FFFFFF" stroke={ink} strokeWidth={5} />{[0, 1, 2, 3, 4].map(j => { const a = (j / 5) * Math.PI * 2 - Math.PI / 2 + t; return <circle key={j} cx={cx + Math.cos(a) * 52} cy={cy + Math.sin(a) * 52} r={10} fill={BLUE} stroke={ink} strokeWidth={3} />; })}</g>;
-    return <g><polyline points={`${cx - 55},${cy} ${cx - 25},${cy} ${cx - 10},${cy - 36} ${cx + 8},${cy + 30} ${cx + 22},${cy} ${cx + 55},${cy}`} stroke={ink} strokeWidth={7} fill="none" strokeLinejoin="round" strokeLinecap="round" /></g>;
-  };
-  return (
-    <Abs>
-      <Dots color={ink} />
-      <div style={{ position: "absolute", left: 70, top: 190 }}><Kinetic text="用光拆解大脑电路" at={0.05} size={104} color={ink} stagger={0.05} /></div>
-      {cards.map((c, k) => {
-        const s = sp(q.cards[k], { damping: 12 }), y = 420 + k * 320;
-        return (
-          <div key={k} style={{ position: "absolute", left: 70, right: 70, top: y, height: 270, background: "#FFFFFF", borderRadius: 36, boxShadow: `0 0 0 6px ${ink}`, display: "flex", alignItems: "center", gap: 36, padding: "0 36px", boxSizing: "border-box", opacity: clamp01(s * 3), translate: `${(1 - Math.min(1, s)) * 160}px 0px` }}>
-            <svg width={180} height={180} style={{ flexShrink: 0 }}>
-              <circle cx={90} cy={90} r={86} fill={c.col} stroke={ink} strokeWidth={6} />
-              <g transform="translate(-450 -810)">{icon(k, 540, 900)}</g>
-            </svg>
-            <div>
-              <div style={{ fontFamily: FONT_CN, fontWeight: 900, fontSize: 56, color: ink }}>{c.title}</div>
-              <div style={{ fontFamily: FONT_CN, fontWeight: 700, fontSize: 32, color: ink, opacity: 0.75, marginTop: 10, lineHeight: 1.35 }}>{c.detail}</div>
-            </div>
-          </div>
-        );
-      })}
-      <Say at={q.tool} text="如今，它已是神经科学的标准工具" color={ink} y={1420} size={52} center />
     </Abs>
   );
 };
@@ -247,7 +208,7 @@ export const Nobel: React.FC = () => {
         <Kinetic text="绿藻，是怎么看见光的？" at={q.a} size={78} color="#FFFFFF" stagger={0.045} />
       </div>
       <Say at={q.a + 1.6} text="从池塘里的一个细胞，到照进大脑的一束光" color={ink} y={1440} size={40} weight={700} center />
-      <div style={{ position: "absolute", left: 0, right: 0, top: 1650, textAlign: "center", fontFamily: FONT_CN, fontWeight: 700, fontSize: 24, color: ink, opacity: 0.5 * eOut(range(t, 6.0, 6.4)) }}>资料：诺贝尔奖官方公告 · Nature Neuroscience 2005 · Nature Medicine 2021</div>
+      <div style={{ position: "absolute", left: 0, right: 0, top: 1650, textAlign: "center", fontFamily: FONT_CN, fontWeight: 700, fontSize: 24, color: ink, opacity: 0.5 * eOut(range(t, q.src, q.src + 0.4)) }}>资料：诺贝尔奖官方公告 · Nature Neuroscience 2005 · Nature Medicine 2021</div>
       <div style={{ position: "absolute", left: 0, right: 0, top: 1615, textAlign: "center", fontFamily: FONT_UI, fontWeight: 500, fontSize: 20, color: ink, opacity: 0.55 * eOut(range(t, q.people[2], q.people[2] + 0.4)) }}>照片：Millencolin（CC BY-SA 4.0 / CC0）· Christopher Michel（CC BY-SA 4.0）</div>
     </Abs>
   );

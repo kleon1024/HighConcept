@@ -3,173 +3,162 @@
   "width": 1080,
   "height": 1920,
   "bpm": 120,
-  "duration": 102.0,
+  "duration": 58,
   "sections": [
     {
       "id": "cold",
       "start": 0,
-      "end": 12.0,
+      "end": 8,
       "bg": "#0E0E12"
     },
     {
       "id": "title",
-      "start": 12.0,
-      "end": 16.0,
+      "start": 8,
+      "end": 10,
       "bg": "#2D5BFF"
     },
     {
       "id": "problem",
-      "start": 16.0,
-      "end": 30.0,
+      "start": 10,
+      "end": 18,
       "bg": "#15122E"
     },
     {
       "id": "neuron",
-      "start": 30.0,
-      "end": 40.0,
+      "start": 18,
+      "end": 24,
       "bg": "#FFD23F"
     },
     {
       "id": "pond",
-      "start": 40.0,
-      "end": 54.0,
+      "start": 24,
+      "end": 32,
       "bg": "#00B386"
     },
     {
       "id": "transplant",
-      "start": 54.0,
-      "end": 68.0,
+      "start": 32,
+      "end": 40,
       "bg": "#F5F1E8"
     },
     {
       "id": "switch",
-      "start": 68.0,
-      "end": 76.0,
+      "start": 40,
+      "end": 44,
       "bg": "#2D5BFF"
     },
     {
-      "id": "reveal",
-      "start": 76.0,
-      "end": 84.0,
-      "bg": "#FF3D7F"
-    },
-    {
       "id": "sight",
-      "start": 84.0,
-      "end": 94.0,
+      "start": 44,
+      "end": 52,
       "bg": "#0E0E12"
     },
     {
       "id": "nobel",
-      "start": 94.0,
-      "end": 102.0,
+      "start": 52,
+      "end": 58,
       "bg": "#00C9A7"
     }
   ],
   "cues": {
     "cold": {
       "ask": 0.1,
-      "q": 0.5,
+      "q": 0.4,
       "on": [
         [
-          2.0,
-          3.1
+          1.6,
+          2.6
         ],
         [
-          3.7,
-          4.8
+          3.1,
+          3.9
         ],
         [
-          8.6,
-          9.8
+          6.0,
+          6.8
         ]
       ],
-      "remote": 5.3,
-      "nots": 7.0,
-      "alga": 8.6,
-      "prize": 10.2
+      "remote": 4.1,
+      "nots": 5.0,
+      "alga": 6.0,
+      "prize": 6.9
     },
     "title": {
-      "title": 0.1,
-      "sub": 0.7,
-      "toggle": 1.0,
-      "bridge": 2.4
+      "title": 0.05,
+      "sub": 0.35,
+      "toggle": 0.7
     },
     "problem": {
       "count": [
-        0.2,
-        1.6
+        0.1,
+        1.3
       ],
-      "net": 3.5,
-      "need": 5.5,
-      "electrode": 7.5,
-      "drug": 9.5,
-      "crick": 11.5,
-      "light": 12.8
+      "net": 1.8,
+      "need": 2.6,
+      "electrode": 4.4,
+      "drug": 6.0,
+      "end": 8.0
     },
     "neuron": {
-      "gates": 0.6,
-      "open": 2.6,
-      "spike": 4.6,
-      "wish": 6.8
+      "gates": 0.3,
+      "open": 1.4,
+      "spike": 2.9,
+      "wish": 4.3
     },
     "pond": {
-      "drop": 0.3,
-      "zoom": 1.4,
-      "swim": 3.0,
-      "sci": 5.0,
-      "eyespot": 8.0,
-      "open": 9.6,
-      "dream": 12.0
+      "drop": 0.2,
+      "zoom": 0.9,
+      "swim": 2.0,
+      "sci": 3.2,
+      "eyespot": 4.6,
+      "open": 5.8,
+      "dream": 7.0
     },
     "transplant": {
-      "card": 0.8,
+      "card": 0.4,
       "steps": [
-        2.0,
-        3.4,
-        4.8
+        1.0,
+        1.6,
+        2.2
       ],
-      "scope": 6.4,
-      "pulse0": 7.0,
+      "scope": 2.8,
+      "pulse0": 3.2,
       "pulseStep": 0.5,
-      "pulses": 8,
-      "ms": 9.6,
-      "only": 11.2,
-      "crick": 12.6
+      "pulses": 6,
+      "ms": 5.6,
+      "only": 6.6
     },
     "switch": {
-      "labels": 0.8,
-      "fire0": 1.4,
-      "fireStep": 0.25,
-      "fires": 10,
-      "mouse": 4.2,
-      "spin": 5.0
-    },
-    "reveal": {
-      "cards": [
-        0.6,
-        2.4,
-        4.2
+      "labels": 0.3,
+      "fire0": 0.6,
+      "fireStep": 0.2,
+      "fires": 8,
+      "spont": [
+        0.15,
+        0.4,
+        2.3
       ],
-      "tool": 6.2
+      "mouse": 2.4,
+      "spin": 2.8
     },
     "sight": {
-      "retina": 1.6,
-      "inject": 3.4,
-      "goggles": 5.6,
-      "see": 7.4,
-      "count": 8.4
+      "retina": 1.0,
+      "inject": 2.6,
+      "goggles": 4.2,
+      "see": 5.6,
+      "count": 6.6
     },
     "nobel": {
-      "tag": 0.2,
+      "tag": 0.1,
       "people": [
-        0.6,
-        1.0,
-        1.4
+        0.3,
+        0.55,
+        0.8
       ],
-      "cite": 2.2,
-      "q": 3.8,
-      "a": 4.6
+      "cite": 1.3,
+      "q": 2.6,
+      "a": 3.2,
+      "src": 4.4
     }
   }
 }

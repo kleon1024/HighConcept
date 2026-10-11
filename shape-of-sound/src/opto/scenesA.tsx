@@ -101,7 +101,6 @@ export const Title: React.FC = () => {
         </div>
         <div style={{ fontFamily: FONT_CN, fontWeight: 900, fontSize: 76, color: "#FFFFFF" }}>用光，开关大脑</div>
       </div>
-      <Say at={q.bridge} text="故事，要从一个难题讲起" color="#FFFFFF" y={1300} size={52} center />
     </Abs>
   );
 };
@@ -123,7 +122,6 @@ export const Problem: React.FC = () => {
   const cnt = eOut(range(t, q.count[0], q.count[1]));
   const E: [number, number] = [520, 870], ePin = eOut(range(t, q.electrode, q.electrode + 0.4)), zap = q.electrode + 0.4;
   const pillP = sp(q.drug, { damping: 12 }), wash = range(t, q.drug + 0.4, q.drug + 2.4);
-  const card = eOut(range(t, q.crick, q.crick + 0.5));
   return (
     <Abs>
       <Dots color="#FFFFFF" opacity={0.06} />
@@ -143,7 +141,7 @@ export const Problem: React.FC = () => {
           const chatter = t > q.net ? Math.max(0, Math.sin(t * (3 + hash(i + 7) * 5) + i) - 0.85) / 0.15 : 0;
           const d = Math.hypot(x - E[0], y - E[1]);
           const zapK = t > zap ? Math.exp(-(t - zap) / 0.6) * clamp01(1 - d / 190) : 0;
-          const washK = clamp01(wash * 1.6 - Math.hypot(x - 300, y - 760) / 700) * (1 - range(t, q.crick - 0.4, q.crick));
+          const washK = clamp01(wash * 1.6 - Math.hypot(x - 300, y - 760) / 700) * (1 - range(t, q.end - 0.4, q.end));
           const col = zapK > 0.05 ? C.yellow : washK > 0.05 ? C.pink : chatter > 0.3 ? "#FFFFFF" : "#B9A6FF";
           return <circle key={i} cx={x} cy={y} r={(4 + 3 * chatter + 8 * zapK + 2 * washK) * eOut(ap)} fill={col} opacity={0.6 + 0.4 * Math.max(chatter, zapK, washK)} />;
         })}
@@ -155,24 +153,16 @@ export const Problem: React.FC = () => {
           <text x={E[0] + 150} y={E[1] - 210} fontFamily={FONT_CN} fontWeight={900} fontSize={40} fill="#FFFFFF">电极</text>
         </g>}
         {/* drug */}
-        {t > q.drug && t < q.crick && <g opacity={1 - range(t, q.crick - 0.4, q.crick)} transform={`translate(300 ${lerp(560, 760, Math.min(1, pillP))}) rotate(-30)`}>
+        {t > q.drug && t < q.end && <g opacity={1 - range(t, q.end - 0.4, q.end)} transform={`translate(300 ${lerp(560, 760, Math.min(1, pillP))}) rotate(-30)`}>
           <rect x={-60} y={-28} width={120} height={56} rx={28} fill="#FFFFFF" stroke={C.ink} strokeWidth={5} />
           <rect x={0} y={-28} width={60} height={56} rx={0} fill={C.pink} />
           <rect x={-60} y={-28} width={120} height={56} rx={28} fill="none" stroke={C.ink} strokeWidth={5} />
         </g>}
-        {t > q.drug && t < q.crick && <text x={190} y={680} fontFamily={FONT_CN} fontWeight={900} fontSize={40} fill="#FFFFFF" opacity={1 - range(t, q.crick - 0.4, q.crick)}>药物</text>}
+        {t > q.drug && t < q.end && <text x={190} y={680} fontFamily={FONT_CN} fontWeight={900} fontSize={40} fill="#FFFFFF" opacity={1 - range(t, q.end - 0.4, q.end)}>药物</text>}
       </Svg>
-      <Say at={q.need} out={q.crick - 0.3} text={"想弄清哪群神经元管什么，\n就得能单独开关它们"} color="#FFFFFF" y={1330} size={52} />
+      <Say at={q.need} out={q.end - 0.3} text={"要弄清谁管什么，\n就得能单独开关它们"} color="#FFFFFF" y={1330} size={56} />
       <Say at={q.electrode + 0.3} out={q.drug - 0.2} text="电极：一戳一大片，分不清谁是谁" color={C.yellow} y={1500} size={46} />
-      <Say at={q.drug + 0.3} out={q.crick - 0.3} text="药物：几分钟才起效，神经信号却以毫秒计" color={C.pink} y={1500} size={44} />
-      {/* Crick's card */}
-      {t > q.crick && (
-        <div style={{ position: "absolute", left: 50, right: 50, top: 1180, background: "#FFFFFF", borderRadius: 40, padding: "44px 50px", translate: `0px ${(1 - card) * 500}px`, opacity: card, boxShadow: "0 0 0 6px #0E0E12" }}>
-          <div style={{ fontFamily: FONT_CN, fontWeight: 900, fontSize: 50, lineHeight: 1.35, color: C.ink }}>“神经科学的大难题：<br />只控制一类神经元，而不碰其他。”</div>
-          <div style={{ fontFamily: FONT_CN, fontWeight: 700, fontSize: 28, color: C.ink, opacity: 0.65, marginTop: 18 }}>—— 弗朗西斯·克里克（DNA 双螺旋发现者之一），1979（大意）</div>
-          <div style={{ fontFamily: FONT_CN, fontWeight: 900, fontSize: 46, color: C.blue, marginTop: 26, opacity: eOut(range(t, q.light, q.light + 0.4)), clipPath: `inset(-20% ${(1 - eOut(range(t, q.light, q.light + 0.5))) * 100}% -20% 0)` }}>他还设想：最理想的开关，也许是光。</div>
-        </div>
-      )}
+      <Say at={q.drug + 0.3} out={q.end - 0.3} text="药物：太慢，要几分钟才起效" color={C.pink} y={1500} size={46} />
     </Abs>
   );
 };
