@@ -76,7 +76,7 @@ const FS_CLOUD = `#version 300 es
 precision highp float;
 in vec2 vUv; out vec4 o;
 uniform vec2 uRes; uniform float uTime; uniform vec2 uCore;
-uniform int uCT; uniform vec4 uCP, uCQ, uCR; uniform vec3 uCLit, uCSh, uCHaze, uCRim; uniform vec2 uCDrift; uniform float uCOp;
+uniform int uCT; uniform vec4 uCP, uCQ, uCR; uniform vec3 uCLit, uCSh, uCHaze, uCRim, uCAlt; uniform vec2 uCDrift; uniform float uCOp;
 ${NOISE}
 float cloudField(vec2 p, int oct){
   vec2 q = vec2(fbm(p,3), fbm(p+vec2(5.2,1.3),3));
@@ -123,7 +123,10 @@ void main(){
     float hn = h/amp;
     float dif = clamp(dot(n, L)*0.5 + 0.5, 0.0, 1.0);
     float rim = pow(1.0 - clamp(dot(n, -rd), 0.0, 1.0), 4.0) * (0.3 + 0.7*clamp(dot(rd, L), 0.0, 1.0));
-    vec3 col = mix(uCSh, uCLit, clamp(dif*0.55 + hn*0.55 + (det-0.5)*Q.w, 0.0, 1.0));
+    float hv = smoothstep(0.3, 0.75, vnoise(w*0.45 + 11.0));
+    vec3 litc = mix(uCLit, uCAlt, hv);
+    vec3 col = mix(uCSh, litc, clamp(dif*0.5 + hn*0.6 + (det-0.5)*Q.w, 0.0, 1.0));
+    float bs = vnoise(vec2(w.x*1.2 - w.y*0.4, w.y*10.0)); col *= 0.9 + 0.2*bs;
     col *= 0.55 + 0.45*smoothstep(0.0, 0.35, hn);                  // valleys sink into shadow
     col += uCRim * rim * Q.z * (0.5 + 1.5*exp(-coreD*2.5)) * smoothstep(0.05, 0.4, hn);
     float fwd = pow(clamp(dot(rd, L), 0.0, 1.0), 6.0);
@@ -142,7 +145,9 @@ void main(){
     float m = h * (0.3 + 0.7*band) + band*0.32 - 0.14;
     float d = smoothstep(P.w, P.w + Q.y, m);
     float rim = clamp((h2 - h)*Q.z*-1.0 + 0.5, 0.0, 1.0);
-    vec3 col = mix(uCSh, uCLit, clamp(rim*0.7 + (m-P.w)*0.9, 0.0, 1.0));
+    vec3 litc = mix(uCLit, uCAlt, smoothstep(0.3, 0.75, vnoise(p*0.6 + 3.0)));
+    vec3 col = mix(uCSh, litc, clamp(rim*0.7 + (m-P.w)*0.9, 0.0, 1.0));
+    col *= 0.9 + 0.2*vnoise(vec2(p.x*1.5, p.y*14.0));
     float edge = clamp(1.0 - abs(d*2.0-1.0), 0.0, 1.0);
     col += uCRim * (pow(rim, 3.0)*0.8 + edge*0.5) * (0.5 + 1.5*exp(-coreD*3.0)) * uCR.z;
     col = mix(col, uCHaze, Q.w);
@@ -234,7 +239,7 @@ function GL(canvas) {
     for (let i = 0; i < 2; i++) { const C = U.clouds[i] || { type: 0 };
       set(p, 'uRes', [W / 2, H / 2]); set(p, 'uTime', U.time); set(p, 'uCore', [U.uCore[0] / 2, U.uCore[1] / 2]);
       gl.uniform1i(loc(p, 'uCT'), C.type || 0);
-      if (C.type) { set(p, 'uCP', C.P); set(p, 'uCQ', C.Q); set(p, 'uCR', C.R || [0.3, 0, 1, 0]); set(p, 'uCLit', C.lit); set(p, 'uCSh', C.sh);
+      if (C.type) { set(p, 'uCP', C.P); set(p, 'uCQ', C.Q); set(p, 'uCR', C.R || [0.3, 0, 1, 0]); set(p, 'uCLit', C.lit); set(p, 'uCAlt', C.alt || C.lit); set(p, 'uCSh', C.sh);
         set(p, 'uCHaze', C.haze); set(p, 'uCRim', C.rim); set(p, 'uCDrift', C.drift); set(p, 'uCOp', C.op); }
       draw(cl[i]);
     }

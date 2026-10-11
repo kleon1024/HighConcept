@@ -190,6 +190,19 @@ A.stair = (ctx, o) => {
     if (lit > 0) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = A.css(P.lip, 0.35 * lit * a0);
       ctx.fillRect(s0.x - s0.w, s0.y - gap * 0.2, s0.w * 2, gap * 0.6); ctx.globalCompositeOperation = 'source-over'; }
   }
+  // 御路: the carved central ramp (cloud-scroll relief), breaks the rhythm of the steps
+  if (o.ramp !== false) { const near = S[0], far = S[S.length - 1]; const k = 0.2;
+    const rg = ctx.createLinearGradient(0, near.y, 0, far.y);
+    rg.addColorStop(0, A.css(P.ramp, 0.9 * a0)); rg.addColorStop(0.7, A.css(A.mix(P.ramp, hzc, 0.5), 0.9 * a0)); rg.addColorStop(1, A.css(hzc, 0.9 * a0));
+    ctx.fillStyle = rg; ctx.beginPath(); ctx.moveTo(near.x - near.w * k, near.y); ctx.lineTo(far.x - far.w * k, far.y); ctx.lineTo(far.x + far.w * k, far.y); ctx.lineTo(near.x + near.w * k, near.y); ctx.fill();
+    ctx.lineWidth = 0.9;
+    for (const sd of [-1, 1]) { ctx.strokeStyle = A.css(P.lip, 0.8 * a0); ctx.beginPath(); ctx.moveTo(near.x + sd * near.w * k, near.y); ctx.lineTo(far.x + sd * far.w * k, far.y); ctx.stroke(); }
+    // relief: cloud scrolls along the ramp (hairlines)
+    ctx.strokeStyle = A.css(P.relief, 0.65 * a0);
+    for (let j = 0; j < S.length - 3; j += 3) { const s0 = S[j]; if (s0.w < 2) break; const rr = s0.w * k * 0.55, cy = s0.y - (S[j].y - S[j + 1].y) * 0.5;
+      ctx.lineWidth = Math.max(0.5, s0.w / 260); ctx.beginPath(); const dir = (j / 3) % 2 ? 1 : -1;
+      ctx.ellipse(s0.x + dir * rr * 0.35, cy, rr * 0.55, Math.max(0.5, (S[j].y - S[j + 3].y) * 0.32), 0, 0, Math.PI * 1.6 * 1); ctx.stroke(); }
+  }
   // balustrade: posts + rails, lamps every 8 steps
   for (const side of [-1, 1]) {
     ctx.strokeStyle = A.css(P.rail, a0 * 0.9); ctx.beginPath();
