@@ -81,7 +81,7 @@ A.ring = (ctx, o) => {
   circle(R_(0.885), 0.9, gold);
   // lotus petal band
   ctx.save(); ctx.rotate(-sp * 0.6);
-  const np = o.petals || 32, rIn = R_(0.735), rOut = R_(0.875);
+  const np = o.noPetals ? 0 : (o.petals || 32), rIn = R_(0.735), rOut = R_(0.875);
   for (let i = 0; i < np; i++) {
     const a = (i + 0.5) / np * TAU, da = TAU / np * 0.48;
     const c = i % 2 ? P.petalA : P.petalB;
@@ -358,9 +358,9 @@ A.figure = (ctx, o) => {
   // inner skirt lining glimpse + sash (saturated accents)
   ctx.fillStyle = A.css(P.lining, 0.95 * a0); ctx.beginPath();
   ctx.moveTo(-0.17 + tr * 0.9, -0.004 + fly * 0.05); ctx.quadraticCurveTo(0.0 + tr * 0.5, 0.012 + fly * 0.04, 0.15 + tr * 0.35, -0.006); ctx.lineTo(0.15 + tr * 0.35, -0.03); ctx.quadraticCurveTo(0, -0.022, -0.16 + tr * 0.9, -0.026 + fly * 0.05); ctx.fill();
-  ctx.fillStyle = A.css(P.sash, 0.9 * a0); ctx.beginPath(); ctx.moveTo(-0.1, -0.6); ctx.quadraticCurveTo(0, -0.592, 0.1, -0.6); ctx.lineTo(0.102, -0.582); ctx.quadraticCurveTo(0, -0.574, -0.102, -0.582); ctx.fill();
+  ctx.fillStyle = A.css(P.sash, 0.85 * a0); ctx.beginPath(); ctx.moveTo(-0.07, -0.598); ctx.quadraticCurveTo(0, -0.59, 0.07, -0.598); ctx.lineTo(0.071, -0.586); ctx.quadraticCurveTo(0, -0.578, -0.071, -0.586); ctx.fill();
   // sash tail streaming with the wind
-  ctx.strokeStyle = A.css(P.sash, 0.85 * a0); ctx.lineWidth = 0.009; ctx.beginPath(); ctx.moveTo(0.03, -0.585);
+  ctx.strokeStyle = A.css(P.sash, 0.7 * a0); ctx.lineWidth = 0.006; ctx.beginPath(); ctx.moveTo(0.03, -0.585);
   ctx.bezierCurveTo(0.05 + wx * 0.06, -0.5, 0.04 + wx * 0.12 + sw(2.4, 1) * 0.02, -0.42, 0.06 + wx * 0.18, -0.34); ctx.stroke();
   // gold hairline embroidery: hem band, cuffs, bagua on the back
   ctx.strokeStyle = A.css(P.gold, 0.85 * a0); ctx.lineWidth = 1.1 / s;
@@ -707,7 +707,7 @@ A.bagua = (ctx, o) => {
     ctx.stroke(); ctx.restore(); }
   // taiji
   ctx.save(); ctx.rotate(-(o.rot || 0) * 2.5);
-  const tr = r * 0.26;
+  const tr = r * 0.17;
   ctx.fillStyle = A.css(P.yang, 0.95 * a0); ctx.beginPath(); ctx.arc(0, 0, tr, -Math.PI / 2, Math.PI / 2); ctx.arc(0, tr / 2, tr / 2, Math.PI / 2, -Math.PI / 2, true); ctx.arc(0, -tr / 2, tr / 2, Math.PI / 2, -Math.PI / 2); ctx.fill();
   ctx.globalCompositeOperation = 'source-over';
   ctx.fillStyle = A.css(P.yin, 0.95 * a0); ctx.beginPath(); ctx.arc(0, 0, tr, Math.PI / 2, -Math.PI / 2); ctx.arc(0, -tr / 2, tr / 2, -Math.PI / 2, Math.PI / 2, true); ctx.arc(0, tr / 2, tr / 2, -Math.PI / 2, Math.PI / 2); ctx.fill();
@@ -743,29 +743,73 @@ A.fragments = (ctx, o) => {
 };
 // octagonal well (天井) seen from below: concentric tiers converging to the core
 A.well = (ctx, o) => {
-  const P = o.pal, a0 = o.alpha ?? 1, N = o.tiers || 12;
+  const P = o.pal, a0 = o.alpha ?? 1, N = o.tiers || 12, kk = o.k || 0.72;
   const oct = (rr, rot) => { ctx.beginPath(); for (let i = 0; i <= 8; i++) { const a = rot + (i + 0.5) / 8 * TAU; const x = o.x + Math.cos(a) * rr, y = o.y + Math.sin(a) * rr; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.closePath(); };
+  const octPath = (rr, rot, ccw) => { for (let ii = 0; ii <= 8; ii++) { const i = ccw ? 8 - ii : ii; const a = rot + (i + 0.5) / 8 * TAU; const x = o.x + Math.cos(a) * rr, y = o.y + Math.sin(a) * rr; ii ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.closePath(); };
   for (let k = 0; k < N; k++) {
-    const r0 = o.r * Math.pow(o.k || 0.72, k + (o.phase || 0)), r1 = r0 * (o.k || 0.72), rot = (o.rot || 0) * (1 + k * 0.08);
-    if (r0 < 6) break; const hz = A.clamp(1 - r0 / o.r) * 0.75; const C = (c) => A.mix(c, P.haze, hz);
-    // band (wall of the tier) with gradient: outer dark, inner lit
-    ctx.save(); oct(r0, rot); oct(r1, rot); 
-    const g = ctx.createRadialGradient(o.x, o.y, r1, o.x, o.y, r0); g.addColorStop(0, A.css(C(P.wallLit), a0)); g.addColorStop(0.35, A.css(C(P.wall), a0)); g.addColorStop(1, A.css(C(P.wallDark), a0));
-    ctx.fillStyle = g; ctx.fill('evenodd');
-    // window rows (lights)
+    const r0 = o.r * Math.pow(kk, k + (o.phase || 0)), r1 = r0 * kk, rot = (o.rot || 0) * (1 + k * 0.08);
+    if (r0 < 5) break; const hz = Math.pow(A.clamp(1 - r0 / (o.r * 0.9)), 1.6) * 0.85; const C = (c) => A.mix(c, P.haze, hz);
+    const rm = A.lerp(r1, r0, 0.42); // balcony line splits the tier: outer = underside (dark), inner = lit wall face
+    ctx.save();
+    // underside of the floor above (dark, cool)
+    ctx.beginPath(); octPath(r0, rot); octPath(rm, rot, true);
+    const g1 = ctx.createRadialGradient(o.x, o.y, rm, o.x, o.y, r0); g1.addColorStop(0, A.css(C(P.wall), a0)); g1.addColorStop(1, A.css(C(P.wallDark), a0)); ctx.fillStyle = g1; ctx.fill();
+    // lit wall face (towards the core)
+    ctx.beginPath(); octPath(rm, rot); octPath(r1, rot, true);
+    const g2 = ctx.createRadialGradient(o.x, o.y, r1, o.x, o.y, rm); g2.addColorStop(0, A.css(C(P.wallLit), a0)); g2.addColorStop(1, A.css(C(P.wallMid || P.wall), a0)); ctx.fillStyle = g2; ctx.fill();
+    // window lights on the lit face
     ctx.globalCompositeOperation = 'lighter';
-    const rows = r0 > 300 ? 3 : (r0 > 80 ? 2 : 1);
-    for (let j = 0; j < rows; j++) { const rr = A.lerp(r1, r0, (j + 0.6) / (rows + 0.4)); const nw = Math.max(16, Math.floor(rr / 5)); const sz = Math.max(0.8, (r0 - r1) / (rows * 5));
-      for (let i = 0; i < nw; i++) { const a = rot + i / nw * TAU; const fl = 0.6 + 0.4 * A.n1(i * 0.7 + k * 13 + j * 5 + (o.t || 0) * 1.5, 2);
-        ctx.fillStyle = A.css(C(i % 7 === 0 ? P.win2 : P.win), 0.8 * a0 * fl); ctx.fillRect(o.x + Math.cos(a) * rr - sz / 2, o.y + Math.sin(a) * rr - sz, sz, sz * 2); } }
+    const wr = A.lerp(r1, rm, 0.5), nw = Math.max(16, Math.floor(wr / 9)), sz = Math.max(0.7, (rm - r1) * 0.16);
+    for (let i = 0; i < nw; i++) { if ((i * 7 + k * 3) % 5 === 0) continue; const a = rot + (i + 0.5) / nw * TAU; const fl = 0.55 + 0.45 * A.n1(i * 0.7 + k * 13 + (o.t || 0) * 1.5, 2);
+      const x = o.x + Math.cos(a) * wr, y = o.y + Math.sin(a) * wr; const wg = ctx.createRadialGradient(x, y, 0, x, y, sz * 2.6);
+      const wc = C(i % 6 === 0 ? P.win2 : P.win); wg.addColorStop(0, A.css(wc, 0.95 * a0 * fl)); wg.addColorStop(0.4, A.css(wc, 0.35 * a0 * fl)); wg.addColorStop(1, A.css(wc, 0));
+      ctx.fillStyle = wg; ctx.fillRect(x - sz * 2.6, y - sz * 2.6, sz * 5.2, sz * 5.2); }
     ctx.globalCompositeOperation = 'source-over';
-    // gold edges and eaves
-    ctx.strokeStyle = A.css(C(P.gold), 0.9 * a0); ctx.lineWidth = Math.max(0.6, r0 / 500); oct(r0, rot); ctx.stroke(); oct(r1 * 1.04, rot); ctx.stroke();
-    // radial beams (pillars) at the octagon corners
-    ctx.strokeStyle = A.css(C(P.beam), 0.85 * a0); ctx.lineWidth = Math.max(1, (r0 - r1) * 0.06);
-    for (let i = 0; i < 8; i++) { const a = rot + (i + 0.5) / 8 * TAU; ctx.beginPath(); ctx.moveTo(o.x + Math.cos(a) * r0, o.y + Math.sin(a) * r0); ctx.lineTo(o.x + Math.cos(a) * r1, o.y + Math.sin(a) * r1); ctx.stroke(); }
+    // vermilion pillars at the corners + railings
+    ctx.strokeStyle = A.css(C(P.beam), 0.95 * a0); ctx.lineWidth = Math.max(1, (rm - r1) * 0.08);
+    for (let i = 0; i < 8; i++) { const a = rot + (i + 0.5) / 8 * TAU; ctx.beginPath(); ctx.moveTo(o.x + Math.cos(a) * rm, o.y + Math.sin(a) * rm); ctx.lineTo(o.x + Math.cos(a) * r1, o.y + Math.sin(a) * r1); ctx.stroke(); }
+    ctx.strokeStyle = A.css(C(P.gold), 0.95 * a0); ctx.lineWidth = Math.max(0.6, r0 / 450); oct(rm, rot); ctx.stroke();
+    ctx.lineWidth = Math.max(0.5, r0 / 900); oct(r1 * 1.02, rot); ctx.stroke(); oct(r0 * 0.985, rot); ctx.stroke();
+    // eave teeth along the balcony
+    ctx.strokeStyle = A.css(C(P.gold), 0.5 * a0); ctx.beginPath(); const ne = Math.floor(rm / 6);
+    for (let i = 0; i < ne; i++) { const a = rot + i / ne * TAU; ctx.moveTo(o.x + Math.cos(a) * rm, o.y + Math.sin(a) * rm); ctx.lineTo(o.x + Math.cos(a) * (rm + (r0 - rm) * 0.12), o.y + Math.sin(a) * (rm + (r0 - rm) * 0.12)); } ctx.stroke();
     ctx.restore();
   }
+};
+// macro of the robe's back: silk folds, brocade cloud scrolls, hair strands, a silk ribbon — for the 背纹 close-up
+A.silk = (ctx, o) => {
+  const t = o.t, P = o.pal, W = 1080, Hh = 1920, a0 = o.alpha ?? 1;
+  ctx.save(); ctx.globalAlpha = a0;
+  // shoulder edge: the robe fills all but the top-right corner (sky shows there)
+  ctx.beginPath(); ctx.moveTo(-20, -20); ctx.lineTo(560, -20); ctx.bezierCurveTo(760, 180, 980, 330, 1100, 520 + Math.sin(t * 0.8) * 10); ctx.lineTo(1100, 1940); ctx.lineTo(-20, 1940); ctx.closePath();
+  ctx.save(); ctx.fillStyle = A.css(P.rim); ctx.translate(6, -6); ctx.fill(); ctx.restore();
+  ctx.fillStyle = A.css(P.silk); ctx.fill(); ctx.save(); ctx.clip();
+  // folds: long diagonal bands, valley → ridge (rim-lit) → valley
+  for (let i = 0; i < 9; i++) { const off = -700 + i * 260 + Math.sin(t * 0.6 + i) * 18; const w = 120 + (i % 3) * 50;
+    const gx0 = off, gx1 = off + w; const g = ctx.createLinearGradient(gx0, 0, gx1, -w * 0.3);
+    g.addColorStop(0, A.css(P.valley, 0)); g.addColorStop(0.45, A.css(P.ridge, 0.75)); g.addColorStop(0.55, A.css(P.sheen, 0.55)); g.addColorStop(0.62, A.css(P.ridge, 0.6)); g.addColorStop(1, A.css(P.valley, 0));
+    ctx.save(); ctx.translate(540, 960); ctx.rotate(-0.55); ctx.translate(-540, -960); ctx.fillStyle = g; ctx.fillRect(gx0, -400, w, 2800); ctx.restore(); }
+  // brocade: tiled cloud scrolls (gold hairlines)
+  ctx.strokeStyle = A.css(P.gold, 0.28); ctx.lineWidth = 1;
+  for (let y = 40; y < Hh; y += 120) for (let x = (y / 120 % 2) * 60; x < W; x += 120) { const dx = x + Math.sin(y * 0.01 + t * 0.6) * 6;
+    ctx.beginPath(); ctx.arc(dx, y, 16, Math.PI * 0.2, Math.PI * 1.7); ctx.stroke(); ctx.beginPath(); ctx.arc(dx + 13, y + 4, 9, Math.PI * 1.1, Math.PI * 2.6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(dx - 22, y + 14); ctx.quadraticCurveTo(dx, y + 24, dx + 26, y + 12); ctx.stroke(); }
+  // embroidered border band around the bagua roundel
+  ctx.strokeStyle = A.css(P.gold, 0.6); ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(o.cx, o.cy, o.r * 1.35, 0, TAU); ctx.stroke(); ctx.beginPath(); ctx.arc(o.cx, o.cy, o.r * 1.42, 0, TAU); ctx.stroke();
+  for (let i = 0; i < 48; i++) { const a = i / 48 * TAU; ctx.beginPath(); ctx.arc(o.cx + Math.cos(a) * o.r * 1.385, o.cy + Math.sin(a) * o.r * 1.385, 4, 0, TAU); ctx.stroke(); }
+  ctx.restore();
+  ctx.restore();
+};
+// long hair strands sweeping across (Mika-style coloured highlights)
+A.hair = (ctx, o) => {
+  const r = A.rng(o.seed || 3), t = o.t, a0 = o.alpha ?? 1; ctx.save(); ctx.lineCap = 'round';
+  for (let i = 0; i < (o.n || 160); i++) { const u = r(); const x0 = A.lerp(o.x0, o.x1, u) + (r() - 0.5) * 30, y0 = o.y0 - r() * 80;
+    const c = r(); const col = c < 0.1 ? o.hi[0] : (c < 0.18 ? o.hi[1] : (c < 0.24 ? o.hi[2] : o.base));
+    const sway = Math.sin(t * 1.1 + u * 3) * 40, sway2 = Math.sin(t * 0.9 + u * 5 + 1) * 70;
+    ctx.globalCompositeOperation = c < 0.24 ? 'lighter' : 'source-over';
+    ctx.strokeStyle = A.css(col, (c < 0.24 ? 0.55 : 0.85) * a0); ctx.lineWidth = c < 0.24 ? 1.2 : 1.5 + r() * 3;
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.bezierCurveTo(x0 + o.dx * 0.3 + sway, y0 + o.dy * 0.3, x0 + o.dx * 0.6 + sway2, y0 + o.dy * 0.7, x0 + o.dx + sway2 * 1.3, y0 + o.dy * (0.85 + r() * 0.3)); ctx.stroke(); }
+  ctx.restore();
 };
 // light motes (bookend rain in the white)
 A.motes = (ctx, o) => {
