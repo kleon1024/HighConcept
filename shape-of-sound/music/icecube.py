@@ -2,9 +2,8 @@
 import json, os, subprocess
 import mido
 import numpy as np
-import pyloudnorm as pyln
 import soundfile as sf
-from scipy.signal import butter, sosfilt
+from mixutil import bloom, cap_velocity, jumps, master, swell
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 J = json.load(open(os.path.join(ROOT, 'src', 'icecube', 'icecube.json')))
@@ -17,7 +16,7 @@ S = {s['id']: s for s in J['sections']}; Q = J['cues']
 ev = []
 def msg(s, o, m): ev.append((tk(s), o, m))
 def note(ch, s, d, p, v=90):
-    v = int(max(1, min(127, v + rng.integers(-3, 4))))
+    v = int(max(1, min(127, cap_velocity(ch, p, v + rng.integers(-3, 4), DR, BRASS, TIMP, BASS))))
     msg(s, 2, mido.Message('note_on', channel=ch, note=int(p), velocity=v)); msg(s + max(0.03, d) - 0.003, 0, mido.Message('note_off', channel=ch, note=int(p), velocity=0))
 def chord(ch, s, d, ps, v=85):
     for p in ps: note(ch, s, d, p, v)
@@ -26,7 +25,7 @@ PAD, MAR, BASS, BRASS, CEL, VIB, STR, ARP, PIZZ, BELL, TIMP = 0, 1, 2, 3, 4, 5, 
 for ch, p in [(PAD, 94), (MAR, 12), (BASS, 38), (BRASS, 61), (CEL, 8), (VIB, 11), (STR, 48), (ARP, 81), (PIZZ, 45), (BELL, 14), (TIMP, 47)]:
     msg(0, 0, mido.Message('program_change', channel=ch, program=p))
 for ch in range(16):
-    msg(0, 1, mido.Message('control_change', channel=ch, control=91, value=55))
+    msg(0, 1, mido.Message('control_change', channel=ch, control=91, value=62))
 
 E = 64  # E4 — E minor, i–VI–III–VII
 prog = [[0, 3, 7], [-4, 0, 3], [3, 7, 10], [-2, 2, 5]]   # Em C G D
@@ -110,7 +109,7 @@ chord(STR, c0 + c['iso'], 3.6, [E - 12, E - 5, E + 3, E + 7, E + 12], 85)
 chord(PAD, c0 + c['dark'], 8.0, [E - 12, E - 5, E, E + 3], 70)
 bars(c0 + c['dark'], S['detector']['end'], drums='heart', arp=False, pad=PAD)
 for k in range(12): note(CEL, c0 + c['nu'] + k * 0.083, 0.08, E + 36 - (k % 3) * 2, 40 + k * 3)   # ghostly shimmer
-note(DR, c0 + c['hit'], 2.0, CRASH, 122); note(TIMP, c0 + c['hit'], 1.0, E - 24, 125); note(BASS, c0 + c['hit'], 3.0, E - 36, 120)
+note(DR, c0 + c['hit'], 2.0, CRASH, 60); note(TIMP, c0 + c['hit'], 1.0, E - 24, 72); note(BASS, c0 + c['hit'], 3.0, E - 24, 80)
 mu = c['muEnd'] - c['hit']
 for k in range(14): note(CEL, c0 + c['hit'] + mu * k / 14, 0.5, E + 12 + PENTA[k % 5] + 12 * (k // 5), 80 + k * 2); note(VIB, c0 + c['hit'] + mu * k / 14, 0.5, E + PENTA[k % 5] + 12 * (k // 5), 60)
 chord(STR, c0 + c['muEnd'], 3.0, [E - 12, E - 5, E, E + 7], 70)
@@ -144,28 +143,21 @@ subprocess.run(['fluidsynth', '-ni', '-q', '-g', '0.55', '-r', str(SR), '-R', '1
 x, _ = sf.read(os.path.join(OUT, 'icecube_orch.wav'), always_2d=True)
 x = np.pad(x, ((0, max(0, N - len(x))), (0, 0)))[:N]
 
-def whoosh(d=0.4, up=True):
-    n = int(d * SR); w = rng.standard_normal(n); out = np.zeros(n)
-    for i in range(0, n, 1024):
-        f = i / n if up else 1 - i / n
-        fc = 300 * (7000 / 300) ** f; out[i:i + 1024] = sosfilt(butter(2, [fc * 0.6, min(fc * 1.6, 20000)], 'band', fs=SR, output='sos'), w[i:i + 1024])
-    return out * np.sin(np.pi * np.arange(n) / n) ** 2
 def add(s, sig, gain):
     i0 = int(s * SR); seg = sig[:max(0, N - i0)]; x[i0:i0 + len(seg)] += (seg * gain)[:, None]
-for s in J['sections'][1:]: add(s['start'] - 0.38, whoosh(), 0.22)
-add(c0 + c['arrow'] - 0.05, whoosh(0.8), 0.2)                                    # the reconstruction arrow
-add(S['ghost']['start'] + g['neutrino'][0], whoosh(1.4), 0.12)                     # neutrino sliding through the Earth
-# sub boom at the collision: a falling sine with a fast attack
-n = int(1.6 * SR); tt = np.arange(n) / SR
-boom = np.sin(2 * np.pi * np.cumsum(np.geomspace(90, 32, n)) / SR) * np.exp(-tt / 0.45) * (1 - np.exp(-tt / 0.004))
-add(c0 + c['hit'], boom, 0.55)
-# the lights-off cut: duck everything else for a beat
-i0 = int((c0 + c['dark']) * SR); ramp = np.ones(N); ramp[i0:i0 + int(0.25 * SR)] = np.linspace(1, 0.55, int(0.25 * SR)); ramp[i0 + int(0.25 * SR):int((c0 + c['hit']) * SR)] = 0.55
+pk = np.abs(x).max()
+# soft air swells that peak on each cut, instead of white-noise whooshes
+for s in J['sections'][1:]: add(s['start'] - 0.55, swell(SR, rng, 0.7), 0.05 * pk)
+add(c0 + c['arrow'] - 0.1, swell(SR, rng, 0.9, 300, 2600), 0.05 * pk)              # the reconstruction arrow
+add(S['ghost']['start'] + g['neutrino'][0], swell(SR, rng, 1.4, 400, 3000), 0.03 * pk)   # neutrino sliding through the Earth
+add(c0 + c['hit'], bloom(SR), 0.12 * pk)                                            # the collision: a low bloom
+# lights off: ease the band down over a bar rather than cutting it
+i0 = int((c0 + c['dark']) * SR); i1 = int((c0 + c['hit']) * SR); ramp = np.ones(N)
+ramp[i0:i1] = 0.7 + 0.3 * np.exp(-np.arange(i1 - i0) / (0.5 * SR))
 x *= ramp[:, None]
-
-meter = pyln.Meter(SR)
-x = pyln.normalize.loudness(x, meter.integrated_loudness(x), -14.0)
-ceil = 10 ** (-1.2 / 20); x = np.tanh(x / ceil) * ceil
-print(f'integrated {meter.integrated_loudness(x):.1f} LUFS, peak {20 * np.log10(np.abs(x).max()):.1f} dBFS')
+x, L, P = master(x, SR)
+print(f'integrated {L:.1f} LUFS, peak {P:.1f} dBFS')
+med, mx, jj = jumps(x, SR)
+print(f'median {med:.1f} dB, loudest {mx:.1f} dB, biggest jumps {jj}')
 sf.write(os.path.join(ROOT, 'public', 'icecube_score.wav'), x.astype(np.float32), SR, subtype='PCM_16')
 print('wrote public/icecube_score.wav')

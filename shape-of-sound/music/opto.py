@@ -2,9 +2,8 @@
 import json, os, subprocess
 import mido
 import numpy as np
-import pyloudnorm as pyln
 import soundfile as sf
-from scipy.signal import butter, sosfilt
+from mixutil import bloom, cap_velocity, jumps, master, swell
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 J = json.load(open(os.path.join(ROOT, 'src', 'opto', 'opto.json')))
@@ -18,7 +17,7 @@ st = lambda k: S[k]['start']
 ev = []
 def msg(s, o, m): ev.append((tk(s), o, m))
 def note(ch, s, d, p, v=90):
-    v = int(max(1, min(127, v + rng.integers(-3, 4))))
+    v = int(max(1, min(127, cap_velocity(ch, p, v + rng.integers(-3, 4), DR, BRASS, TIMP, BASS))))
     msg(s, 2, mido.Message('note_on', channel=ch, note=int(p), velocity=v)); msg(s + max(0.03, d) - 0.003, 0, mido.Message('note_off', channel=ch, note=int(p), velocity=0))
 def chord(ch, s, d, ps, v=85):
     for p in ps: note(ch, s, d, p, v)
@@ -27,7 +26,7 @@ PAD, MAR, BASS, BRASS, CEL, VIB, STR, ARP, PIZZ, BELL, TIMP, PNO, LEAD = 0, 1, 2
 for ch, p in [(PAD, 89), (MAR, 12), (BASS, 38), (BRASS, 61), (CEL, 8), (VIB, 11), (STR, 48), (ARP, 81), (PIZZ, 45), (BELL, 14), (TIMP, 47), (PNO, 0), (LEAD, 80)]:
     msg(0, 0, mido.Message('program_change', channel=ch, program=p))
 for ch in range(16):
-    msg(0, 1, mido.Message('control_change', channel=ch, control=91, value=52))
+    msg(0, 1, mido.Message('control_change', channel=ch, control=91, value=60))
 
 K = 57  # A3 — A minor, i–VI–III–VII; the ending turns to A major
 prog = [[0, 3, 7], [-4, 0, 3], [3, 7, 10], [-2, 2, 5]]   # Am F C G
@@ -70,6 +69,7 @@ for a, b in c['on']:
         note(BASS, t, 0.2, K - 12, 108)
         t += 0.25
     note(DR, b, 0.05, RIM, 110)                     # the switch clicking off
+chord(STR, 0.0, c['remote'], [K - 24, K - 12, K - 5], 62)              # a low drone under the strobe so "off" is hushed, not dead
 chord(PAD, c['remote'], 10 - c['remote'], [K - 12, K - 5, K, K + 3], 58)
 for x in (c['nots'] + 0.35, c['nots'] + 0.65): note(DR, x, 0.2, LTOM, 118); note(TIMP, x, 0.4, K - 24, 100)
 note(BELL, c['prize'], 2.0, K + 19, 108); chord(BRASS, c['prize'], 1.5, [K - 12, K - 8, K - 5, K], 95)
@@ -180,33 +180,26 @@ subprocess.run(['fluidsynth', '-ni', '-q', '-g', '0.55', '-r', str(SR), '-R', '1
 x, _ = sf.read(os.path.join(OUT, 'opto_orch.wav'), always_2d=True)
 x = np.pad(x, ((0, max(0, N - len(x))), (0, 0)))[:N]
 
-def band_noise(d, f0, f1):
-    n = int(d * SR); w = rng.standard_normal(n); out = np.zeros(n)
-    for i in range(0, n, 1024):
-        fc = f0 * (f1 / f0) ** (i / n); out[i:i + 1024] = sosfilt(butter(2, [fc * 0.6, min(fc * 1.6, 20000)], 'band', fs=SR, output='sos'), w[i:i + 1024])
-    return out * np.sin(np.pi * np.arange(n) / n) ** 2
 def add(s, sig, gain):
     i0 = int(s * SR)
     if i0 >= N: return
     seg = sig[:N - i0]; x[i0:i0 + len(seg)] += (seg * gain)[:, None]
-tt = np.arange(int(1.4 * SR)) / SR
-boom = np.sin(2 * np.pi * np.cumsum(np.geomspace(95, 34, len(tt))) / SR) * np.exp(-tt / 0.4) * (1 - np.exp(-tt / 0.003))
+pk = np.abs(x).max()
 for s, kind in hits:
-    if kind == 'boom': add(s, boom, 0.6)
-    elif kind == 'zap': add(s, band_noise(0.35, 6000, 900), 0.35)
-    elif kind == 'rise': add(s, band_noise(0.6, 300, 7000), 0.2)
-    elif kind == 'tick': add(s, band_noise(0.05, 5000, 9000), 0.15)
-for s in J['sections'][1:]: add(s['start'] - 0.38, band_noise(0.4, 300, 7000), 0.2)
-# hard silence while the light is off in the cold open
-gate = np.ones(N)
+    if kind == 'boom': add(s, bloom(SR, 1.2, 80, 42), 0.2 * pk)
+    elif kind == 'zap': add(s - 0.05, swell(SR, rng, 0.3, 1500, 5000), 0.06 * pk)
+    elif kind == 'rise': add(s, swell(SR, rng, 0.6, 300, 2600), 0.05 * pk)
+    elif kind == 'tick': add(s - 0.04, swell(SR, rng, 0.06, 4000, 7000), 0.02 * pk)
+for s in J['sections'][1:]: add(s['start'] - 0.55, swell(SR, rng, 0.7), 0.05 * pk)
+# the cold open's "light off": drop the band low (not to silence), with short fades so nothing clicks
+gate = np.ones(N); f = int(0.03 * SR)
 for (a, b), nxt in zip(c['on'][:2], [c['on'][1][0], c['remote']]):
-    i0, i1 = int((b + 0.02) * SR), int(nxt * SR); gate[i0:i1] = 0.08
-    gate[i1:i1 + 240] = np.linspace(0.08, 1, 240)[:max(0, min(240, N - i1))]
+    i0, i1 = int((b + 0.02) * SR), int(nxt * SR)
+    gate[i0:i1] = 0.25; gate[i0:i0 + f] = np.linspace(1, 0.25, f); gate[i1 - f:i1] = np.linspace(0.25, 1, f)
 x *= gate[:, None]
-
-meter = pyln.Meter(SR)
-x = pyln.normalize.loudness(x, meter.integrated_loudness(x), -14.0)
-ceil = 10 ** (-1.2 / 20); x = np.tanh(x / ceil) * ceil
-print(f'integrated {meter.integrated_loudness(x):.1f} LUFS, peak {20 * np.log10(np.abs(x).max()):.1f} dBFS')
+x, L, P = master(x, SR)
+print(f'integrated {L:.1f} LUFS, peak {P:.1f} dBFS')
+med, mx, jj = jumps(x, SR)
+print(f'median {med:.1f} dB, loudest {mx:.1f} dB, biggest jumps {jj}')
 sf.write(os.path.join(ROOT, 'public', 'opto_score.wav'), x.astype(np.float32), SR, subtype='PCM_16')
 print('wrote public/opto_score.wav')
