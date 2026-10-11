@@ -9,7 +9,6 @@
 <link rel="stylesheet" href="node_modules/@fontsource/noto-serif-sc/700.css">
 <link rel="stylesheet" href="node_modules/@fontsource/anton/400.css">
 <link rel="stylesheet" href="node_modules/@fontsource/bebas-neue/400.css">
-<link rel="stylesheet" href="node_modules/@fontsource/oswald/700.css">
 <style>
   :root {
     --red: #E60012;
@@ -36,7 +35,6 @@
   .serif7 { font-family: 'Noto Serif SC'; font-weight: 700; }
   .anton { font-family: 'Anton'; font-weight: 400; }
   .bebas { font-family: 'Bebas Neue'; font-weight: 400; }
-  .oswald { font-family: 'Oswald'; font-weight: 700; }
 </style>
 </head>
 <body>
@@ -282,7 +280,7 @@ function lantern(g, x, y, s, label, opt = {}) {
 
 // black slanted band behind the title
 (function titleBand() {
-  const band = torn([[0, 1140, 0], [1080, 990, 0], [1080, 1395, 0], [0, 1560, 20]], 20);
+  const band = torn([[0, 1140, 0], [1080, 990, 0], [1080, 1395, 18], [0, 1560, 0]], 20);
   el('path', { d: band, fill: WHT, transform: 'translate(0,16)' }, bg);
   el('path', { d: P([[0, 1122], [1080, 972], [1080, 984], [0, 1134]]), fill: WHT }, bg);
   el('path', { d: band, fill: BLK }, bg);
@@ -467,7 +465,7 @@ const fg = document.getElementById('fgRoot');
 
 // shards flying off the leap
 (function shards() {
-  const list = [[958, 120, 1, 0.4], [1006, 600, 0, 2.2], [150, 1000, 0, 4.1], [700, 1000, 1, 5.2], [64, 860, 1, 0.9], [668, 70, 0, 3.6], [470, 1010, 1, 1.4]];
+  const list = [[1012, 36, 1, 1.7], [1006, 600, 0, 2.2], [150, 1000, 0, 4.1], [700, 1000, 1, 5.2], [64, 860, 1, 0.9], [668, 70, 0, 3.6], [470, 1010, 1, 1.4]];
   list.forEach(([x, y, w, a]) => {
     const s = R(26, 50);
     const pts = [[x, y], [x + Math.cos(a) * s * 1.9, y + Math.sin(a) * s * 1.9], [x + Math.cos(a + 2.2) * s * 0.7, y + Math.sin(a + 2.2) * s * 0.7]];
