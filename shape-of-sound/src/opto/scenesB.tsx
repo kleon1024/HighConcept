@@ -1,6 +1,6 @@
 import React from "react";
 import { C, clamp01, eInOut, eOut, FONT_CN, FONT_EN, FONT_UI, Kinetic, lerp, range, useSpring, useT } from "../theme";
-import { Abs, AMBER, BLUE, Burst, Dots, GLOW, implantAt, Mouse, Neuron, Pill, Q, Say, Scope, Svg } from "./kit";
+import { Abs, AMBER, BLUE, Burst, Dots, GLOW, implantAt, mix, Mouse, Neuron, Pill, Q, Say, Scope, Svg } from "./kit";
 import { spinMouse } from "./scenesA";
 import { Inset } from "../media";
 import { Img, staticFile } from "remotion";
@@ -20,8 +20,8 @@ export const Transplant: React.FC = () => {
       <div style={{ position: "absolute", left: 70, top: 310 }}><Kinetic text="把绿藻的闸门，装进神经元" at={0.15} size={68} color={ink} stagger={0.035} /></div>
       {/* Deisseroth */}
       <div style={{ position: "absolute", left: 70, right: 70, top: 430, display: "flex", alignItems: "center", gap: 26, background: "#FFFFFF", borderRadius: 30, padding: "20px 28px", boxShadow: `0 0 0 5px ${ink}`, opacity: clamp01(card * 3), translate: `${(1 - Math.min(1, card)) * -80}px 0px` }}>
-        <div style={{ width: 84, height: 84, borderRadius: 42, background: BLUE, border: `5px solid ${ink}`, boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ width: 26, height: 26, borderRadius: 13, background: C.yellow, boxShadow: `0 0 0 10px rgba(255,210,63,0.35)` }} />
+        <div style={{ width: 96, height: 96, borderRadius: 48, overflow: "hidden", flexShrink: 0, boxShadow: `0 0 0 5px ${BLUE}, 0 0 0 9px ${ink}` }}>
+          <Img src={staticFile("media/deisseroth.jpg")} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "64% 24%" }} />
         </div>
         <div>
           <div style={{ fontFamily: FONT_CN, fontWeight: 900, fontSize: 46, color: ink }}>卡尔·戴瑟罗斯</div>
@@ -130,6 +130,7 @@ export const Sight: React.FC = () => {
       <div style={{ position: "absolute", left: 70, top: 180 }}><Kinetic text="2021" at={0.05} size={140} color={AMBER} font={FONT_EN} weight={400} stagger={0.06} /></div>
       <div style={{ position: "absolute", left: 70, top: 345 }}><Kinetic text="一位失明多年的患者" at={0.4} size={72} color="#FFFFFF" stagger={0.04} /></div>
       <Svg>
+        {t < 1.0 && (() => { const k = eInOut(range(t, -0.45, 0.5)); return <circle cx={lerp(300, EX, k)} cy={lerp(1540, EY, k)} r={lerp(190, 96, k)} fill={mix("#1C1C26", "#6B6F80", k)} stroke="#FFFFFF" strokeOpacity={0.25 * (1 - k)} strokeWidth={4} opacity={1 - range(t, 0.6, 1.0)} />; })()}
         {/* the eye */}
         <g opacity={eOut(range(t, 0.6, 1.0)) * (1 - see * 0.85)}>
           <path d={`M${EX - 280} ${EY} Q ${EX} ${EY - 210} ${EX + 280} ${EY} Q ${EX} ${EY + 210} ${EX - 280} ${EY} Z`} fill="#F5F1E8" stroke="#FFFFFF" strokeWidth={6} />
@@ -203,11 +204,11 @@ export const Nobel: React.FC = () => {
         );
       })}
       <div style={{ position: "absolute", left: 90, right: 90, top: 940, textAlign: "center", fontFamily: FONT_CN, fontWeight: 700, fontSize: 38, color: ink, lineHeight: 1.5, opacity: eOut(range(t, q.cite, q.cite + 0.4)) }}>“表彰他们在光门控离子通道<br />与光遗传学方面的发现”</div>
-      <Say at={q.q} text="一切，始于一个看似“没用”的问题：" color={ink} y={1120} size={44} center />
-      <div style={{ position: "absolute", left: 0, right: 0, top: 1210, height: 170, background: ink, display: "flex", justifyContent: "center", alignItems: "center", opacity: eOut(range(t, q.a - 0.2, q.a + 0.1)), clipPath: `inset(0 ${(1 - eInOut(range(t, q.a - 0.2, q.a + 0.2))) * 100}% 0 0)` }}>
-        <Kinetic text="绿藻，是怎么看见光的？" at={q.a} size={78} color="#FFFFFF" stagger={0.045} />
+      <Say at={q.q} text="一束光，真的能遥控大脑。" color={ink} y={1060} size={56} center />
+      <Say at={q.a} text="而这一切，始于一个看似“没用”的问题：" color={ink} y={1150} size={40} weight={700} center />
+      <div style={{ position: "absolute", left: 0, right: 0, top: 1240, height: 170, background: ink, display: "flex", justifyContent: "center", alignItems: "center", opacity: eOut(range(t, q.a + 0.4, q.a + 0.7)), clipPath: `inset(0 ${(1 - eInOut(range(t, q.a + 0.4, q.a + 0.8))) * 100}% 0 0)` }}>
+        <Kinetic text="绿藻，是怎么看见光的？" at={q.a + 0.5} size={78} color="#FFFFFF" stagger={0.045} />
       </div>
-      <Say at={q.a + 1.6} text="从池塘里的一个细胞，到照进大脑的一束光" color={ink} y={1440} size={40} weight={700} center />
       <div style={{ position: "absolute", left: 0, right: 0, top: 1650, textAlign: "center", fontFamily: FONT_CN, fontWeight: 700, fontSize: 24, color: ink, opacity: 0.5 * eOut(range(t, q.src, q.src + 0.4)) }}>资料：诺贝尔奖官方公告 · Nature Neuroscience 2005 · Nature Medicine 2021</div>
       <div style={{ position: "absolute", left: 0, right: 0, top: 1615, textAlign: "center", fontFamily: FONT_UI, fontWeight: 500, fontSize: 20, color: ink, opacity: 0.55 * eOut(range(t, q.people[2], q.people[2] + 0.4)) }}>照片：Millencolin（CC BY-SA 4.0 / CC0）· Christopher Michel（CC BY-SA 4.0）</div>
     </Abs>

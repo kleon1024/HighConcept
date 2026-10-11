@@ -118,12 +118,13 @@
       "wish": 4.3
     },
     "pond": {
-      "drop": 0.2,
-      "zoom": 0.9,
-      "swim": 2.0,
-      "sci": 3.2,
-      "eyespot": 4.6,
-      "open": 5.8,
+      "photo": 0.0,
+      "drop": 1.0,
+      "zoom": 1.6,
+      "swim": 2.5,
+      "sci": 3.5,
+      "eyespot": 5.0,
+      "open": 6.0,
       "dream": 7.0
     },
     "transplant": {
@@ -167,10 +168,59 @@
         0.55,
         0.8
       ],
-      "cite": 1.3,
-      "q": 2.6,
-      "a": 3.2,
-      "src": 4.4
+      "cite": 1.2,
+      "q": 2.4,
+      "a": 3.0,
+      "src": 4.6
     }
-  }
+  },
+  "transitions": {
+    "title": {
+      "type": "iris",
+      "x": 540,
+      "y": 1090,
+      "from": "the glowing alga in the cold open"
+    },
+    "problem": {
+      "type": "iris",
+      "x": 300,
+      "y": 990,
+      "from": "the toggle knob in the title"
+    },
+    "neuron": {
+      "type": "iris",
+      "x": 540,
+      "y": 880,
+      "from": "one neuron dot in the brain network"
+    },
+    "pond": {
+      "type": "iris",
+      "x": 540,
+      "y": 1000,
+      "from": "the magnifier circle in the neuron scene"
+    },
+    "transplant": {
+      "type": "iris",
+      "x": 540,
+      "y": 990,
+      "from": "the opened blue gate in the pond scene"
+    },
+    "switch": {
+      "type": "split",
+      "from": "blue from the left, amber from the right"
+    },
+    "sight": {
+      "type": "iris",
+      "x": 300,
+      "y": 1540,
+      "from": "the mouse arena circle, which becomes the pupil"
+    },
+    "nobel": {
+      "type": "iris",
+      "x": 540,
+      "y": 1325,
+      "from": "the amber notebook glow"
+    }
+  },
+  "xfade": 0.45
 }

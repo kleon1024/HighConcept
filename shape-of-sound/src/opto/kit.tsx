@@ -1,7 +1,7 @@
 // Shared pieces for the optogenetics vertical: section wipes, captions, and the recurring drawings (mouse, neuron, membrane, alga, scope).
 import React from "react";
 import { Sequence, useCurrentFrame, useVideoConfig } from "remotion";
-import { C, clamp01, eIn, eOut, FONT_CN, FONT_UI, lerp, range, useT } from "../theme";
+import { C, clamp01, eIn, eInOut, eOut, FONT_CN, FONT_UI, lerp, range, TimeShift, useT } from "../theme";
 import J from "./opto.json";
 
 export const VW = 1080, VH = 1920, FPS = J.fps, X = 0.3;
@@ -46,20 +46,34 @@ export const Progress: React.FC = () => {
     </div>
   );
 };
-// a section: a diagonal colour slab wipes in over the previous one, then the content starts at its nominal time
+// a section grows out of the previous one: an iris from the object that carries over (see opto.json `transitions` and
+// video-craft/transitions.md), or a split; its content is already live inside the reveal (TimeShift)
+type Tr = { type: string; x?: number; y?: number };
 export const Section: React.FC<React.PropsWithChildren<{ s: Sec; first?: boolean }>> = ({ s, first, children }) => {
-  const from = first ? s.start : s.start - X;
+  const xf = first ? 0 : (J as { xfade?: number }).xfade ?? X;
+  const tr = ((J as { transitions?: Record<string, Tr> }).transitions ?? {})[s.id];
+  const from = s.start - xf;
   return (
     <Sequence name={s.id} from={Math.round(from * FPS)} durationInFrames={Math.round((s.end - from) * FPS)}>
-      <WipeIn bg={s.bg} skip={first}>
-        <Sequence from={first ? 0 : Math.round(X * FPS)} layout="none">{children}</Sequence>
-      </WipeIn>
+      <Reveal bg={s.bg} xf={xf} tr={tr}>
+        <TimeShift.Provider value={xf}>{children}</TimeShift.Provider>
+      </Reveal>
     </Sequence>
   );
 };
-const WipeIn: React.FC<React.PropsWithChildren<{ bg: string; skip?: boolean }>> = ({ bg, skip, children }) => {
-  const w = skip ? 1 : eOut(range(useT(), 0, X));
-  return <Abs style={{ clipPath: `polygon(0 ${(1 - w) * 110}%, 100% ${(1 - w) * 110 - 8}%, 100% 100%, 0 100%)`, background: bg, overflow: "hidden" }}>{children}</Abs>;
+const Reveal: React.FC<React.PropsWithChildren<{ bg: string; xf: number; tr?: Tr }>> = ({ bg, xf, tr, children }) => {
+  const t = useT(), w = xf ? eInOut(range(t, 0, xf)) : 1;
+  let clip = `polygon(0 ${(1 - w) * 110}%, 100% ${(1 - w) * 110 - 8}%, 100% 100%, 0 100%)`, ring: React.ReactNode = null;
+  if (tr?.type === "iris" && w < 1) {
+    const r = w * 2300, x = tr.x ?? 540, y = tr.y ?? 960;
+    clip = `circle(${r}px at ${x}px ${y}px)`;
+    ring = <svg width={VW} height={VH} style={{ position: "absolute", inset: 0, zIndex: 95, pointerEvents: "none" }}><circle cx={x} cy={y} r={r} fill="none" stroke="#FFFFFF" strokeOpacity={0.55 * (1 - w)} strokeWidth={10} /></svg>;
+  } else if (tr?.type === "split" && w < 1) {
+    const a = w * 50, b = 100 - w * 50;                               // two halves slide in from the left and the right
+    const m = `linear-gradient(to right, #000 ${a}%, transparent ${a}%, transparent ${b}%, #000 ${b}%)`;
+    return <Abs style={{ background: bg, overflow: "hidden", WebkitMaskImage: m, maskImage: m }}>{children}</Abs>;
+  } else if (w >= 1) clip = "none";
+  return <><Abs style={{ clipPath: clip, background: bg, overflow: "hidden" }}>{children}</Abs>{ring}</>;
 };
 // a caption revealed by a sliding mask; `\n` breaks lines
 export const Say: React.FC<{ at: number; out?: number; text: string; sub?: string; color: string; y: number; size?: number; center?: boolean; weight?: number; x?: number }> = ({

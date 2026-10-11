@@ -31,11 +31,13 @@ export const FONT_UI = "'Space Grotesk', 'Noto Sans SC', sans-serif";
 
 export const NOTE_NAMES = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
 
-// local time in seconds inside the current <Sequence>
+// local time in seconds inside the current <Sequence>; a TimeShift lets a scene start rendering before its t = 0
+// (e.g. inside a reveal that grows out of the previous scene)
+export const TimeShift = React.createContext(0);
 export const useT = () => {
   const f = useCurrentFrame();
   const { fps } = useVideoConfig();
-  return f / fps;
+  return f / fps - React.useContext(TimeShift);
 };
 export const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
