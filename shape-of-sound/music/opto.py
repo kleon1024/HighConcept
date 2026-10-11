@@ -24,13 +24,13 @@ DR = 'drums'; KICK, SNARE, HAT = 36, 38, 42           # R8 one-shots only: no cr
 PNO, HARP, KAL, STR, HORN, PAD, BASS, PLK = 'piano', 'harp', 'kalimba', 'strings', 'horns', 'pad', 'bass', 'pluck'
 PARTS = {
     PNO: SF2('piano', level=-15, verb=0.35),                     # Salamander grand
-    HARP: SF2('ms', 46, level=-18, verb=0.4),                    # MuseScore harp
+    HARP: SF2('ms', 46, level=-17, verb=0.4),                    # MuseScore harp
     KAL: SF2('kalimba', level=-19, verb=0.3),
     STR: SF2('ms', 49, level=-15, verb=0.4),                     # slow strings
-    HORN: SF2('ms', 60, level=-20, verb=0.5, cap=82),            # French horns: soft swells only
-    PAD: Synth('pad', level=-17, verb=0.35, duck=0.35, cutoff=1600, attack=0.6),
-    BASS: Synth('sub', level=-16, verb=0.0, duck=0.45, cap=104),
-    PLK: Synth('pluck', level=-19, verb=0.3, bright=0.7, decay=3.0, length=0.5, lp=3800),   # the electric pluck
+    HORN: SF2('ms', 60, level=-19, verb=0.5, cap=82),            # French horns: soft swells only
+    PAD: Synth('pad', level=-19, verb=0.35, duck=0.35, cutoff=2000, attack=0.6),
+    BASS: Synth('sub', level=-17, verb=0.0, duck=0.45, cap=104),
+    PLK: Synth('pluck', level=-18, verb=0.3, bright=1.1, decay=3.0, length=0.5, lp=6000),   # the electric pluck
     DR: Drums({36: 'R8/kick', 38: 'R8/snare', 42: 'R8/hihat'}, level=-16, verb=0.12),
 }
 
@@ -72,7 +72,7 @@ GROOVES = {                    # 16 steps of 0.125 s per 2 s bar
     'light':  {KICK: 'x.......x.......', SNARE: '............x...', HAT: '..x...x...x...x.'},
     'heart':  {KICK: 'x.x.............'},
 }
-DRV = {KICK: 90, SNARE: 66, HAT: 50}
+DRV = {KICK: 90, SNARE: 66, HAT: 64}
 def bars(s0, s1, drums=None, bass='pulse', pad=PAD, pv=52, arp=None, av=48, kal=0, harp=0, v=0):
     """The groove from s0 to s1 on the 16th grid, following the harmony map. `v` shifts every velocity."""
     for i in range(int(round(s0 / 0.125)), int(round(s1 / 0.125))):
@@ -91,8 +91,8 @@ def bars(s0, s1, drums=None, bass='pulse', pad=PAD, pv=52, arp=None, av=48, kal=
             note(PLK, t, 0.1, lad[[0, 1, 2, 3, 1, 2, 3, 4][s % 8] + (2 if arp == 'high' else 0)] + sh - 12 * (arp == 'low'), av + v + (8 if s % 4 == 0 else 0))
         if kal and s % 2 == 0:                     # kalimba ostinato in 8ths
             note(KAL, t, 0.3, lad[[0, 2, 1, 3, 2, 4, 3, 1][(s // 2) % 8]] + 12, kal + v + (8 if s % 4 == 0 else 0))
-        if harp and s % 2 == 0:                    # harp: an 8th-note arpeggio rising through two octaves
-            note(HARP, t, 0.9, lad[(s // 2) % 8], harp + v + (6 if s % 8 == 0 else 0))
+        if harp and s % 2 == 0:                    # harp: an 8th-note arpeggio rising from A4
+            note(HARP, t, 0.9, lad[[0, 1, 2, 3, 4, 5, 6, 5][(s // 2) % 8]] + 12, harp + v + (6 if s % 8 == 0 else 0))
 
 def light_on(a, b, k, v=0):
     """A light switching on: low weight on the frame, then a short electric groove until it goes off."""
@@ -101,7 +101,7 @@ def light_on(a, b, k, v=0):
     j, t = 0, a
     while t < b - 0.06:
         note(PLK, t, 0.1, lad[[1, 2, 3, 4, 3, 2, 3, 4][j % 8]], 70 + v + (8 if j % 4 == 0 else 0))
-        note(DR, t, 0.05, HAT, (54 if j % 2 == 0 else 40) + v)
+        note(DR, t, 0.05, HAT, (64 if j % 2 == 0 else 50) + v)
         if j and j % 4 == 0: note(DR, t, 0.1, KICK, 80 + v)
         if j % 2 == 0: note(BASS, t, 0.2, 45, 80 + v)
         t += 0.125; j += 1
@@ -128,8 +128,8 @@ for k in range(8): note(PLK, TITLE - 1 + k * 0.125, 0.1, [57, 59, 64, 69, 64, 69
 chord(STR, TITLE - 0.5, 0.5, [52, 56, 59, 64], 80)
 
 # ── 2 title: the downbeat (low + strings), a soft horn swell; the toggle sets the electric pulse going
-chord(STR, TITLE, 2.0, [45, 52, 57, 60, 64], 90); chord(HORN, TITLE, 1.9, [45, 52, 57], 70)
-chord(PNO, TITLE, 1.6, [A1, 45, 57, 64, 69], 84); note(BASS, TITLE, 1.0, A1, 102); note(DR, TITLE, 0.1, KICK, 98)
+chord(STR, TITLE, 2.0, [45, 52, 57, 60, 64, 69, 72], 90); chord(HORN, TITLE, 1.9, [45, 52, 57], 70)
+chord(PNO, TITLE, 1.6, [45, 57, 64, 69, 76], 84); note(BASS, TITLE, 1.0, A1, 102); note(DR, TITLE, 0.1, KICK, 98)
 chord(PAD, TITLE, 2.0, [57, 60, 64, 69], 62)
 bars(TITLE + 1, PROB, drums='light', bass='pulse', pad=None, arp='mid', av=50)
 
@@ -160,11 +160,12 @@ bars(POND, P_OPEN - 0.5, bass='long', pad=PAD, pv=54, harp=62, v=0)
 chord(STR, POND, P_OPEN - 1 - POND, [45, 52, 57], 50)
 note(KAL, POND + po['drop'], 0.6, 76, 70)                                 # a drop of pond water
 chord(HORN, POND + po['sci'], 1.5, [45, 52, 57], 58)                      # two scientists: a warm, human colour
-chord(STR, P_OPEN - 1, 0.5, [52, 57, 59, 64, 69], 66); chord(STR, P_OPEN - 0.5, 0.5, [40, 56, 59, 64, 68], 78)   # the swell ends on the reveal
+chord(STR, P_OPEN - 1, 0.5, [52, 57, 59, 64, 69], 74); chord(STR, P_OPEN - 0.5, 0.5, [40, 56, 59, 64, 68, 71], 86)
+for k in range(4): note(HARP, P_OPEN - 0.5 + 0.125 * k, 0.6, [64, 68, 71, 76][k], 60 + 3 * k)   # the swell ends on the reveal
 # the first big lift: low weight, strings and horns in A major, harp spilling upward, then the groove
-note(DR, P_OPEN, 0.1, KICK, 98); note(BASS, P_OPEN, 1.0, A1, 104)
-chord(STR, P_OPEN, 2.0, [45, 52, 57, 61, 64, 69], 98); chord(HORN, P_OPEN, 1.9, [45, 52, 57, 61], 76)
-chord(PNO, P_OPEN, 1.4, [A1, 45, 57, 61, 64, 69], 86); chord(PAD, P_OPEN, 1.0, [57, 61, 64, 69], 66)
+note(DR, P_OPEN, 0.1, KICK, 92); note(BASS, P_OPEN, 1.0, A1, 100)
+chord(STR, P_OPEN, 2.0, [45, 52, 57, 61, 64, 69, 73, 76], 94); chord(HORN, P_OPEN, 1.9, [45, 52, 57, 61], 76)
+chord(PNO, P_OPEN, 1.4, [45, 57, 61, 64, 69, 76], 80); chord(PAD, P_OPEN, 1.0, [57, 61, 64, 69], 66)
 for k in range(8): note(HARP, P_OPEN + 0.0625 * k, 0.9, [57, 61, 64, 69, 73, 76, 81, 85][k], 70 + 2 * k)
 bars(P_OPEN + 0.5, TRANS, drums='groove', bass='pulse', pad=None, arp='mid', av=50, v=-2)
 chord(STR, P_OPEN + 1, 1.0, [50, 57, 62, 66], 84)                         # "梦寐以求的光控闸门"
@@ -178,30 +179,33 @@ chord(STR, bar(p0) - 1, MS - bar(p0) + 1, [43, 55, 62, 67], 60)
 for k, s in enumerate(pulses):                                            # one pluck per flash, one soft kick per spike
     note(PLK, s, 0.12, [69, 72, 74, 76, 79, 81][k], 84); note(DR, s, 0.1, KICK, 70 + 2 * k)
 note(DR, MS, 0.1, KICK, 98); note(BASS, MS, 0.9, A1, 104)
-chord(STR, MS, 1.4, [45, 52, 57, 60, 64], 92); chord(PNO, MS, 1.0, [A1, 45, 57, 60, 64], 86)
-bars(bar(MS), TRANS + 7.5, drums='groove', bass='pulse', arp='high', av=50, pv=52)
+chord(STR, MS, 1.4, [45, 52, 57, 60, 64, 69], 92); chord(PNO, MS, 1.0, [45, 57, 60, 64, 69], 86)
+bars(bar(MS), SWI, drums='groove', bass='pulse', arp='high', av=50, pv=52)
 
 # ── 7 on & off: bright plucks for the blue side, a low hush for the amber side; then the mouse spins again
-chord(PAD, SWI, 2.4, CH['Fmaj7'][1], 52); chord(STR, SWI, 2.4, [41, 48], 58)   # the amber side: a low, quiet hold; note(BASS, SWI, 2.0, 41, 70)
+chord(PAD, SWI, 2.4, CH['Fmaj7'][1], 60); chord(STR, SWI, 2.4, [41, 48, 57], 66)   # the amber side: a low, quiet hold
+chord(PNO, SWI, 1.5, [41, 53, 57, 60, 64], 70); note(DR, SWI, 0.1, KICK, 78); note(BASS, SWI, 2.0, 41, 70)
 for k in range(sw['fires']): note(PLK, SWI + sw['fire0'] + k * sw['fireStep'], 0.1, [72, 76, 79, 81, 84, 81, 79, 76][k % 8], 76)
 for s in sw['spont']: note(HARP, SWI + s, 0.5, 45, 66)                    # the amber neuron, firing on its own
-chord(PAD, SWI + 2, 2.0, [45, 52, 57, 60], 50); note(BASS, SWI + 2, sw['spin'] - 2, A1, 66)
+chord(PAD, SWI + 2, 2.0, [45, 52, 57, 60], 58); note(BASS, SWI + 2, sw['spin'] - 2, A1, 66)
 light_on(SWI + sw['spin'], SWI + sw['spin'] + 0.8, 0, v=-6)                # the same light as the cold open
 chord(STR, SWI + sw['spin'] + 0.8, SIGHT - SWI - sw['spin'] - 0.8, [45, 52, 57, 60], 56)
 
 # ── 8 sight: piano and strings, held back; the swell lands on "看见" in A major
 mot = [(0, 69), (0.5, 76), (1, 74), (1.5, 72), (2, 72), (2.5, 69), (3, 67), (3.5, 65), (4, 65), (4.5, 69), (5, 71), (5.3, 68)]
-for s, p in mot: note(PNO, SIGHT + s, 0.9, p, 66)
-for s in (0, 2, 4): chord(PNO, SIGHT + s, 1.9, [CH[harm(SIGHT + s)][0], CH[harm(SIGHT + s)][0] + 7], 58)
+for s, p in mot: note(PNO, SIGHT + s, 0.9, p, 76)
+for s in (0, 2, 4):                                                       # left hand: a slow broken chord
+    r = CH[harm(SIGHT + s)][0]
+    for j, d in enumerate([0, 7, 12, 15 if harm(SIGHT + s) != 'F' else 16, 19, 12, 7, 12][:8 if s < 4 else 4]): note(PNO, SIGHT + s + 0.25 * j, 0.6, r + d, 60 - 4 * (j % 2))
 chord(PNO, SEE - 0.6, 0.6, [40, 47], 60)
-chord(STR, SIGHT, 2.0, [45, 57, 60], 54); chord(STR, SIGHT + 2, 2.0, [41, 57, 60], 56); chord(STR, SIGHT + 4, SEE - SIGHT - 4.6, [38, 57, 62], 60)
-chord(STR, SEE - 0.6, 0.3, [40, 57, 59, 64], 74); chord(STR, SEE - 0.3, 0.3, [40, 56, 59, 64], 82)
-note(PAD, SIGHT, SEE - 0.3 - SIGHT, 45, 44)
+chord(STR, SIGHT, 2.0, [45, 57, 60, 64], 66); chord(STR, SIGHT + 2, 2.0, [41, 57, 60, 65], 68); chord(STR, SIGHT + 4, SEE - SIGHT - 4.6, [38, 57, 62, 65], 72)
+chord(STR, SEE - 0.6, 0.3, [40, 57, 59, 64, 71], 80); chord(STR, SEE - 0.3, 0.3, [40, 56, 59, 64, 71], 86)
+note(PAD, SIGHT, SEE - 0.3 - SIGHT, 45, 52)
 for k, s in enumerate((si['inject'] + 0.3, si['goggles'])): note(HARP, SIGHT + s, 0.6, [64, 69][k], 58)
 # "他看见了": the biggest warm lift — the chord blooms rather than hits
 note(DR, SEE, 0.1, KICK, 80); note(BASS, SEE, 2.2, A1, 96)
-chord(STR, SEE, 2.4, [45, 52, 57, 61, 64, 69, 73], 100); chord(HORN, SEE, 2.4, [45, 52, 57, 61], 80)
-chord(PNO, SEE, 2.0, [A1, 45, 52, 61, 64, 69, 73], 88); chord(PAD, SEE, 2.4, [57, 61, 64, 69], 68)
+chord(STR, SEE, 2.4, [45, 52, 57, 61, 64, 69, 73, 76], 100); chord(HORN, SEE, 2.4, [45, 52, 57, 61], 80)
+chord(PNO, SEE, 2.0, [45, 52, 61, 64, 69, 73, 76], 88); chord(PAD, SEE, 2.4, [57, 61, 64, 69], 68)
 for k in range(8): note(HARP, SEE + 0.125 * k, 1.0, [57, 61, 64, 69, 73, 76, 81, 85][k], 66 + 2 * k)
 for s, p in [(si['count'] - si['see'], 76), (NOBEL - 1 - SEE, 74), (NOBEL - 0.5 - SEE, 73)]: note(PNO, SEE + s, 0.9, p, 72)
 chord(STR, NOBEL - 1, 1.0, [50, 57, 62, 66], 76); bars(NOBEL - 1, NOBEL, drums='heart', bass='beat', pad=None, v=-6)
@@ -215,7 +219,7 @@ note(PNO, ASK, 0.6, 71, 62)
 # the final line lands on the widest chord of the film, rings, and leaves ~1 s of breath
 END = DUR - 1.2
 note(DR, FIN, 0.1, KICK, 92); note(BASS, FIN, END - FIN, A1, 98)
-chord(STR, FIN, END - FIN, [33, 45, 52, 57, 61, 64, 69, 71], 100); chord(HORN, FIN, END - FIN, [45, 52, 57, 61, 64], 80)
+chord(STR, FIN, END - FIN, [33, 45, 52, 57, 61, 64, 69, 71, 73, 76], 100); chord(HORN, FIN, END - FIN, [45, 52, 57, 61, 64], 80)
 chord(PNO, FIN, END - FIN, [A1, 45, 57, 61, 64, 69, 76], 90); chord(PAD, FIN, END - FIN, CH['Aadd9'][1] + [69], 66)
 for k in range(8): note(HARP, FIN + 0.125 * k, 1.4, [57, 61, 64, 69, 71, 73, 76, 81][k], 64 + 2 * k)
 note(PNO, NOBEL + nb['src'], 1.2, 81, 56)                                 # one last high A under the closing line
@@ -229,11 +233,11 @@ x *= fade[:, None]
 fx = Sfx(DUR, SR)
 # every cut: an air whoosh peaking on the section start (the 0.45 s iris that grows out of the last scene); later cuts quieter
 for sec, name, db in [('title', 'whoosh_air', -24), ('problem', 'whoosh_air', -26), ('neuron', 'swoosh_vacuum', -26),
-                      ('pond', 'swell_slow', -27), ('transplant', 'whoosh_air', -27), ('sight', 'whoosh_air', -28), ('nobel', 'whoosh_air', -28)]:
+                      ('pond', 'swell_slow', -27), ('transplant', 'whoosh_air', -27), ('sight', 'whoosh_air', -30), ('nobel', 'whoosh_air', -28)]:
     fx.play(st(sec), name, db, align='peak')
-fx.play(SWI, 'sweep_air', -29, align='peak', pan=-0.6); fx.play(SWI + 0.04, 'sweep_air', -30, align='peak', pan=0.6)   # blue from the left, amber from the right
+fx.play(SWI, 'sweep_air', -31, align='peak', pan=-0.6); fx.play(SWI + 0.04, 'sweep_air', -32, align='peak', pan=0.6)   # blue from the left, amber from the right
 # 1 cold open
-fx.play(c['ask'], 'deep_hit', -27, rate=1.53)                             # a low heartbeat under the question (tuned to A)
+fx.play(c['ask'], 'deep_hit', -29, rate=1.53)                             # a low heartbeat under the question (tuned to A)
 fx.play(c['q'] + 0.45, 'heartbeat', -28); fx.play(c['q'] + 1.0, 'heartbeat', -31)
 for k, sh in enumerate(shots):
     fx.play(sh['on'], 'switch', -21 - 0.5 * k); fx.play(sh['on'], 'bass_hit', -25, rate=1.59)   # click + low body
@@ -241,34 +245,34 @@ for k, sh in enumerate(shots):
 for k in range(2): fx.play(c['nots'] + 0.4 + 0.3 * k, 'air_quick', -31 - 2 * k, align='peak', maxlen=0.7)   # two red strike-throughs
 fx.play(c['light'], 'deep_air', -27, align='peak')                        # "是一束光": a warm sweep
 fx.play(c['alga'], 'bubble', -27)
-fx.play(c['prize'], 'pop_soft', -29)
+fx.play(c['prize'], 'pop_soft', -24)
 fx.play(TITLE, 'riser', -30, align='peak')                                # the blue spreading into the title
 # 2 title
-fx.play(TITLE, 'bass_hit', -24, rate=1.59); fx.play(TITLE + ti['toggle'], 'switch', -22)
+fx.play(TITLE, 'bass_hit', -24, rate=1.59); fx.play(TITLE + ti['toggle'], 'switch', -18)
 # 3 the problem
 fx.play(PROB + pr['electrode'] + 0.4, 'electric_pop', -26, rate=0.8); fx.play(PROB + pr['electrode'] + 0.4, 'bass_hit', -29, rate=1.59)
 fx.play(PROB + pr['drug'] + 0.3, 'deep_air', -29, rate=0.75, maxlen=1.3)              # the drug's slow slide
 # 4 neuron
 fx.play(NEU + ne['open'] + 0.1, 'vacuum', -27, align='peak'); fx.play(NEU + ne['open'] + 0.15, 'bubble', -28)
-for k, s in enumerate((ne['spike'], ne['spike'] + 1.0)): fx.play(NEU + s, 'electric_pop', -27 - 2 * k)
+for k, s in enumerate((ne['spike'], ne['spike'] + 1.0)): fx.play(NEU + s, 'electric_pop', -23 - 2 * k)
 # 5 pond
 fx.play(POND + po['drop'], 'bubble_liquid', -28)
 fx.play(POND + po['zoom'] + 0.35, 'sweep_air', -30, align='peak')
-for k in range(2): fx.play(POND + po['sci'] + 0.4 + 0.25 * k, 'pop_soft', -29 - 2 * k)
+for k in range(2): fx.play(POND + po['sci'] + 0.4 + 0.25 * k, 'pop_soft', -25 - 2 * k)
 fx.play(POND + po['eyespot'] + 0.4, 'vacuum', -28, align='peak')          # into the eyespot
-fx.play(P_OPEN, 'bass_hit', -24, rate=1.59); fx.play(P_OPEN + 0.1, 'bubble_liquid', -28)   # the gate opens: low body + water
+fx.play(P_OPEN, 'bass_hit', -22, rate=1.59); fx.play(P_OPEN + 0.1, 'bubble_liquid', -26)   # the gate opens: low body + water
 # 6 transplant
-for k, s in enumerate(tr['steps']): fx.play(TRANS + s, 'pop_soft', -27 - k)
-fx.play(MS, 'bass_hit', -25, rate=1.59)
+for k, s in enumerate(tr['steps']): fx.play(TRANS + s, 'pop_soft', -23 - k)
+fx.play(MS, 'bass_hit', -22, rate=1.59)
 # 7 on & off
-fx.play(SWI + sw['spin'], 'switch', -23); fx.play(SWI + sw['spin'] + 0.25, 'air_quick', -31, align='peak', pan=-0.3)
+fx.play(SWI + sw['spin'], 'switch', -20); fx.play(SWI + sw['spin'] + 0.25, 'air_quick', -29, align='peak', pan=-0.3)
 # 8 sight
 fx.play(SIGHT + si['inject'] + 0.45, 'vacuum', -29, align='peak')         # the injection: soft air pressure
-fx.play(SIGHT + si['goggles'] + 0.15, 'lock_quick', -28)                  # the goggles click into place
-fx.play(SEE, 'swell_slow', -27, align='peak')                             # a warm air swell into "看见"
+fx.play(SIGHT + si['goggles'] + 0.15, 'lock_quick', -26)                  # the goggles click into place
+fx.play(SEE, 'swell_slow', -24, align='peak')                             # a warm air swell into "看见"
 # 9 the prize
-for k, s in enumerate(nb['people']): fx.play(NOBEL + s, 'pop_soft', -30 - k)
-fx.play(FIN, 'bass_hit', -26, rate=1.59); fx.play(FIN, 'air_quick', -31, align='peak')   # the black bar wipes in
+for k, s in enumerate(nb['people']): fx.play(NOBEL + s, 'pop_soft', -26 - k)
+fx.play(FIN, 'bass_hit', -23, rate=1.59); fx.play(FIN, 'air_quick', -29, align='peak')   # the black bar wipes in
 bus = fx.mix(sc.ir, 0.15, lp=9000)
 if os.environ.get('STEM_DIR'):                  # for the level check: the music and the SFX bus before mastering
     sf.write(os.path.join(os.environ['STEM_DIR'], '_music.wav'), x.astype(np.float32), SR)
