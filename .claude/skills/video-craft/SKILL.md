@@ -11,6 +11,7 @@ taught us; follow them, and when the user gives new feedback, add it to the matc
 
 | Topic | File | The one-line rule |
 |---|---|---|
+| Visual style | [style.md](style.md) | Research references first, build with techniques that reach the quality, compare side by side. |
 | Opening | [opening.md](opening.md) | Frame 1 is a question, an anomaly or an impact — never a title card. |
 | Narrative | [narrative.md](narrative.md) | Each scene answers the last scene's question and asks the next one. |
 | Transitions | [transitions.md](transitions.md) | Something must carry across every cut: a shape, a colour, a motion, a sound. |
