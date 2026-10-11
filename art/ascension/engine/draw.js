@@ -564,8 +564,13 @@ A.pine = (ctx, o) => {
 A.palace = (ctx, o) => {
   const P = o.pal, a0 = o.alpha ?? 1, C = (c) => A.mix(c, o.hazeCol || [1, 1, 1], o.haze || 0);
   const n = o.tiers || 6;
+  // floating rock base under the lowest tier (inverted, rim-lit) with light-falls rising from it
+  if (o.base !== false) { const r = A.rng(5); const bw = o.r * 1.02, bh = o.r * 1.1; ctx.beginPath(); ctx.moveTo(o.x - bw, o.y);
+    for (let i = 0; i <= 24; i++) { const u = i / 24, x = A.lerp(o.x - bw, o.x + bw, u), d = Math.abs(u - 0.5) * 2; const y = o.y + bh * Math.pow(1 - d, 1.6) * (0.75 + 0.5 * A.n1(u * 9, 4)) + (r() - 0.5) * 8; ctx.lineTo(x, y); }
+    ctx.closePath(); const g = ctx.createLinearGradient(0, o.y, 0, o.y + bh); g.addColorStop(0, A.css(C(P.rock || P.wall), a0)); g.addColorStop(1, A.css(C(P.rockDark || P.wall), a0));
+    ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = A.css(C(P.gold), 0.6 * a0); ctx.lineWidth = 1; ctx.stroke(); }
   for (let k = 0; k < n; k++) {
-    const rr = o.r * Math.pow(0.78, k), y = o.y - k * o.gap * Math.pow(0.9, k), ey = rr * 0.18, hgt = o.gap * 0.55 * Math.pow(0.9, k);
+    const rr = o.r * Math.pow(o.shrink || 0.78, k), y = o.y - k * o.gap * Math.pow(0.92, k), ey = rr * 0.16, hgt = o.gap * 0.62 * Math.pow(0.92, k);
     // front wall (dark lacquer) with window rows
     const wg = ctx.createLinearGradient(0, y - hgt, 0, y + ey);
     wg.addColorStop(0, A.css(C(P.wallTop), a0)); wg.addColorStop(1, A.css(C(P.wall), a0));

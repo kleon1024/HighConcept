@@ -223,7 +223,8 @@ function s5(L, U, lt) {
   A.strokes(b, { cx: 540, cy: 560, t: lt + 12, n: 700, seed: 14, r0: 250, r1: 560, pal: STROKES, swirl: 0.25, width: 2.4, alpha: 0.55, len: 0.8, lanes: 7, tilt: 0.35 });
   // light-falls rising from the palace
   A.flow(b, { t: lt, n: 160, seed: 3, area: [300, 250, 780, 1150], dir: [0, -1], speed: 160, pal: [hx('#fff0c8'), hx('#9ff6ff'), hx('#ffd36b')], width: 1.2, len: 120, alpha: 0.35 });
-  A.palace(b, { x: 540, y: 1300, r: 400, tiers: 9, gap: 112, t: lt, pal: { wallTop: hx('#4a1e6a'), wall: hx('#1a0e3e'), window: hx('#ffb347'), window2: hx('#7af0ff'), roof: hx('#140a30'), roofTop: hx('#b04a7a'), gold: GOLD } });
+  A.palace(b, { x: 540, y: 1180, r: 330, tiers: 9, gap: 92, shrink: 0.84, t: lt, pal: { wallTop: hx('#4a1e6a'), wall: hx('#1a0e3e'), window: hx('#ffb347'), window2: hx('#7af0ff'), roof: hx('#140a30'), roofTop: hx('#b04a7a'), gold: GOLD, rock: hx('#2a1a5a'), rockDark: hx('#0e0828') } });
+  A.flow(b, { t: lt, n: 90, seed: 13, area: [300, 1180, 780, 1600], dir: [0, -1], speed: 120, pal: [hx('#9ff6ff'), hx('#fff0c8')], width: 1.0, len: 160, alpha: 0.4 });
   U.clouds[0] = rowCloud({ hor: U.uHorY, near: 0.05, scale: 1.2, cov: 0.5, rows: 8, haze: 0.75, rimK: 5,
     lit: hx('#ff9ab8'), alt: hx('#ffc38a'), sh: hx('#4a1e7a'), hazeCol: hx('#ffc890'), rim: hx('#fff0d0'), drift: [lt * 0.05, 0] });
   // lotus blossoms on the cloud sea
