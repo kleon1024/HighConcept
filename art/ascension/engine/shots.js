@@ -57,7 +57,7 @@ function shotStair(L, U, t, k) {
   [[170, horPx + 12, 170, 120, 31, 0.62], [880, horPx + 8, 210, 150, 47, 0.6], [640, horPx + 4, 110, 70, 52, 0.7], [420, horPx + 6, 90, 60, 61, 0.72]].forEach(([x, y, w, h, s, hz]) =>
     A.peak(b, { x, y, w, h, seed: s, pal: PEAK, haze: hz, hazeCol: hazeC, light: [x < 540 ? 1 : -1, -1], detail: 0 }));
   A.peak(b, { x: 150, y: horPx + 150, w: 360, h: 640, seed: 11, pal: PEAK, haze: 0.05, hazeCol: hazeC, light: [1, -1], pavilion: true, t });
-  A.peak(b, { x: 990, y: horPx + 120, w: 280, h: 470, seed: 23, pal: PEAK, haze: 0.12, hazeCol: hazeC, light: [-1, -1], pavilion: true, t });
+  A.peak(b, { x: k.poster ? 1015 : 990, y: horPx + (k.poster ? 150 : 120), w: k.poster ? 250 : 280, h: k.poster ? 360 : 470, seed: 23, pal: PEAK, haze: 0.12, hazeCol: hazeC, light: [-1, -1], pavilion: true, t });
   A.birds(b, { t: t + (k.birdT || 0), n: 9, seed: 3, cx: 300, cy: 300, spread: 260, dir: [0.9, 0.25], speed: 28, size: 9, col: hx('#fff4e0'), rim: hx('#ffb060'), alpha: 0.95 });
   A.haloRing(b, { x: cx, y: cy, r: R * 1.32, tilt: 0.22, rot: -0.18, col: GOLD, alpha: 0.55, n: 160, dots: 24, dotCol: hx('#ff6a3a') });
   A.haloRing(b, { x: cx, y: cy, r: R * 1.22, col: GOLD, alpha: 0.5, n: 120, dots: 8, dotR: 3, dotCol: hx('#7af0ff'), rot: t * 0.05 });
@@ -350,7 +350,7 @@ window.renderAt = (t, opts = {}) => {
   ensure();
   const L = layers.map(c => { const x = c.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, W, H); return x; });
   const U = baseU(); U.time = t;
-  if (opts.poster) { shotStair(L, U, t, { u: 0.55, lit: [] }); posterText(L[2], 1); }
+  if (opts.poster) { shotStair(L, U, t, { u: 0.55, lit: [], poster: true }); posterText(L[2], 1); }
   else for (const s of SHOTS) if (t >= s.t0 && t < s.t1) { s.fn(L, U, t - s.t0, t); break; }
   gl.render(U, layers);
   return true;

@@ -1,0 +1,6 @@
+refs/*.jpg
+refs/*.png
+refs/*.webp
+!refs/board.jpg
+node_modules/
+package-lock.json
