@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>百鬼夜行 Style C</title>
+<link rel="stylesheet" href="../../shape-of-sound/node_modules/@fontsource/noto-sans-sc/900.css">
+<link rel="stylesheet" href="../../shape-of-sound/node_modules/@fontsource/noto-sans-sc/700.css">
+<link rel="stylesheet" href="node_modules/@fontsource/noto-serif-sc/900.css">
+<link rel="stylesheet" href="node_modules/@fontsource/noto-serif-sc/700.css">
+<link rel="stylesheet" href="node_modules/@fontsource/anton/400.css">
+<link rel="stylesheet" href="node_modules/@fontsource/bebas-neue/400.css">
+<link rel="stylesheet" href="node_modules/@fontsource/oswald/700.css">
+<style>
+  :root {
+    --red: #E60012;
+    --blk: #0B0B0B;
+    --wht: #FFFFFF;
+    --acc: #FFD400; /* the single tiny accent */
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--red); }
+  #stage { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: var(--red); }
+  svg.layer { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+  .abs { position: absolute; }
+
+  /* ---------- ransom-note pieces ---------- */
+  .piece { position: absolute; transform-origin: 50% 50%; }
+  .piece .plate { position: absolute; inset: 0; }
+  .piece .glyph {
+    position: relative; display: flex; align-items: center; justify-content: center;
+    line-height: 1; white-space: nowrap;
+  }
+  .sans9 { font-family: 'Noto Sans SC'; font-weight: 900; }
+  .sans7 { font-family: 'Noto Sans SC'; font-weight: 700; }
+  .serif9 { font-family: 'Noto Serif SC'; font-weight: 900; }
+  .serif7 { font-family: 'Noto Serif SC'; font-weight: 700; }
+  .anton { font-family: 'Anton'; font-weight: 400; }
+  .bebas { font-family: 'Bebas Neue'; font-weight: 400; }
+  .oswald { font-family: 'Oswald'; font-weight: 700; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <!-- L0: background panels, burst, moon, sky details -->
+  <svg class="layer" id="bg" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="sticker" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+        <feMorphology in="SourceAlpha" operator="dilate" radius="8" result="d1"/>
+        <feFlood flood-color="#fff"/><feComposite in2="d1" operator="in" result="white"/>
+        <feOffset in="d1" dx="18" dy="16" result="d2"/>
+        <feFlood flood-color="#0B0B0B"/><feComposite in2="d2" operator="in" result="shadow"/>
+        <feMerge><feMergeNode in="shadow"/><feMergeNode in="white"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <filter id="stickerS" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+        <feMorphology in="SourceAlpha" operator="dilate" radius="5" result="d1"/>
+        <feFlood flood-color="#fff"/><feComposite in2="d1" operator="in" result="white"/>
+        <feOffset in="d1" dx="10" dy="9" result="d2"/>
+        <feFlood flood-color="#0B0B0B"/><feComposite in2="d2" operator="in" result="shadow"/>
+        <feMerge><feMergeNode in="shadow"/><feMergeNode in="white"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <filter id="shadowOnly" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+        <feOffset in="SourceAlpha" dx="14" dy="14" result="o"/>
+        <feFlood flood-color="#0B0B0B"/><feComposite in2="o" operator="in" result="s"/>
+        <feMerge><feMergeNode in="s"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <pattern id="toneK" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <circle cx="4.5" cy="4.5" r="2.1" fill="#0B0B0B"/>
+      </pattern>
+      <pattern id="toneW" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <circle cx="5" cy="5" r="2.2" fill="#fff"/>
+      </pattern>
+      <pattern id="toneR" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <circle cx="5" cy="5" r="2.6" fill="#E60012"/>
+      </pattern>
+      <pattern id="hatchK" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(-28)">
+        <rect width="12" height="4" fill="#0B0B0B"/>
+      </pattern>
+      <pattern id="hatchW" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(-28)">
+        <rect width="14" height="3" fill="#fff"/>
+      </pattern>
+    </defs>
+    <g id="bgRoot"></g>
+  </svg>
+
+  <!-- L1: hero figure + oni mask -->
+  <svg class="layer" id="mid" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg"><g id="midRoot"></g></svg>
+
+  <!-- L2: typography -->
+  <div id="type" class="abs" style="left:0;top:0;width:1080px;height:1920px;"></div>
+
+  <!-- L3: foreground: parade strip, shards -->
+  <svg class="layer" id="fg" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg"><g id="fgRoot"></g></svg>
+
+  <!-- L4: top typography (over fg) -->
+  <div id="type2" class="abs" style="left:0;top:0;width:1080px;height:1920px;"></div>
+</div>
+
+<script>
+const NS = 'http://www.w3.org/2000/svg';
+const RED = '#E60012', BLK = '#0B0B0B', WHT = '#FFFFFF', ACC = '#FFD400';
+
+function el(tag, attrs = {}, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+// deterministic RNG
+let _s = 20261031;
+function rnd() { _s |= 0; _s = (_s + 0x6D2B79F5) | 0; let t = Math.imul(_s ^ (_s >>> 15), 1 | _s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }
+const R = (a, b) => a + (b - a) * rnd();
+const P = (pts) => 'M' + pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join('L') + 'Z';
+
+// polygon with torn / jagged edges. pts: [x,y,amp] amp applies to edge starting there
+function torn(pts, step = 16) {
+  const out = [];
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i], b = pts[(i + 1) % pts.length];
+    const amp = a[2] || 0;
+    const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy);
+    const nx = -dy / len, ny = dx / len;
+    const segs = amp ? Math.max(1, Math.round(len / step)) : 1;
+    for (let j = 0; j < segs; j++) {
+      const t = j / segs;
+      const jit = j === 0 ? 0 : (rnd() - 0.5) * 2 * amp;
+      const tj = j === 0 ? 0 : (rnd() - 0.5) * 0.4 / segs;
+      out.push([a[0] + dx * (t + tj) + nx * jit, a[1] + dy * (t + tj) + ny * jit]);
+    }
+  }
+  return P(out);
+}
+// tapered limb polygon along polyline
+function limb(pts, ws) {
+  const L = [], Rr = [];
+  for (let i = 0; i < pts.length; i++) {
+    const p0 = pts[Math.max(0, i - 1)], p1 = pts[Math.min(pts.length - 1, i + 1)];
+    let dx = p1[0] - p0[0], dy = p1[1] - p0[1]; const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
+    const nx = -dy, ny = dx, w = ws[i] / 2;
+    L.push([pts[i][0] + nx * w, pts[i][1] + ny * w]);
+    Rr.push([pts[i][0] - nx * w, pts[i][1] - ny * w]);
+  }
+  return P(L.concat(Rr.reverse()));
+}
+// spiky star / burst
+function burst(cx, cy, n, r1, r2, rot = 0, jit = 0) {
+  const pts = [];
+  for (let i = 0; i < n * 2; i++) {
+    const a = rot + (i / (n * 2)) * Math.PI * 2;
+    const r = (i % 2 ? r2 : r1) * (1 + (rnd() - 0.5) * jit);
+    pts.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]);
+  }
+  return P(pts);
+}
+// variable-size halftone on a 45deg lattice; fn(x,y)->0..1
+function halftone(g, { x0, y0, x1, y1, step = 18, rmax = 8, ang = Math.PI / 4, fn, fill }) {
+  const ca = Math.cos(ang), sa = Math.sin(ang);
+  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, half = Math.hypot(x1 - x0, y1 - y0) / 2 + step;
+  const n = Math.ceil(half / step);
+  let d = '';
+  for (let i = -n; i <= n; i++) for (let j = -n; j <= n; j++) {
+    const x = cx + (i * ca - j * sa) * step, y = cy + (i * sa + j * ca) * step;
+    if (x < x0 - step || x > x1 + step || y < y0 - step || y > y1 + step) continue;
+    const f = fn(x, y); if (f <= 0.04) continue;
+    const r = rmax * Math.min(1, f);
+    d += `M${(x - r).toFixed(1)},${y.toFixed(1)}a${r.toFixed(1)},${r.toFixed(1)} 0 1,0 ${(2 * r).toFixed(1)},0a${r.toFixed(1)},${r.toFixed(1)} 0 1,0 ${(-2 * r).toFixed(1)},0`;
+  }
+  return el('path', { d, fill }, g);
+}
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+let clipN = 0;
+function clipTo(d, parent) {
+  const id = 'c' + (clipN++);
+  const defs = document.querySelector('#bg defs');
+  const cp = el('clipPath', { id }, defs); el('path', { d }, cp);
+  return `url(#${id})`;
+}
+
+/* ====================================================================
+   L0  BACKGROUND
+   ==================================================================== */
+const bg = document.getElementById('bgRoot');
+
+// radial burst rays from behind the hero
+(function rays() {
+  const cx = 560, cy = 700, g = el('g', {}, bg);
+  const N = 44;
+  for (let i = 0; i < N; i++) {
+    if (i % 2) continue;
+    const a0 = (i / N) * Math.PI * 2 + 0.05, a1 = ((i + 1) / N) * Math.PI * 2 + 0.05 + R(-0.02, 0.03);
+    el('path', { d: P([[cx, cy], [cx + Math.cos(a0) * 2400, cy + Math.sin(a0) * 2400], [cx + Math.cos(a1) * 2400, cy + Math.sin(a1) * 2400]]), fill: BLK, opacity: 0.16 }, g);
+  }
+})();
+
+// black halftone in red middle zone (from left & right edges)
+halftone(bg, { x0: 0, y0: 560, x1: 1080, y1: 1200, step: 20, rmax: 9.5,
+  fn: (x, y) => clamp(1.1 - Math.hypot(x - 1080, y - 1150) / 520) + clamp(0.9 - Math.hypot(x, y - 1050) / 380), fill: BLK });
+
+// SKY panel (black) with a torn lower edge + white paper under-layer
+const skyPts = [[0, 0, 0], [1080, 0, 0], [1080, 545, 14], [0, 905, 0]];
+const skyUnder = torn([[0, 0, 0], [1080, 0, 0], [1080, 572, 18], [0, 935, 0]], 22);
+el('path', { d: skyUnder, fill: WHT }, bg);
+const skyD = torn(skyPts, 18);
+el('path', { d: skyD, fill: BLK }, bg);
+// red halftone rising toward torn edge (screen-tone sky)
+(function () {
+  const g = el('g', { 'clip-path': clipTo(skyD) }, bg);
+  halftone(g, { x0: 0, y0: 200, x1: 1080, y1: 920, step: 17, rmax: 7.8,
+    fn: (x, y) => { const edge = 905 - (x / 1080) * 360; return clamp(1 - (edge - y) / 330); }, fill: RED });
+  // diagonal hatch slashes in sky
+  for (let i = 0; i < 7; i++) {
+    const x = R(-100, 900), y = R(40, 520), w = R(140, 420);
+    el('path', { d: P([[x, y], [x + w, y - w * 0.32], [x + w, y - w * 0.32 + R(3, 7)], [x, y + R(3, 7)]]), fill: WHT, opacity: 0.85 }, g);
+  }
+})();
+
+// stars (4-point sparkles)
+function sparkle(g, x, y, s, fill = WHT) {
+  el('path', { d: `M${x},${y - s}L${x + s * 0.22},${y - s * 0.22}L${x + s},${y}L${x + s * 0.22},${y + s * 0.22}L${x},${y + s}L${x - s * 0.22},${y + s * 0.22}L${x - s},${y}L${x - s * 0.22},${y - s * 0.22}Z`, fill }, g);
+}
+[[120, 420, 16], [470, 120, 12], [560, 300, 20], [300, 90, 9], [990, 640, 14], [640, 470, 10], [210, 560, 9], [395, 470, 13]].forEach(s => sparkle(bg, ...s));
+
+// MOON: fat crescent, white with red halftone terminator + black slash
+(function moon() {
+  const cx = 848, cy = 318, r = 236;
+  const defs = document.querySelector('#bg defs');
+  const m = el('mask', { id: 'moonMask', maskUnits: 'userSpaceOnUse', x: 0, y: 0, width: 1080, height: 1920 }, defs);
+  el('rect', { x: 0, y: 0, width: 1080, height: 1920, fill: '#000' }, m);
+  el('circle', { cx, cy, r, fill: '#fff' }, m);
+  el('circle', { cx: cx - 128, cy: cy - 92, r: 212, fill: '#000' }, m);
+  // offset paper shadow
+  const sh = el('g', { mask: 'url(#moonMask)', transform: 'translate(16,14)' }, bg);
+  el('rect', { x: 0, y: 0, width: 1080, height: 1920, fill: RED }, sh);
+  const g = el('g', { mask: 'url(#moonMask)' }, bg);
+  el('circle', { cx, cy, r, fill: WHT }, g);
+  halftone(g, { x0: cx - r, y0: cy - r, x1: cx + r, y1: cy + r, step: 13, rmax: 6.4,
+    fn: (x, y) => clamp(1 - (Math.hypot(x - (cx - 128), y - (cy - 92)) - 212) / 120), fill: RED });
+  // crater cut shapes
+  el('circle', { cx: cx + 120, cy: cy + 120, r: 26, fill: 'url(#toneK)' }, g);
+  el('circle', { cx: cx + 175, cy: cy + 30, r: 14, fill: 'url(#toneK)' }, g);
+})();
+
+// lantern string across the sky
+function lantern(g, x, y, s, label, opt = {}) {
+  const lg = el('g', { transform: `translate(${x},${y}) rotate(${opt.rot || 0}) scale(${s})` }, g);
+  el('line', { x1: 0, y1: -38, x2: 0, y2: -24, stroke: WHT, 'stroke-width': 3 }, lg);
+  el('rect', { x: -18, y: -26, width: 36, height: 9, fill: BLK, stroke: WHT, 'stroke-width': 2 }, lg);
+  el('path', { d: 'M-18,-18 C-40,-6 -40,34 -18,46 L18,46 C40,34 40,-6 18,-18Z', fill: opt.body || WHT, stroke: BLK, 'stroke-width': 2.5 }, lg);
+  for (const yy of [-6, 6, 18, 30]) {
+    const w = 33 - Math.abs(yy - 14) * 0.25;
+    el('path', { d: `M${-w},${yy} Q0,${yy + 5} ${w},${yy}`, fill: 'none', stroke: opt.rib || BLK, 'stroke-width': 1.6, opacity: 0.55 }, lg);
+  }
+  el('rect', { x: -18, y: 45, width: 36, height: 9, fill: BLK, stroke: WHT, 'stroke-width': 2 }, lg);
+  el('path', { d: 'M-6,54 L-8,74 M0,54 L0,78 M6,54 L8,74', stroke: opt.tassel || RED, 'stroke-width': 3 }, lg);
+  const t = el('text', { x: 0, y: 26, 'text-anchor': 'middle', 'font-family': 'Noto Serif SC', 'font-weight': 900, 'font-size': 30, fill: opt.ink || RED }, lg);
+  t.textContent = label;
+  return lg;
+}
+(function string() {
+  const g = el('g', {}, bg);
+  const pts = [[-20, 250], [130, 296], [280, 318], [430, 300], [580, 248]];
+  el('path', { d: `M${pts[0]}Q140,320 300,320T600,240`, fill: 'none', stroke: WHT, 'stroke-width': 3 }, g);
+  lantern(g, 98, 330, 1.25, '百', { rot: -4 });
+  lantern(g, 236, 352, 1.05, '鬼', { rot: 6, body: RED, ink: WHT, rib: WHT, tassel: WHT });
+  lantern(g, 372, 350, 1.18, '夜', { rot: -8 });
+  lantern(g, 510, 308, 0.95, '行', { rot: 5, body: RED, ink: WHT, rib: WHT, tassel: WHT });
+})();
+
+// hitodama (spirit flames) floating
+function wisp(g, x, y, s, rot, fill = WHT) {
+  el('path', { d: 'M0,0 C22,0 30,24 14,40 C2,52 -26,46 -24,22 C-22,6 -14,-6 -30,-36 C-6,-26 -12,-4 0,0Z', fill,
+    transform: `translate(${x},${y}) rotate(${rot}) scale(${s})` }, g);
+}
+
+// big white burst behind the hero (cut-out paper)
+(function heroBurst() {
+  const d = burst(560, 690, 15, 365, 255, -0.2, 0.22);
+  el('path', { d, fill: BLK, transform: 'translate(18,18)' }, bg);
+  el('path', { d, fill: WHT }, bg);
+  const g = el('g', { 'clip-path': clipTo(d) }, bg);
+  halftone(g, { x0: 160, y0: 300, x1: 960, y1: 1080, step: 16, rmax: 7.6,
+    fn: (x, y) => clamp((Math.hypot(x - 560, y - 690) - 170) / 200), fill: RED });
+})();
+
+// red/black slanted strip behind title region
+(function titleBand() {
+  const band = torn([[0, 1140, 0], [1080, 990, 20], [1080, 1395, 0], [0, 1560, 20]], 20);
+  el('path', { d: band, fill: WHT, transform: 'translate(0,16)' }, bg);
+  el('path', { d: band, fill: BLK }, bg);
+  const g = el('g', { 'clip-path': clipTo(band) }, bg);
+  el('rect', { x: 0, y: 900, width: 1080, height: 800, fill: 'url(#hatchW)', opacity: 0.11 }, g);
+  halftone(g, { x0: 0, y0: 980, x1: 1080, y1: 1570, step: 18, rmax: 8.5,
+    fn: (x, y) => clamp(1 - (x + (1560 - y) * 1.4) / 620), fill: RED });
+})();
+
+// red zone below title band: black halftone + white speed slashes
+halftone(bg, { x0: 0, y0: 1380, x1: 1080, y1: 1920, step: 20, rmax: 9,
+  fn: (x, y) => clamp((y - 1500) / 380) * clamp(1.2 - x / 1000), fill: BLK });
+
+/* ====================================================================
+   L1  HERO FIGURE (local coords, mid-leap toward the moon)
+   ==================================================================== */
+const mid = document.getElementById('midRoot');
+
+(function hero() {
+  const wrap = el('g', { filter: 'url(#sticker)' }, mid);
+  const g = el('g', { transform: 'translate(-34,198) scale(1.32)' }, wrap);
+
+  // scarf (red, streaming behind) - under everything
+  el('path', { d: limb([[566, 214], [480, 186], [400, 204], [318, 168], [228, 188], [128, 146]], [30, 28, 26, 22, 16, 2]), fill: RED, stroke: BLK, 'stroke-width': 3 }, g);
+  el('path', { d: limb([[540, 212], [470, 226], [400, 252], [318, 250], [236, 286]], [22, 20, 16, 12, 2]), fill: RED, stroke: BLK, 'stroke-width': 3 }, g);
+
+  // back arm (flung back for balance)
+  el('path', { d: limb([[505, 244], [430, 286], [350, 266]], [36, 28, 22]), fill: BLK }, g);
+  el('circle', { cx: 342, cy: 263, r: 17, fill: BLK }, g);
+
+  // back leg (trailing)
+  el('path', { d: limb([[452, 405], [418, 520], [338, 598]], [52, 40, 30]), fill: BLK }, g);
+  el('path', { d: limb([[346, 590], [300, 628], [262, 650]], [38, 26, 4]), fill: BLK }, g);
+
+  // coat
+  const coat = [[575, 200], [562, 226], [590, 248], [582, 300], [544, 365], [514, 415],
+    [440, 468], [340, 535], [255, 605], [196, 672],
+    [285, 585], [345, 522], [372, 492],
+    [270, 514], [160, 550], [34, 574],
+    [150, 502], [260, 456], [318, 430],
+    [220, 394], [80, 362],
+    [215, 330], [335, 320], [420, 292],
+    [468, 250], [496, 214], [512, 168], [538, 206]];
+  const coatD = P(coat);
+  el('path', { d: coatD, fill: BLK }, g);
+  // red lining on the flaring tails (with tone)
+  const lining = el('g', {}, g);
+  el('path', { d: P([[425, 480], [330, 548], [232, 636], [298, 572], [356, 512]]), fill: RED }, lining);
+  el('path', { d: P([[330, 488], [230, 525], [96, 566], [210, 508], [300, 470]]), fill: RED }, lining);
+  el('path', { d: P([[290, 418], [190, 395], [112, 368], [220, 380]]), fill: RED }, lining);
+  // white fold slashes on coat
+  const cc = el('g', { 'clip-path': (() => { const id = 'coatClip'; const cp = el('clipPath', { id }, document.querySelector('#bg defs')); el('path', { d: coatD, transform: 'translate(-34,198) scale(1.32)' }, cp); return 'url(#coatClip)'; })() }, wrap);
+  // (fold lines drawn in local coords inside a second transformed group)
+  const fl = el('g', { transform: 'translate(-34,198) scale(1.32)' }, cc);
+  [[[548, 262], [470, 330], [380, 372], [260, 410]], [[530, 330], [450, 400], [360, 450], [240, 500]], [[560, 300], [520, 360], [470, 420]]].forEach(l => {
+    el('path', { d: 'M' + l.join('L'), fill: 'none', stroke: WHT, 'stroke-width': 3.2, 'stroke-linejoin': 'miter' }, fl);
+  });
+
+  // front leg (knee driven up)
+  const g2 = el('g', { transform: 'translate(-34,198) scale(1.32)' }, wrap);
+  el('path', { d: limb([[480, 392], [578, 428], [562, 532]], [52, 42, 32]), fill: BLK }, g2);
+  el('circle', { cx: 578, cy: 428, r: 21, fill: BLK }, g2);
+  el('path', { d: limb([[556, 524], [596, 550], [640, 566]], [40, 30, 4]), fill: BLK }, g2);
+  // white rim lights on legs
+  el('path', { d: 'M600,440 L586,520', stroke: WHT, 'stroke-width': 3.5 }, g2);
+  el('path', { d: 'M512,384 L574,406', stroke: WHT, 'stroke-width': 3 }, g2);
+
+  // front arm reaching for the moon
+  el('path', { d: limb([[578, 250], [656, 214], [726, 152]], [38, 30, 22]), fill: BLK }, g2);
+  el('circle', { cx: 656, cy: 214, r: 15, fill: BLK }, g2);
+  el('circle', { cx: 738, cy: 140, r: 17, fill: BLK }, g2);
+  [[-112, 30], [-78, 40], [-55, 44], [-33, 40], [-10, 32]].forEach(([a, len]) => {
+    const r = a * Math.PI / 180, x0 = 738, y0 = 140;
+    el('path', { d: limb([[x0, y0], [x0 + Math.cos(r) * len, y0 + Math.sin(r) * len]], [10, 5]), fill: BLK }, g2);
+  });
+  el('path', { d: 'M600,236 L700,170', stroke: WHT, 'stroke-width': 3 }, g2);
+
+  // neck + head + hair
+  el('path', { d: limb([[588, 186], [570, 224]], [28, 28]), fill: BLK }, g2);
+  el('ellipse', { cx: 598, cy: 150, rx: 44, ry: 50, transform: 'rotate(25 598 150)', fill: BLK }, g2);
+  [[[572, 118], [490, 92], [560, 146]], [[560, 150], [478, 160], [562, 176]], [[580, 108], [534, 58], [600, 108]], [[566, 172], [508, 200], [574, 190]]].forEach(t => el('path', { d: P(t), fill: BLK }, g2));
+
+  // fox mask (original design) - 3/4 view facing up-right
+  const mk = el('g', {}, g2);
+  el('path', { d: P([[590, 114], [600, 76], [626, 104], [648, 84], [650, 120], [698, 146], [664, 172], [630, 188], [598, 182], [586, 150]]), fill: WHT, stroke: BLK, 'stroke-width': 3 }, mk);
+  el('path', { d: P([[602, 88], [614, 106], [598, 110]]), fill: RED }, mk);
+  el('path', { d: P([[646, 94], [646, 118], [632, 112]]), fill: RED }, mk);
+  el('path', { d: 'M622,132 L656,142', stroke: BLK, 'stroke-width': 8, 'stroke-linecap': 'round' }, mk);
+  el('path', { d: 'M612,124 Q632,104 660,126', fill: 'none', stroke: RED, 'stroke-width': 5 }, mk);
+  el('path', { d: 'M618,116 Q626,98 640,104', fill: 'none', stroke: RED, 'stroke-width': 4 }, mk);
+  el('path', { d: 'M634,164 L668,158 M640,174 L664,170', stroke: RED, 'stroke-width': 4 }, mk);
+  el('circle', { cx: 694, cy: 147, r: 6, fill: BLK }, mk);
+  el('path', { d: P([[604, 140], [612, 128], [616, 146]]), fill: RED }, mk);
+})();
+
+// ONI mask cut-out (original design)
+function oniMask(parent, x, y, s, rot) {
+  const g = el('g', { transform: `translate(${x},${y}) rotate(${rot}) scale(${s})`, filter: 'url(#sticker)' }, parent);
+  // horns
+  el('path', { d: 'M48,62 C18,30 14,-10 34,-56 C44,-12 62,18 84,44Z', fill: BLK }, g);
+  el('path', { d: 'M152,62 C182,30 186,-10 166,-56 C156,-12 138,18 116,44Z', fill: BLK }, g);
+  el('path', { d: 'M40,0 L52,10 M30,-24 L44,-14', stroke: WHT, 'stroke-width': 3 }, g);
+  el('path', { d: 'M160,0 L148,10 M170,-24 L156,-14', stroke: WHT, 'stroke-width': 3 }, g);
+  // face
+  el('path', { d: 'M100,24 C162,24 194,66 192,126 C190,190 150,240 100,244 C50,240 10,190 8,126 C6,66 38,24 100,24Z', fill: WHT, stroke: BLK, 'stroke-width': 5 }, g);
+  // tone shading on cheeks
+  el('path', { d: 'M18,140 C24,196 60,232 100,240 C70,214 50,180 44,136Z', fill: 'url(#toneK)' }, g);
+  // brows
+  el('path', { d: 'M30,82 L92,108 L88,120 L26,100Z', fill: BLK }, g);
+  el('path', { d: 'M170,82 L108,108 L112,120 L174,100Z', fill: BLK }, g);
+  // eyes
+  el('path', { d: 'M40,118 L88,128 L76,146 L46,140Z', fill: RED, stroke: BLK, 'stroke-width': 4 }, g);
+  el('path', { d: 'M160,118 L112,128 L124,146 L154,140Z', fill: RED, stroke: BLK, 'stroke-width': 4 }, g);
+  el('circle', { cx: 70, cy: 134, r: 6, fill: BLK }, g);
+  el('circle', { cx: 130, cy: 134, r: 6, fill: BLK }, g);
+  // nose
+  el('path', { d: 'M100,138 L84,170 L116,170Z', fill: BLK }, g);
+  // mouth with fangs
+  el('path', { d: 'M40,180 Q100,166 160,180 L148,216 Q100,232 52,216Z', fill: BLK }, g);
+  el('path', { d: 'M52,184 Q100,176 148,184 L140,198 Q100,190 60,198Z', fill: RED }, g);
+  el('path', { d: 'M54,214 L62,188 L72,216Z M146,214 L138,188 L128,216Z', fill: WHT }, g);
+  el('path', { d: 'M82,182 L88,198 L94,182Z M106,182 L112,198 L118,182Z', fill: WHT }, g);
+  // forehead mark
+  el('path', { d: 'M100,46 L110,70 L100,88 L90,70Z', fill: RED, stroke: BLK, 'stroke-width': 3 }, g);
+  return g;
+}
+oniMask(mid, 800, 640, 1.02, 14);
+
+// speech bubble spike
+(function bubble() {
+  const g = el('g', { filter: 'url(#shadowOnly)' }, mid);
+  const cx = 214, cy = 545;
+  const pts = [];
+  const N = 22;
+  for (let i = 0; i < N; i++) {
+    const a = (i / N) * Math.PI * 2;
+    const r = i % 2 ? R(118, 132) : R(150, 176);
+    pts.push([cx + Math.cos(a) * r * 1.12, cy + Math.sin(a) * r * 0.62]);
+  }
+  // tail toward the hero
+  pts.splice(1, 0, [cx + 250, cy + 70], [cx + 128, cy + 30]);
+  el('path', { d: P(pts), fill: WHT, stroke: BLK, 'stroke-width': 6 }, g);
+})();
+
+/* ====================================================================
+   L3  FOREGROUND: parade strip
+   ==================================================================== */
+const fg = document.getElementById('fgRoot');
+
+// shards flying from the leap
+(function shards() {
+  const list = [[960, 150, 1], [1010, 520, 0], [420, 960, 1], [140, 980, 0], [700, 1010, 1], [80, 690, 1], [995, 900, 1], [560, 160, 0]];
+  list.forEach(([x, y, w]) => {
+    const s = R(26, 54), a = R(0, 6.28);
+    const pts = [[x, y], [x + Math.cos(a) * s * 1.8, y + Math.sin(a) * s * 1.8], [x + Math.cos(a + 2.2) * s * 0.7, y + Math.sin(a + 2.2) * s * 0.7]];
+    el('path', { d: P(pts), fill: w ? WHT : BLK, stroke: w ? BLK : WHT, 'stroke-width': 3 }, fg);
+  });
+})();
+
+const yb = (x) => 1852 - 0.13 * x; // parade baseline
+
+(function paradeStrip() {
+  const strip = torn([[-20, 1692, 16], [1100, 1546, 0], [1100, 1742, 16], [-20, 1888, 0]], 18);
+  el('path', { d: strip, fill: BLK, transform: 'translate(14,-16)' }, fg);
+  el('path', { d: strip, fill: WHT }, fg);
+  const g = el('g', { 'clip-path': clipTo(strip) }, fg);
+  halftone(g, { x0: 0, y0: 1520, x1: 1080, y1: 1900, step: 14, rmax: 6.2,
+    fn: (x, y) => clamp((y - (yb(x) - 120)) / 150) * 0.9, fill: RED });
+  // ground line
+  el('path', { d: `M-20,${yb(-20) + 8}L1100,${yb(1100) + 8}`, stroke: BLK, 'stroke-width': 5 }, g);
+  el('path', { d: `M-20,${yb(-20) + 18}L1100,${yb(1100) + 18}`, stroke: BLK, 'stroke-width': 2 }, g);
+})();
+
+// --- parade silhouettes (local box ~120x170, baseline y=170) ---
+const yokai = {
+  kasa(g) { // umbrella ghost, hopping
+    el('path', { d: 'M8,82 L60,6 L112,82 Q99,72 86,84 Q73,72 60,84 Q47,72 34,84 Q21,72 8,82Z', fill: BLK }, g);
+    el('rect', { x: 56, y: -4, width: 8, height: 12, fill: BLK }, g);
+    el('path', { d: 'M60,12 L36,78 M60,12 L84,78', stroke: WHT, 'stroke-width': 2 }, g);
+    el('ellipse', { cx: 60, cy: 50, rx: 13, ry: 15, fill: WHT }, g);
+    el('circle', { cx: 63, cy: 53, r: 6, fill: BLK }, g);
+    el('path', { d: 'M56,70 Q58,100 74,108 Q72,86 66,70Z', fill: RED }, g);
+    el('rect', { x: 56, y: 82, width: 8, height: 58, fill: BLK }, g);
+    el('rect', { x: 38, y: 140, width: 44, height: 9, fill: BLK }, g);
+    el('rect', { x: 43, y: 149, width: 8, height: 12, fill: BLK }, g);
+    el('rect', { x: 69, y: 149, width: 8, height: 12, fill: BLK }, g);
+  },
+  chochin(g) { // lantern ghost, floating
+    el('path', { d: 'M60,0 L60,18', stroke: BLK, 'stroke-width': 4 }, g);
+    el('rect', { x: 32, y: 16, width: 56, height: 12, fill: BLK }, g);
+    el('path', { d: 'M32,28 C4,46 4,100 32,118 L88,118 C116,100 116,46 88,28Z', fill: BLK }, g);
+    for (const y of [44, 58, 72, 104]) el('path', { d: `M${14 + Math.abs(y - 73) * 0.35},${y} Q60,${y + 6} ${106 - Math.abs(y - 73) * 0.35},${y}`, fill: 'none', stroke: WHT, 'stroke-width': 2 }, g);
+    el('path', { d: 'M12,84 L40,78 L50,90 L60,78 L72,90 L82,78 L108,84 L84,98 L70,92 L60,100 L48,92 L36,98Z', fill: WHT }, g);
+    el('path', { d: 'M56,96 Q74,128 52,150 Q62,124 50,98Z', fill: RED }, g);
+    el('circle', { cx: 72, cy: 54, r: 12, fill: WHT });
+    el('circle', { cx: 74, cy: 54, r: 12, fill: WHT }, g);
+    el('circle', { cx: 77, cy: 56, r: 5, fill: BLK }, g);
+    el('rect', { x: 32, y: 118, width: 56, height: 12, fill: BLK }, g);
+  },
+  oni(g) { // oni with spiked club
+    el('path', { d: limb([[78, 70], [140, -4]], [18, 24]), fill: BLK }, g);
+    for (let i = 0; i < 5; i++) { const t = 0.3 + i * 0.15, x = 78 + 62 * t, y = 70 - 74 * t; el('circle', { cx: x, cy: y, r: 3, fill: WHT }, g); }
+    el('circle', { cx: 56, cy: 36, r: 20, fill: BLK }, g);
+    el('path', { d: 'M42,24 L34,0 L52,20Z M68,22 L80,-2 L72,26Z', fill: BLK }, g);
+    el('path', { d: 'M48,36 L56,40 M64,36 L72,32', stroke: WHT, 'stroke-width': 3 }, g);
+    el('path', { d: 'M24,58 Q56,48 90,58 L96,112 L18,112Z', fill: BLK }, g);
+    el('path', { d: limb([[86, 64], [100, 82], [92, 64]], [16, 14, 12]), fill: BLK }, g);
+    el('path', { d: limb([[26, 64], [10, 92], [6, 112]], [16, 14, 12]), fill: BLK }, g);
+    el('path', { d: 'M20,112 L96,112 L92,126 L24,126Z', fill: RED }, g);
+    el('path', { d: 'M36,118 L44,112 M58,120 L66,112 M80,120 L86,113', stroke: BLK, 'stroke-width': 3 }, g);
+    el('path', { d: limb([[38, 124], [26, 150], [14, 168]], [22, 18, 16]), fill: BLK }, g);
+    el('path', { d: limb([[78, 124], [94, 146], [100, 168]], [22, 18, 16]), fill: BLK }, g);
+  },
+  fox(g) { // kitsune leading with a lantern pole
+    el('path', { d: 'M40,108 C-14,120 -26,60 6,30 C6,64 24,86 52,92Z', fill: BLK }, g);
+    el('path', { d: 'M6,30 C2,44 4,52 10,58 C14,46 12,38 6,30Z', fill: WHT }, g);
+    el('path', { d: 'M44,56 L82,56 L96,168 L30,168Z', fill: BLK }, g);
+    el('path', { d: 'M48,58 L62,98 L76,58Z', fill: RED }, g);
+    el('path', { d: 'M46,20 L50,-4 L62,14 L74,14 L84,-4 L86,22 Q100,30 108,42 L88,50 Q66,58 52,50 Q42,40 46,20Z', fill: WHT, stroke: BLK, 'stroke-width': 4 }, g);
+    el('path', { d: 'M52,6 L56,16 L50,16Z M82,6 L82,18 L76,16Z', fill: RED }, g);
+    el('path', { d: 'M64,28 L76,30', stroke: BLK, 'stroke-width': 4, 'stroke-linecap': 'round' }, g);
+    el('path', { d: 'M60,22 Q70,14 80,24', stroke: RED, 'stroke-width': 3, fill: 'none' }, g);
+    el('circle', { cx: 105, cy: 42, r: 4, fill: BLK }, g);
+    el('path', { d: limb([[80, 66], [104, 84], [112, 70]], [14, 12, 10]), fill: BLK }, g);
+    el('path', { d: 'M108,96 L150,10', stroke: BLK, 'stroke-width': 5 }, g);
+    el('path', { d: 'M150,10 L150,26', stroke: BLK, 'stroke-width': 3 }, g);
+    el('path', { d: 'M140,26 C126,36 126,60 140,68 L160,68 C174,60 174,36 160,26Z', fill: RED, stroke: BLK, 'stroke-width': 4 }, g);
+    el('path', { d: 'M137,44 Q150,48 163,44', stroke: BLK, 'stroke-width': 2, fill: 'none' }, g);
+  },
+  jack(g) { // pumpkin-head wanderer (the hidden one) – tiny accent in the eyes
+    el('path', { d: 'M24,74 L96,74 L112,168 L92,156 L80,170 L64,154 L48,170 L36,156 L10,168Z', fill: BLK }, g);
+    el('path', { d: 'M60,4 Q64,-6 74,-4 L66,14Z', fill: BLK }, g);
+    el('path', { d: 'M60,12 C20,8 14,34 18,48 C22,72 44,80 60,78 C76,80 98,72 102,48 C106,34 100,8 60,12Z', fill: BLK }, g);
+    el('path', { d: 'M44,16 Q36,44 46,76 M76,16 Q84,44 74,76', stroke: WHT, 'stroke-width': 1.6, fill: 'none', opacity: 0.5 }, g);
+    el('path', { d: 'M34,40 L44,26 L52,42Z M68,42 L76,26 L86,40Z', fill: ACC }, g);
+    el('path', { d: 'M30,54 L40,62 L48,54 L56,64 L64,54 L72,64 L80,54 L90,58 L80,70 L40,70Z', fill: ACC }, g);
+    el('path', { d: limb([[94, 90], [116, 100], [120, 82]], [14, 12, 10]), fill: BLK }, g);
+  },
+  yurei(g) { // floating ghost with raised limp hands
+    el('path', { d: 'M38,18 C46,-4 84,-4 90,22 L98,96 L72,80 L46,92 L30,80Z', fill: BLK }, g);
+    el('path', { d: 'M54,16 L64,4 L74,16Z', fill: WHT }, g);
+    el('path', { d: 'M30,60 L92,58 L104,112 Q86,126 80,150 Q70,124 58,146 Q52,120 36,132 Q38,104 30,60Z', fill: BLK }, g);
+    el('path', { d: 'M86,66 L124,58 L130,70 L126,84 L120,74 L90,84Z', fill: BLK }, g);
+    el('path', { d: 'M86,86 L120,82 L124,96 L118,106 L114,94 L88,100Z', fill: BLK }, g);
+    el('path', { d: 'M40,64 L62,110 L70,64Z', fill: WHT, opacity: 0.9 }, g);
+  },
+  hitotsume(g) { // one-eyed child carrying a lantern
+    el('circle', { cx: 56, cy: 50, r: 34, fill: BLK }, g);
+    el('ellipse', { cx: 58, cy: 46, rx: 15, ry: 18, fill: WHT }, g);
+    el('circle', { cx: 62, cy: 49, r: 8, fill: BLK }, g);
+    el('path', { d: 'M54,72 Q58,96 70,98 Q66,84 64,72Z', fill: RED }, g);
+    el('path', { d: 'M28,84 L86,84 L100,150 L16,150Z', fill: BLK }, g);
+    el('path', { d: 'M40,84 L58,122 L74,84', stroke: WHT, 'stroke-width': 3, fill: 'none' }, g);
+    el('path', { d: limb([[36, 150], [32, 168]], [16, 16]), fill: BLK }, g);
+    el('path', { d: limb([[78, 150], [86, 168]], [16, 16]), fill: BLK }, g);
+    el('path', { d: limb([[88, 96], [110, 112], [118, 96]], [14, 12, 10]), fill: BLK }, g);
+  },
+};
+function placeYokai(name, x, s, lift = 0, rot = 0) {
+  const by = yb(x + 60 * s);
+  const g = el('g', { transform: `translate(${x},${by - 170 * s - lift}) rotate(${rot} ${60 * s} ${170 * s}) scale(${s})` }, fg);
+  yokai[name](g);
+}
+placeYokai('hitotsume', 24, 0.92);
+placeYokai('yurei', 150, 0.98, 26, -4);
+placeYokai('jack', 288, 0.9);
+placeYokai('chochin', 420, 0.92, 34, 6);
+placeYokai('kasa', 560, 0.98, 16, -10);
+placeYokai('oni', 700, 1.0);
+placeYokai('fox', 850, 1.0);
+
+// bottom ticker bar
+(function ticker() {
+  const g = el('g', {}, fg);
+  el('path', { d: P([[-10, 1868], [1090, 1842], [1090, 1930], [-10, 1930]]), fill: BLK }, g);
+})();
+
+/* ====================================================================
+   L2 / L4  TYPOGRAPHY  (ransom-note pieces)
+   ==================================================================== */
+const T = document.getElementById('type');
+const T2 = document.getElementById('type2');
+function piece(parent, { ch, x, y, size, font = 'sans9', bg, fg, rot = 0, back, backRot = 0, pad = 0.12, sx = 1, clip, shadow, border, glyphRot = 0, ls = 0, glyphDy = 0 }) {
+  const p = document.createElement('div');
+  p.className = 'piece';
+  p.style.left = x + 'px'; p.style.top = y + 'px';
+  parent.appendChild(p);
+  const inner = document.createElement('div');
+  inner.style.position = 'relative';
+  inner.style.transform = `rotate(${rot}deg)`;
+  if (shadow) inner.style.filter = `drop-shadow(${shadow})`;
+  p.appendChild(inner);
+  if (back) {
+    const b = document.createElement('div');
+    b.className = 'plate';
+    b.style.background = back;
+    b.style.inset = `-${size * 0.07}px -${size * 0.08}px -${size * 0.06}px -${size * 0.07}px`;
+    b.style.transform = `rotate(${backRot}deg)`;
+    b.style.clipPath = 'polygon(3% 0, 100% 6%, 96% 100%, 0 93%)';
+    inner.appendChild(b);
+  }
+  const f = document.createElement('div');
+  f.className = 'glyph ' + font;
+  f.style.fontSize = size + 'px';
+  f.style.padding = `${size * pad}px ${size * pad * 1.05}px`;
+  f.style.background = bg;
+  f.style.color = fg;
+  f.style.letterSpacing = ls + 'px';
+  if (border) f.style.outline = border;
+  f.style.clipPath = clip || `polygon(${R(0, 6)}% ${R(0, 7)}%, ${R(94, 100)}% ${R(0, 5)}%, 100% ${R(93, 100)}%, ${R(0, 5)}% 100%)`;
+  const span = document.createElement('span');
+  span.textContent = ch;
+  span.style.display = 'inline-block';
+  span.style.transform = `rotate(${glyphRot}deg) scaleX(${sx}) translateY(${glyphDy}px)`;
+  f.appendChild(span);
+  inner.appendChild(f);
+  return p;
+}
+
+// HERO TITLE 百鬼夜行 — diagonal staircase rising toward the moon
+piece(T2, { ch: '百', x: 66, y: 1232, size: 212, font: 'serif9', bg: WHT, fg: BLK, rot: -9, back: RED, backRot: 5, shadow: `12px 14px 0 ${BLK}` });
+piece(T2, { ch: '鬼', x: 300, y: 1088, size: 268, font: 'sans9', bg: RED, fg: WHT, rot: 6, back: WHT, backRot: -4, shadow: `14px 16px 0 ${BLK}`, glyphRot: -3 });
+piece(T2, { ch: '夜', x: 612, y: 1110, size: 196, font: 'serif9', bg: BLK, fg: WHT, rot: -5, back: WHT, backRot: 7, shadow: `10px 12px 0 ${RED}` });
+piece(T2, { ch: '行', x: 806, y: 1000, size: 178, font: 'sans9', bg: WHT, fg: RED, rot: 10, back: BLK, backRot: -6, shadow: `10px 12px 0 ${BLK}`, glyphRot: 4 });
+
+// Latin line on a white tape
+(function latin() {
+  const d = document.createElement('div');
+  d.className = 'abs anton';
+  Object.assign(d.style, { left: '338px', top: '1408px', fontSize: '84px', lineHeight: '1', color: BLK, background: WHT,
+    padding: '10px 26px 8px 30px', transform: 'rotate(-8deg) skewX(-10deg)', letterSpacing: '1px',
+    clipPath: 'polygon(2% 0, 100% 4%, 98% 100%, 0 92%)', filter: `drop-shadow(10px 10px 0 ${BLK})` });
+  d.innerHTML = 'NIGHT PARADE <span style="color:#E60012">·</span> 2026';
+  T2.appendChild(d);
+})();
+
+// slogan, small ransom pieces
+(function slogan() {
+  const s = '今夜，面具全部摘下';
+  const styles = [
+    { bg: BLK, fg: WHT, font: 'sans9' }, { bg: WHT, fg: BLK, font: 'serif9' }, { bg: 'transparent', fg: WHT, font: 'sans9' },
+    { bg: RED, fg: WHT, font: 'serif9' }, { bg: WHT, fg: RED, font: 'sans9' }, { bg: BLK, fg: WHT, font: 'serif7' },
+    { bg: WHT, fg: BLK, font: 'sans9' }, { bg: RED, fg: BLK, font: 'sans9' }, { bg: BLK, fg: RED, font: 'serif9' },
+  ];
+  let x = 74;
+  [...s].forEach((c, i) => {
+    const st = styles[i];
+    const size = [56, 50, 40, 58, 52, 48, 56, 50, 60][i];
+    const yy = 1528 - i * 7 + R(-6, 6);
+    piece(T2, { ch: c, x, y: yy, size, font: st.font, bg: st.bg, fg: st.fg, rot: R(-12, 12), pad: 0.14,
+      shadow: st.bg === 'transparent' ? 'none' : `5px 6px 0 ${i % 2 ? BLK : WHT}` });
+    x += size * 1.2 + (c === '，' ? -14 : 4);
+  });
+})();
+
+// speech bubble text
+(function bubbleText() {
+  const d = document.createElement('div');
+  d.className = 'abs';
+  Object.assign(d.style, { left: '74px', top: '484px', width: '290px', transform: 'rotate(-7deg)', textAlign: 'center' });
+  d.innerHTML = `<div class="sans9" style="font-size:66px;line-height:1;color:${BLK};letter-spacing:-2px">别<span style="color:${RED}" class="serif9">回</span>头<span style="color:${RED}">！</span></div>
+  <div class="bebas" style="font-size:28px;line-height:1;color:${BLK};margin-top:6px;letter-spacing:3px">DON'T LOOK BACK</div>`;
+  T.appendChild(d);
+})();
+
+// header tags (top-left)
+(function header() {
+  const d = document.createElement('div');
+  d.className = 'abs';
+  Object.assign(d.style, { left: '72px', top: '78px', transform: 'rotate(-5deg)', transformOrigin: '0 0' });
+  d.innerHTML = `
+    <div class="sans9" style="display:inline-block;background:${WHT};color:${BLK};font-size:38px;line-height:1;padding:8px 16px 10px;clip-path:polygon(0 4%,100% 0,97% 100%,2% 94%);filter:drop-shadow(6px 6px 0 ${RED})">十月卅一 · 子时</div><br>
+    <div class="bebas" style="display:inline-block;margin-top:12px;margin-left:24px;background:${RED};color:${WHT};font-size:34px;line-height:1;padding:6px 14px 4px;letter-spacing:3px;transform:skewX(-12deg)">OCT 31 / 00:00 / HYAKKI YAKŌ</div>`;
+  T.appendChild(d);
+})();
+
+// vertical serif note on the right edge
+(function vert() {
+  const d = document.createElement('div');
+  d.className = 'abs serif9';
+  Object.assign(d.style, { right: '74px', top: '596px', writingMode: 'vertical-rl', fontSize: '30px', letterSpacing: '6px', color: WHT,
+    background: BLK, padding: '14px 6px', lineHeight: 1 });
+  d.textContent = '面具之下皆是鬼';
+  // (kept off — oni mask sits here)
+})();
+
+// bottom ticker text (decorative, inside the unsafe bottom band)
+(function tickerText() {
+  const d = document.createElement('div');
+  d.className = 'abs bebas';
+  Object.assign(d.style, { left: '-20px', top: '1868px', width: '1200px', fontSize: '32px', lineHeight: '1', color: WHT, whiteSpace: 'nowrap',
+    transform: 'rotate(-1.35deg)', transformOrigin: '0 0', letterSpacing: '4px' });
+  d.innerHTML = Array(6).fill(`<span style="color:${RED}">▲</span> 百鬼夜行 NIGHT PARADE `).join('');
+  T2.appendChild(d);
+})();
+</script>
+</body>
+</html>

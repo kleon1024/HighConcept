@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>Acid Night Parade</title>
+<link rel="stylesheet" href="../../shape-of-sound/node_modules/@fontsource/noto-sans-sc/900.css">
+<link rel="stylesheet" href="node_modules/@fontsource/unbounded/900.css">
+<link rel="stylesheet" href="node_modules/@fontsource/unbounded/400.css">
+<link rel="stylesheet" href="node_modules/@fontsource/jetbrains-mono/400.css">
+<link rel="stylesheet" href="node_modules/@fontsource/jetbrains-mono/700.css">
+<link rel="stylesheet" href="node_modules/@fontsource/major-mono-display/400.css">
+<style>
+  :root{
+    --ink:#050507; --acid:#C6FF00; --violet:#8A2BFF; --pink:#FF2E93; --ice:#8FE9FF;
+  }
+  html,body{margin:0;padding:0;width:1080px;height:1920px;overflow:hidden;background:var(--ink)}
+  #stage{position:relative;width:1080px;height:1920px;overflow:hidden;
+    background:radial-gradient(120% 70% at 50% 34%, #120a22 0%, #07060c 55%, #040406 100%);}
+  .blob{position:absolute;border-radius:50%;mix-blend-mode:screen;pointer-events:none}
+  svg.layer{position:absolute;left:0;top:0;width:1080px;height:1920px;overflow:visible}
+  #grain{mix-blend-mode:overlay;opacity:.32}
+  #scan{position:absolute;inset:0;pointer-events:none;mix-blend-mode:multiply;opacity:.35;
+    background:repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0 2px, rgba(0,0,0,.55) 2px 3px);}
+  #vig{position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(90% 62% at 50% 46%, rgba(0,0,0,0) 55%, rgba(0,0,0,.55) 100%);}
+  text{font-kerning:normal}
+  .mono{font-family:'JetBrains Mono',monospace}
+  .unb{font-family:'Unbounded','Noto Sans SC',sans-serif}
+  .cjk{font-family:'Noto Sans SC',sans-serif;font-weight:900}
+</style>
+</head>
+<body>
+<div id="stage">
+  <!-- holographic blur blobs -->
+  <div class="blob" style="left:-120px;top:150px;width:720px;height:720px;background:radial-gradient(circle,#7a2cff 0%,rgba(122,44,255,0) 68%);filter:blur(40px);opacity:.85"></div>
+  <div class="blob" style="left:560px;top:180px;width:520px;height:520px;background:radial-gradient(circle,#59d8ff 0%,rgba(89,216,255,0) 66%);filter:blur(50px);opacity:.55"></div>
+  <div class="blob" style="left:560px;top:700px;width:640px;height:640px;background:radial-gradient(circle,#ff2e93 0%,rgba(255,46,147,0) 66%);filter:blur(50px);opacity:.6"></div>
+  <div class="blob" style="left:-80px;top:1080px;width:520px;height:420px;background:radial-gradient(circle,#c6ff00 0%,rgba(198,255,0,0) 64%);filter:blur(60px);opacity:.26"></div>
+  <div class="blob" style="left:-100px;top:1380px;width:1280px;height:300px;background:radial-gradient(closest-side,#ff2e93 0%,#8a2bff 45%,rgba(138,43,255,0) 100%);filter:blur(40px);opacity:.7"></div>
+  <div class="blob" style="left:300px;top:1700px;width:700px;height:400px;background:radial-gradient(closest-side,#4a1cff 0%,rgba(74,28,255,0) 100%);filter:blur(50px);opacity:.5"></div>
+
+  <svg class="layer" id="main" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <!-- liquid chrome for the hero type: sky / horizon / ground banding, a touch of holo tint -->
+      <linearGradient id="chromeTitle" gradientUnits="userSpaceOnUse" x1="0" y1="1024" x2="0" y2="1262">
+        <stop offset="0" stop-color="#34448e"/>
+        <stop offset=".16" stop-color="#7f9ff0"/>
+        <stop offset=".34" stop-color="#d6eaff"/>
+        <stop offset=".46" stop-color="#ffffff"/>
+        <stop offset=".488" stop-color="#ffffff"/>
+        <stop offset=".50" stop-color="#0e0820"/>
+        <stop offset=".555" stop-color="#24163f"/>
+        <stop offset=".69" stop-color="#5d3a8c"/>
+        <stop offset=".83" stop-color="#ff9ed8"/>
+        <stop offset=".93" stop-color="#fff2fb"/>
+        <stop offset="1" stop-color="#ffffff"/>
+      </linearGradient>
+      <linearGradient id="chromeSub" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#5a6cb8"/>
+        <stop offset=".3" stop-color="#d4e6ff"/>
+        <stop offset=".48" stop-color="#ffffff"/>
+        <stop offset=".5" stop-color="#120c24"/>
+        <stop offset=".62" stop-color="#3a2c66"/>
+        <stop offset=".85" stop-color="#c4b4f0"/>
+        <stop offset="1" stop-color="#ffffff"/>
+      </linearGradient>
+      <linearGradient id="chromeMask" gradientUnits="userSpaceOnUse" x1="0" y1="260" x2="0" y2="900">
+        <stop offset="0" stop-color="#5a6cb8"/>
+        <stop offset=".10" stop-color="#d4e6ff"/>
+        <stop offset=".17" stop-color="#ffffff"/>
+        <stop offset=".176" stop-color="#120c24"/>
+        <stop offset=".24" stop-color="#3a2c66"/>
+        <stop offset=".33" stop-color="#a898dd"/>
+        <stop offset=".40" stop-color="#f0eaff"/>
+        <stop offset=".47" stop-color="#6c80c8"/>
+        <stop offset=".55" stop-color="#e6f2ff"/>
+        <stop offset=".585" stop-color="#ffffff"/>
+        <stop offset=".592" stop-color="#140e28"/>
+        <stop offset=".66" stop-color="#4a3a7a"/>
+        <stop offset=".78" stop-color="#c4b4f0"/>
+        <stop offset=".86" stop-color="#ffffff"/>
+        <stop offset=".92" stop-color="#6070b8"/>
+        <stop offset="1" stop-color="#dfe9ff"/>
+      </linearGradient>
+      <linearGradient id="chromeBB" x1="0" y1="0" x2="0.3" y2="1">
+        <stop offset="0" stop-color="#6a7cc4"/>
+        <stop offset=".28" stop-color="#e2efff"/>
+        <stop offset=".45" stop-color="#ffffff"/>
+        <stop offset=".47" stop-color="#120c22"/>
+        <stop offset=".6" stop-color="#4c3a80"/>
+        <stop offset=".8" stop-color="#d8c8ff"/>
+        <stop offset="1" stop-color="#ffffff"/>
+      </linearGradient>
+      <linearGradient id="holo" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#8FE9FF"/>
+        <stop offset=".35" stop-color="#b98cff"/>
+        <stop offset=".65" stop-color="#FF2E93"/>
+        <stop offset="1" stop-color="#C6FF00"/>
+      </linearGradient>
+      <linearGradient id="holoH" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#8FE9FF"/>
+        <stop offset=".33" stop-color="#b98cff"/>
+        <stop offset=".66" stop-color="#FF2E93"/>
+        <stop offset="1" stop-color="#C6FF00"/>
+      </linearGradient>
+      <linearGradient id="extrude" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#3a1670"/>
+        <stop offset="1" stop-color="#0a0516"/>
+      </linearGradient>
+      <linearGradient id="gridStroke" gradientUnits="userSpaceOnUse" x1="0" y1="1525" x2="0" y2="1920">
+        <stop offset="0" stop-color="#ff5fb0"/>
+        <stop offset=".25" stop-color="#c04bff"/>
+        <stop offset=".7" stop-color="#6a4cff"/>
+        <stop offset="1" stop-color="#8FE9FF"/>
+      </linearGradient>
+      <linearGradient id="gridFade" gradientUnits="userSpaceOnUse" x1="0" y1="1525" x2="0" y2="1920">
+        <stop offset="0" stop-color="#fff" stop-opacity=".15"/>
+        <stop offset=".18" stop-color="#fff" stop-opacity=".9"/>
+        <stop offset="1" stop-color="#fff" stop-opacity="1"/>
+      </linearGradient>
+      <mask id="gridMask"><rect x="0" y="1525" width="1080" height="400" fill="url(#gridFade)"/></mask>
+      <linearGradient id="reflFade" gradientUnits="userSpaceOnUse" x1="0" y1="1525" x2="0" y2="1640">
+        <stop offset="0" stop-color="#fff" stop-opacity=".45"/>
+        <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+      </linearGradient>
+      <mask id="reflMask"><rect x="0" y="1525" width="1080" height="140" fill="url(#reflFade)"/></mask>
+      <radialGradient id="moonDisc" cx="540" cy="600" r="380" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#22103f"/>
+        <stop offset=".7" stop-color="#0d0719"/>
+        <stop offset="1" stop-color="#05040a"/>
+      </radialGradient>
+      <radialGradient id="lanternGlow">
+        <stop offset="0" stop-color="#C6FF00" stop-opacity=".55"/>
+        <stop offset=".6" stop-color="#C6FF00" stop-opacity=".12"/>
+        <stop offset="1" stop-color="#C6FF00" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="lanternGlowIce">
+        <stop offset="0" stop-color="#8FE9FF" stop-opacity=".55"/>
+        <stop offset=".6" stop-color="#8FE9FF" stop-opacity=".12"/>
+        <stop offset="1" stop-color="#8FE9FF" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="smallLantern">
+        <stop offset="0" stop-color="#ffffff"/>
+        <stop offset=".35" stop-color="#e6ff7a"/>
+        <stop offset="1" stop-color="#C6FF00" stop-opacity=".0"/>
+      </radialGradient>
+      <radialGradient id="eyeGlow">
+        <stop offset="0" stop-color="#ffffff"/>
+        <stop offset=".3" stop-color="#eaff8a"/>
+        <stop offset="1" stop-color="#C6FF00"/>
+      </radialGradient>
+      <pattern id="halftone" width="9" height="9" patternUnits="userSpaceOnUse">
+        <circle cx="4.5" cy="4.5" r="1.3" fill="#b98cff"/>
+      </pattern>
+      <radialGradient id="htFade" cx="540" cy="640" r="360" gradientUnits="userSpaceOnUse">
+        <stop offset=".45" stop-color="#fff" stop-opacity="0"/>
+        <stop offset="1" stop-color="#fff" stop-opacity=".5"/>
+      </radialGradient>
+      <mask id="htMask"><circle cx="540" cy="640" r="352" fill="url(#htFade)"/></mask>
+
+      <!-- bevel + specular: makes flat gradient fills read as polished metal -->
+      <filter id="bevelXL" x="-6%" y="-12%" width="112%" height="124%" color-interpolation-filters="sRGB">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="5" result="b"/>
+        <feDiffuseLighting in="b" surfaceScale="7" diffuseConstant="1.1" lighting-color="#fff" result="d"><feDistantLight azimuth="225" elevation="52"/></feDiffuseLighting>
+        <feSpecularLighting in="b" surfaceScale="7" specularConstant="1.25" specularExponent="26" lighting-color="#fff" result="s"><feDistantLight azimuth="225" elevation="40"/></feSpecularLighting>
+        <feComposite in="SourceGraphic" in2="d" operator="arithmetic" k1="1.22" result="lit"/>
+        <feComposite in="s" in2="SourceAlpha" operator="in" result="s2"/>
+        <feComposite in="lit" in2="s2" operator="arithmetic" k2="1" k3="0.95" result="o"/>
+        <feComposite in="o" in2="SourceAlpha" operator="in"/>
+      </filter>
+      <filter id="bevelM" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="2.6" result="b"/>
+        <feDiffuseLighting in="b" surfaceScale="4.5" diffuseConstant="1.1" lighting-color="#fff" result="d"><feDistantLight azimuth="225" elevation="50"/></feDiffuseLighting>
+        <feSpecularLighting in="b" surfaceScale="4.5" specularConstant="1.4" specularExponent="24" lighting-color="#fff" result="s"><feDistantLight azimuth="225" elevation="38"/></feSpecularLighting>
+        <feComposite in="SourceGraphic" in2="d" operator="arithmetic" k1="1.25" result="lit"/>
+        <feComposite in="s" in2="SourceAlpha" operator="in" result="s2"/>
+        <feComposite in="lit" in2="s2" operator="arithmetic" k2="1" k3="1" result="o"/>
+        <feComposite in="o" in2="SourceAlpha" operator="in"/>
+      </filter>
+      <filter id="bevelS" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="1.6" result="b"/>
+        <feDiffuseLighting in="b" surfaceScale="3" diffuseConstant="1.1" lighting-color="#fff" result="d"><feDistantLight azimuth="225" elevation="50"/></feDiffuseLighting>
+        <feSpecularLighting in="b" surfaceScale="3" specularConstant="1.4" specularExponent="22" lighting-color="#fff" result="s"><feDistantLight azimuth="225" elevation="38"/></feSpecularLighting>
+        <feComposite in="SourceGraphic" in2="d" operator="arithmetic" k1="1.25" result="lit"/>
+        <feComposite in="s" in2="SourceAlpha" operator="in" result="s2"/>
+        <feComposite in="lit" in2="s2" operator="arithmetic" k2="1" k3="1" result="o"/>
+        <feComposite in="o" in2="SourceAlpha" operator="in"/>
+      </filter>
+      <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="5" result="g"/>
+        <feMerge><feMergeNode in="g"/><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <filter id="glowSoft" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="2.2" result="g"/>
+        <feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <filter id="blur18" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="18"/></filter>
+      <filter id="blur6" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>
+      <filter id="warp" x="-10%" y="-30%" width="120%" height="160%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.004 0.03" numOctaves="2" seed="7" result="t"/>
+        <feDisplacementMap in="SourceGraphic" in2="t" scale="38" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+      <filter id="liquid" x="-5%" y="-15%" width="110%" height="130%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.006 0.012" numOctaves="1" seed="3" result="t"/>
+        <feDisplacementMap in="SourceGraphic" in2="t" scale="10" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+    </defs>
+
+    <g id="L_bg"></g>
+    <g id="L_grid"></g>
+    <g id="L_ring"></g>
+    <g id="L_lanterns"></g>
+    <g id="L_mask"></g>
+    <g id="L_title"></g>
+    <g id="L_parade"></g>
+    <g id="L_band"></g>
+    <g id="L_micro"></g>
+    <g id="L_spark"></g>
+  </svg>
+
+  <svg class="layer" id="grain" viewBox="0 0 1080 1920">
+    <filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="11" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
+    <rect width="1080" height="1920" filter="url(#noise)"/>
+  </svg>
+  <div id="scan"></div>
+  <div id="vig"></div>
+</div>
+
+<script>
+/* ---------- utilities ---------- */
+const $ = (id) => document.getElementById(id);
+function rng(seed){ return function(){ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+const rand = rng(20261031);
+const f1 = (n) => (+n).toFixed(1);
+function hex(h){ h=h.replace('#',''); return [0,2,4].map(i=>parseInt(h.substr(i,2),16)); }
+function mix(a,b,t){ const A=hex(a),B=hex(b); return 'rgb('+A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')+')'; }
+function sample(stops,t){ for(let i=0;i<stops.length-1;i++){ const [p0,c0]=stops[i],[p1,c1]=stops[i+1]; if(t>=p0&&t<=p1) return mix(c0,c1,(t-p0)/(p1-p0)); } return stops[stops.length-1][1]; }
+
+/* tapered, curling thorn: the building block of the "tribal chrome" ornaments */
+function thorn(x0,y0,ang,len,w,curl,n=26){
+  const L=[],Rr=[];
+  const dx=Math.cos(ang),dy=Math.sin(ang), px=-dy,py=dx;
+  let prev=null;
+  const pts=[];
+  for(let i=0;i<=n;i++){
+    const t=i/n;
+    const along=len*t, side=curl*len*t*t;
+    pts.push([x0+dx*along+px*side, y0+dy*along+py*side]);
+  }
+  for(let i=0;i<=n;i++){
+    const t=i/n;
+    const a=pts[Math.max(0,i-1)], b=pts[Math.min(n,i+1)];
+    let tx=b[0]-a[0], ty=b[1]-a[1]; const l=Math.hypot(tx,ty)||1; tx/=l; ty/=l;
+    const ww=w*Math.pow(1-t,1.15)*(0.55+0.45*Math.sin(Math.PI*Math.min(1,t*1.6+0.35)));
+    L.push([pts[i][0]-ty*ww, pts[i][1]+tx*ww]);
+    Rr.push([pts[i][0]+ty*ww, pts[i][1]-tx*ww]);
+  }
+  const all=L.concat(Rr.reverse());
+  return 'M'+all.map(p=>f1(p[0])+','+f1(p[1])).join('L')+'Z';
+}
+function star4(cx,cy,r,thin=0.12){
+  cx=+cx; cy=+cy; r=+r; const k=r*thin;
+  return `M${cx},${cy-r} Q${cx+k},${cy-k} ${cx+r},${cy} Q${cx+k},${cy+k} ${cx},${cy+r} Q${cx-k},${cy+k} ${cx-r},${cy} Q${cx-k},${cy-k} ${cx},${cy-r}Z`;
+}
+function barcode(x,y,w,h,seed,color='#e8f0ff'){
+  const r=rng(seed); let s='', cx=x;
+  while(cx<x+w){ const bw=1+Math.floor(r()*4); if(r()>0.42) s+=`<rect x="${cx}" y="${y}" width="${bw}" height="${h}" fill="${color}"/>`; cx+=bw+ (r()>0.5?1:2); }
+  return s;
+}
+function mono(x,y,str,{size=13,fill='#9fe8ff',op=0.85,anchor='start',ls=1.5,weight=400,rot=0,fam='mono'}={}){
+  const tr = rot?` transform="rotate(${rot} ${x} ${y})"`:'';
+  return `<text class="${fam}" x="${x}" y="${y}" font-size="${size}" fill="${fill}" fill-opacity="${op}" text-anchor="${anchor}" letter-spacing="${ls}" font-weight="${weight}"${tr}>${str}</text>`;
+}
+function cross(x,y,s=10,c='#9fe8ff'){ return `<path d="M${x-s},${y}H${x+s}M${x},${y-s}V${y+s}" stroke="${c}" stroke-width="1.2" opacity=".85"/>`; }
+
+const CX=540, CY=640, RR=360;   // the lunar halo
+const HZ=1525;                  // horizon line
+
+/* ---------- background: star dust + far halo glows ---------- */
+(function(){
+  let s='';
+  for(let i=0;i<220;i++){
+    const x=rand()*1080, y=rand()*1500, r=rand()<0.9?rand()*1.1+0.3:rand()*1.8+1;
+    s+=`<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(r)}" fill="${rand()<0.8?'#dfe8ff':'#C6FF00'}" opacity="${f1(0.25+rand()*0.6)}"/>`;
+  }
+  // big soft halo behind the moon
+  s+=`<circle cx="${CX}" cy="${CY}" r="${RR+40}" fill="none" stroke="#8FE9FF" stroke-width="40" opacity=".35" filter="url(#blur18)"/>`;
+  s+=`<circle cx="${CX}" cy="${CY}" r="${RR+10}" fill="none" stroke="#ff2e93" stroke-width="18" opacity=".35" filter="url(#blur18)"/>`;
+  $('L_bg').innerHTML=s;
+})();
+
+/* ---------- warped wireframe floor ---------- */
+(function(){
+  const f=430;
+  const d=(x,z)=> 0.30*Math.sin(0.62*x+1.25*z)*Math.exp(-(z-0.9)/4.5)
+                 + 0.62*Math.exp(-(x*x)/14-((z-2.1)**2)/0.9);
+  const P=(x,z)=>[CX + f*x/z, HZ + f*(1-d(x,z))/z];
+  let s='';
+  const zs=[]; for(let z=0.82; z<70; z*=1.13) zs.push(z);
+  for(const z of zs){
+    let pts=[]; for(let x=-30;x<=30;x+=0.25){ pts.push(P(x,z)); }
+    pts=pts.filter(p=>p[0]>-200&&p[0]<1280);
+    s+=`<polyline points="${pts.map(p=>f1(p[0])+','+f1(p[1])).join(' ')}"/>`;
+  }
+  for(let x=-30;x<=30;x+=1.25){
+    let pts=[]; for(let z=0.82; z<70; z*=1.03) pts.push(P(x,z));
+    pts=pts.filter(p=>p[1]<1990&&p[0]>-300&&p[0]<1380);
+    if(pts.length>1) s+=`<polyline points="${pts.map(p=>f1(p[0])+','+f1(p[1])).join(' ')}"/>`;
+  }
+  $('L_grid').innerHTML =
+    `<g mask="url(#gridMask)" fill="none" stroke="url(#gridStroke)" stroke-width="1.3" opacity=".9">${s}</g>`+
+    `<g mask="url(#gridMask)" fill="none" stroke="#C6FF00" stroke-width="3" opacity=".12" filter="url(#blur6)">${s}</g>`+
+    `<rect x="0" y="${HZ-1}" width="1080" height="2.5" fill="#ffd0ea"/>`+
+    `<rect x="0" y="${HZ-6}" width="1080" height="12" fill="#ff2e93" opacity=".7" filter="url(#blur6)"/>`;
+})();
+
+/* ---------- lunar halo: moon disc + conic-chrome ring + tribal thorns + instrument ticks ---------- */
+(function(){
+  let s='';
+  // moon disc + halftone edge
+  s+=`<circle cx="${CX}" cy="${CY}" r="${RR-6}" fill="url(#moonDisc)"/>`;
+  s+=`<rect x="${CX-RR}" y="${CY-RR}" width="${2*RR}" height="${2*RR}" fill="url(#halftone)" mask="url(#htMask)" opacity=".55"/>`;
+  // holographic crescent — the moon itself, glowing inside the halo
+  s+=`<path d="M${CX+40},${CY-330} A330,330 0 1,1 ${CX+40},${CY+330} A300,330 0 1,0 ${CX+40},${CY-330}Z" fill="url(#holo)" opacity=".0"/>`;
+  s+=`<g filter="url(#blur6)" opacity=".75"><path d="${crescent(CX,CY,332,46,-38)}" fill="url(#holo)"/></g>`;
+  s+=`<path d="${crescent(CX,CY,332,40,-38)}" fill="url(#holo)" opacity=".55"/>`;
+
+  // instrument rings
+  s+=`<circle cx="${CX}" cy="${CY}" r="${RR+46}" fill="none" stroke="#9fe8ff" stroke-width="1" opacity=".55"/>`;
+  s+=`<circle cx="${CX}" cy="${CY}" r="${RR-30}" fill="none" stroke="#C6FF00" stroke-width="1" stroke-dasharray="2 7" opacity=".7"/>`;
+  for(let a=0;a<360;a+=2.5){
+    const r1=RR+46, big=a%30===0, mid=a%10===0, r2=r1+(big?18:mid?10:5);
+    const t=a*Math.PI/180;
+    s+=`<line x1="${f1(CX+Math.sin(t)*r1)}" y1="${f1(CY-Math.cos(t)*r1)}" x2="${f1(CX+Math.sin(t)*r2)}" y2="${f1(CY-Math.cos(t)*r2)}" stroke="${big?'#C6FF00':'#9fe8ff'}" stroke-width="${big?1.6:1}" opacity="${big?1:.6}"/>`;
+  }
+  ['000','030','060','090','120','150','180','210','240','270','300','330'].forEach((lab,i)=>{
+    const t=i*30*Math.PI/180, r=RR+82;
+    if([0,2,3,6,9,10].includes(i)) return; // keep clear for horns, thorn wings, lanterns and the title
+    s+=mono(f1(CX+Math.sin(t)*r), f1(CY-Math.cos(t)*r+4), lab+'°',{size:11,anchor:'middle',fill:'#C6FF00',op:.9,ls:1});
+  });
+
+  // conic chrome ring built from small arcs (SVG has no conic gradient)
+  const stops=[[0,'#ffffff'],[.05,'#c8e8ff'],[.11,'#4c5a92'],[.16,'#120e24'],[.185,'#fbf7ff'],[.25,'#9eaadb'],
+               [.33,'#2a1d4a'],[.40,'#e4f8ff'],[.47,'#46357a'],[.54,'#0c0818'],[.60,'#ff9bd6'],[.655,'#ffffff'],
+               [.72,'#6e5cb0'],[.80,'#14102a'],[.845,'#e6f0ff'],[.92,'#7f8fc4'],[1,'#ffffff']];
+  let ring='';
+  const N=360;
+  for(let i=0;i<N;i++){
+    const a0=(i/N)*2*Math.PI-0.004, a1=((i+1)/N)*2*Math.PI+0.004;
+    const x0=CX+Math.sin(a0)*RR, y0=CY-Math.cos(a0)*RR, x1=CX+Math.sin(a1)*RR, y1=CY-Math.cos(a1)*RR;
+    ring+=`<path d="M${x0.toFixed(2)},${y0.toFixed(2)} A${RR},${RR} 0 0,1 ${x1.toFixed(2)},${y1.toFixed(2)}" stroke="${sample(stops,i/N)}"/>`;
+  }
+  // tribal chrome thorns sprouting from the halo (mirrored pairs)
+  let th='';
+  const sprout=(deg,specs)=>{
+    [1,-1].forEach(side=>{
+      const t=deg*Math.PI/180*side;
+      const bx=CX+Math.sin(t)*RR, by=CY-Math.cos(t)*RR;
+      const outward=Math.atan2(by-CY,bx-CX);
+      specs.forEach(([dAng,len,w,curl,off])=>{
+        const ang=outward+dAng*side;
+        th+=`<path d="${thorn(bx+Math.cos(outward)*off, by+Math.sin(outward)*off, ang, len, w, curl*side)}"/>`;
+      });
+    });
+  };
+  // big wing at 3 / 9 o'clock: interlocking hooked thorns
+  sprout(84,[[-0.55,128,22,-0.62,-10],[-0.05,104,16,0.55,-10],[0.62,70,11,-0.7,-8]]);
+  sprout(100,[[0.55,118,20,0.62,-10],[1.1,74,12,-0.6,-8]]);
+  // small barbs further round the halo
+  sprout(132,[[0.35,66,11,0.6,-8],[-0.35,46,8,-0.6,-6]]);
+  sprout(55,[[-0.3,60,10,-0.6,-8]]);
+
+  s+=`<g filter="url(#bevelM)">`+
+     `<g fill="url(#chromeBB)">${th}</g>`+
+     `<g fill="none" stroke-width="24" stroke-linecap="butt">${ring}</g>`+
+     `</g>`;
+  // crisp rim lines on the tube
+  s+=`<circle cx="${CX}" cy="${CY}" r="${RR+12.5}" fill="none" stroke="#05040a" stroke-width="2"/>`;
+  s+=`<circle cx="${CX}" cy="${CY}" r="${RR-12.5}" fill="none" stroke="#05040a" stroke-width="2"/>`;
+  s+=`<circle cx="${CX}" cy="${CY}" r="${RR-7}" fill="none" stroke="#ffffff" stroke-width="1.2" opacity=".55"/>`;
+  $('L_ring').innerHTML=s;
+
+  function crescent(cx,cy,r,thick,rotDeg){
+    // thin lit sliver along the upper-right inner edge
+    const t=rotDeg*Math.PI/180;
+    const ox=Math.cos(t)*thick, oy=Math.sin(t)*thick;
+    const a1=-150*Math.PI/180+t+Math.PI/2, a2=60*Math.PI/180+t+Math.PI/2;
+    // outer arc points
+    const p1=[cx+Math.cos(t-1.25)*r, cy+Math.sin(t-1.25)*r], p2=[cx+Math.cos(t+1.25)*r, cy+Math.sin(t+1.25)*r];
+    return `M${f1(p1[0])},${f1(p1[1])} A${r},${r} 0 0,1 ${f1(p2[0])},${f1(p2[1])} A${r*1.04},${r*1.04} 0 0,0 ${f1(p1[0])},${f1(p1[1])}Z`;
+  }
+})();
+
+/* ---------- wireframe paper lanterns (chōchin) ---------- */
+function lantern(cx,cy,w,h,color,glowId,label,tilt=0){
+  const rx=w/2, ry=h/2; let s=`<g transform="rotate(${tilt} ${cx} ${cy})">`;
+  s+=`<ellipse cx="${cx}" cy="${cy}" rx="${rx*1.6}" ry="${ry*1.4}" fill="url(#${glowId})"/>`;
+  s+=`<g fill="none" stroke="${color}" stroke-width="1.3">`;
+  s+=`<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" stroke-width="2"/>`;
+  const ribs=9;
+  for(let i=1;i<ribs;i++){
+    const y=-ry+i*(2*ry/ribs), k=Math.sqrt(1-(y/ry)**2);
+    s+=`<ellipse cx="${cx}" cy="${f1(cy+y)}" rx="${f1(rx*k)}" ry="${f1(rx*k*0.16)}" opacity=".85"/>`;
+  }
+  [0.25,0.55,0.8].forEach(c=>{ s+=`<ellipse cx="${cx}" cy="${cy}" rx="${f1(rx*c)}" ry="${ry}" opacity=".7"/>`; });
+  s+=`<line x1="${cx}" y1="${cy-ry}" x2="${cx}" y2="${cy+ry}" opacity=".7"/>`;
+  // caps
+  s+=`<rect x="${f1(cx-rx*0.5)}" y="${f1(cy-ry-h*0.07)}" width="${f1(rx)}" height="${f1(h*0.08)}" stroke-width="1.8"/>`;
+  s+=`<rect x="${f1(cx-rx*0.5)}" y="${f1(cy+ry-h*0.01)}" width="${f1(rx)}" height="${f1(h*0.08)}" stroke-width="1.8"/>`;
+  s+=`<path d="M${f1(cx-rx*0.3)},${f1(cy-ry-h*0.07)} Q${cx},${f1(cy-ry-h*0.26)} ${f1(cx+rx*0.3)},${f1(cy-ry-h*0.07)}"/>`;
+  s+=`<path d="M${cx},${f1(cy+ry+h*0.07)} V${f1(cy+ry+h*0.22)} M${cx-4},${f1(cy+ry+h*0.12)} V${f1(cy+ry+h*0.28)} M${cx+4},${f1(cy+ry+h*0.12)} V${f1(cy+ry+h*0.28)}" stroke-width="1"/>`;
+  s+=`</g>`;
+  if(label) s+=`<text class="cjk" x="${cx}" y="${f1(cy+h*0.17)}" font-size="${f1(h*0.42)}" text-anchor="middle" fill="${color}" filter="url(#glowSoft)">${label}</text>`;
+  s+=`</g>`;
+  return s;
+}
+(function(){
+  let s='';
+  s+=lantern(146,318,118,168,'#C6FF00','lanternGlow','鬼',-6);
+  s+=lantern(946,318,84,120,'#8FE9FF','lanternGlowIce','祭',8);
+  s+=mono(146,438,'LANTERN_A // 0x2F',{size:10,anchor:'middle',fill:'#C6FF00',op:.8});
+  s+=mono(946,418,'LANTERN_B // 0x31',{size:10,anchor:'middle',fill:'#8FE9FF',op:.8});
+  $('L_lanterns').innerHTML=s;
+})();
+
+/* ---------- oni mask, chrome line-art (left half drawn, mirrored) ---------- */
+(function(){
+  const half = {
+    face:  'M0,-168 C-70,-174 -140,-164 -176,-110 C-206,-62 -212,0 -197,52 C-182,112 -142,170 -82,210 C-52,228 -26,236 0,237',
+    brow:  'M-26,-46 C-72,-78 -124,-104 -182,-122 C-154,-96 -112,-72 -44,-30 Z',
+    eye:   'M-36,-14 C-74,-46 -128,-48 -162,-24 C-128,2 -78,6 -36,-14 Z',
+    nose:  'M-14,26 C-30,40 -40,56 -26,68 C-18,74 -8,70 -4,64',
+    lip:   'M-128,96 C-92,112 -50,108 0,116',
+    jaw:   'M-128,96 C-98,148 -52,172 0,172',
+    fangU: 'M-96,104 L-80,152 L-66,108',
+    fangL: 'M-60,168 L-46,124 L-34,170',
+    cheek: 'M-160,26 C-140,58 -134,84 -140,104',
+    cheek2:'M-182,-2 C-170,8 -160,14 -150,16',
+    wr1:   'M-70,-128 C-46,-118 -22,-114 0,-114',
+    wr2:   'M-54,-150 C-34,-144 -16,-142 0,-142',
+    horn:  'M-96,-158 C-118,-210 -168,-262 -236,-322 C-214,-262 -186,-216 -146,-142 Z',
+    hornR1:'M-112,-188 L-140,-170', hornR2:'M-140,-228 L-168,-214', hornR3:'M-172,-268 L-196,-258',
+  };
+  const both = (d) => `<path d="${d}"/><path d="${d}" transform="scale(-1,1)"/>`;
+  const strokes = ['face','nose','lip','jaw','fangU','fangL','cheek','cheek2','wr1','wr2','hornR1','hornR2','hornR3'];
+  const T = `translate(${CX},${CY+18}) scale(1.06)`;
+
+  let s='';
+  // dark face plate so the chrome line-art reads against the holo blobs
+  s+=`<g transform="${T}"><path d="${half.face} C26,236 52,228 82,210 C142,170 182,112 197,52 C212,0 206,-62 176,-110 C140,-164 70,-174 0,-168Z" fill="#07040f" opacity=".82"/></g>`;
+  // RGB-split ghosts of the mask
+  const lineArt = (stroke, w, extra='') => `<g transform="${T}" fill="none" stroke="${stroke}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" ${extra}>${strokes.map(k=>both(half[k])).join('')}${both(half.brow)}${both(half.eye)}${both(half.horn)}<path d="M0,-132 L12,-112 L0,-92 L-12,-112Z"/></g>`;
+  s+=`<g opacity=".8" style="mix-blend-mode:screen">${lineArt('#ff2e93',8,'transform-origin="0 0"').replace(`translate(${CX},`,`translate(${CX-7},`)}</g>`;
+  s+=`<g opacity=".8" style="mix-blend-mode:screen">${lineArt('#38d8ff',8).replace(`translate(${CX},`,`translate(${CX+7},`)}</g>`;
+  // eye glow
+  s+=`<g transform="${T}"><g filter="url(#glow)">${both('M-36,-14 C-74,-46 -128,-48 -162,-24 C-128,2 -78,6 -36,-14 Z').replace(/<path /g,'<path fill="#C6FF00" opacity=".9" ')}</g>`+
+     both('M-36,-14 C-74,-46 -128,-48 -162,-24 C-128,2 -78,6 -36,-14 Z').replace(/<path /g,'<path fill="url(#eyeGlow)" ')+
+     `<circle cx="-98" cy="-22" r="13" fill="#07040f"/><circle cx="98" cy="-22" r="13" fill="#07040f"/>`+
+     `<path d="M-128,96 C-92,112 -50,108 0,116 C50,108 92,112 128,96 C98,148 52,172 0,172 C-52,172 -98,148 -128,96Z" fill="#2a0620"/>`+
+     `<path d="M-128,96 C-92,112 -50,108 0,116 C50,108 92,112 128,96 C98,148 52,172 0,172 C-52,172 -98,148 -128,96Z" fill="#ff2e93" opacity=".35" filter="url(#glowSoft)"/>`+
+     `</g>`;
+  // the chrome itself
+  s+=`<g filter="url(#bevelM)">`+
+       `<g transform="${T}" fill="url(#chromeMask)">${both(half.horn)}${both(half.brow)}${both(half.fangU+' Z')}${both(half.fangL+' Z')}<path d="M0,-134 L14,-112 L0,-90 L-14,-112Z"/></g>`+
+       `<g transform="${T}" fill="none" stroke="url(#chromeMask)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">${['face','nose','lip','jaw','cheek','cheek2','wr1','wr2'].map(k=>both(half[k])).join('')}${both(half.eye)}</g>`+
+       `<g transform="${T}" fill="none" stroke="url(#chromeMask)" stroke-width="5" stroke-linecap="round">${both(half.hornR1)}${both(half.hornR2)}${both(half.hornR3)}</g>`+
+     `</g>`;
+  $('L_mask').innerHTML=s;
+})();
+
+/* ---------- hero type: 百鬼夜行 ---------- */
+(function(){
+  const X=540, Y=1250, FS=272, TL=940;
+  const txt='百鬼夜行';
+  const T=(attrs, dx=0, dy=0)=>`<text class="cjk" x="${X+dx}" y="${Y+dy}" font-size="${FS}" text-anchor="middle" textLength="${TL}" lengthAdjust="spacingAndGlyphs" ${attrs}>${txt}</text>`;
+  let s='';
+  // stacked, warped outline echoes rising into the halo
+  [[-150,.16],[-100,.26],[-50,.42]].forEach(([dy,op])=>{
+    s+=`<g filter="url(#warp)">${T(`fill="none" stroke="#C6FF00" stroke-width="1.6" opacity="${op}"`,0,dy)}</g>`;
+  });
+  // deep extrusion
+  let ex=''; for(let i=16;i>=1;i--) ex+=T(`fill="${i>13?'#05030a':'url(#extrude)'}"`, i*0.55, i*1.35);
+  s+=`<g>${ex}</g>`;
+  // RGB split
+  s+=`<g style="mix-blend-mode:screen" opacity=".95">${T('fill="#ff2e93"',-9,-2)}${T('fill="#2fd6ff"',9,2)}</g>`;
+  // dark keyline then liquid chrome face
+  s+=T('fill="none" stroke="#06040c" stroke-width="10" stroke-linejoin="round"');
+  s+=`<g filter="url(#bevelXL)"><g filter="url(#liquid)">${T('fill="url(#chromeTitle)"')}</g></g>`;
+  s+=T('fill="none" stroke="#ffffff" stroke-width="1.2" stroke-opacity=".55"');
+
+  // Latin line
+  s+=`<g filter="url(#glowSoft)"><text class="unb" x="540" y="1352" font-size="56" font-weight="900" text-anchor="middle" textLength="900" lengthAdjust="spacingAndGlyphs" fill="#C6FF00">NIGHT PARADE · 2026</text></g>`;
+  s+=mono(540,1392,'HYAKKI YAGYŌ — EASTERN HALLOWEEN — 31.10.2026 — 23:59 JST',{size:15,anchor:'middle',fill:'#9fe8ff',op:.9,ls:2.2});
+  // tiny tags hugging the title block
+  s+=mono(72,1016,'[01]',{size:13,fill:'#C6FF00',op:1});
+  s+=mono(1008,1016,'ACID_GFX v2.6',{size:13,fill:'#C6FF00',op:1,anchor:'end'});
+  s+=mono(72,1290,'ONI·KITSUNE·KASA',{size:11,fill:'#ff7cc0',op:.95});
+  s+=mono(1008,1290,'FPS 60 / 4:2:2 / HDR',{size:11,fill:'#ff7cc0',op:.95,anchor:'end'});
+  $('L_title').innerHTML=s;
+})();
+
+/* ---------- the procession (百鬼 silhouettes walking the horizon) ---------- */
+(function(){
+  const shapes={
+    obake:{ body:'M-4,-100 C20,-100 34,-82 34,-58 C34,-40 38,-24 44,-8 Q36,-1 30,-8 Q24,0 18,-8 Q12,0 6,-8 Q0,0 -6,-8 Q-12,0 -18,-8 Q-24,0 -30,-6 C-34,-28 -38,-54 -36,-66 C-32,-88 -22,-100 -4,-100Z M28,-54 C38,-58 46,-62 54,-66 L56,-60 C46,-54 38,-48 30,-44Z',
+            eyes:[[10,-72,3.2],[22,-70,3.2]], hand:[55,-63] },
+    kasa: { body:'M-44,-60 C-32,-98 32,-98 44,-60 Q33,-55 22,-60 Q11,-55 0,-60 Q-11,-55 -22,-60 Q-33,-55 -44,-60Z M-2,-94 L0,-110 L2,-94Z M-3,-60 H3 V-16 H-3Z M-12,-16 H12 V-10 H-12Z M-8,-10 H-5 V0 H-8Z M5,-10 H8 V0 H5Z',
+            eyes:[[0,-77,6]], tongue:'M8,-68 C14,-58 12,-48 6,-46 C4,-52 4,-60 4,-66Z' },
+    oni:  { body:'M-24,0 L-15,-52 Q0,-62 15,-52 L25,0Z M0,-80 a13,13 0 1,0 0.01,0Z M-9,-88 L-16,-106 L-3,-91Z M9,-88 L16,-106 L3,-91Z M10,-54 L40,-104 L48,-100 L18,-50Z',
+            eyes:[[-4,-68,2.4],[5,-68,2.4]] },
+    kitsune:{ body:'M-22,0 L-14,-50 Q0,-58 14,-50 L24,0Z M-12,-56 L-16,-98 L-3,-76 L5,-76 L16,-98 L13,-62 L30,-58 L12,-48 L-10,-50Z M-18,-18 C-52,-26 -62,-72 -42,-96 C-44,-66 -32,-42 -12,-34Z',
+            eyes:[[-2,-64,2.2],[9,-64,2.2]], hand:[22,-40] },
+    chochin:{ body:'M-26,-86 H26 V-80 H-26Z M-26,-20 H26 V-14 H-26Z M0,-80 C40,-80 40,-20 0,-20 C-40,-20 -40,-80 0,-80Z',
+            eyes:[[-9,-58,4],[10,-56,6]], tongue:'M-6,-36 C-2,-24 8,-10 2,4 C-6,-6 -10,-22 -10,-34Z', ribs:true },
+  };
+  const order=['chochin','obake','oni','kasa','kitsune','obake','oni','chochin','kasa','obake','kitsune','oni','obake'];
+  let fig='', glows='';
+  const r=rng(77);
+  const n=order.length;
+  order.forEach((k,i)=>{
+    const sh=shapes[k];
+    const x=92+i*(896/(n-1));
+    const sc=0.78+0.22*Math.sin(i*1.7)+0.08*r();
+    const y=HZ - (k==='chochin'||k==='obake'?10+6*Math.sin(i*2.3):0);
+    let g=`<g transform="translate(${f1(x)},${f1(y)}) scale(${sc.toFixed(3)})">`;
+    g+=`<path d="${sh.body}" fill="#07040e" stroke="#ff4fa8" stroke-width="${(1.8/sc).toFixed(2)}" stroke-linejoin="round" fill-rule="nonzero"/>`;
+    if(sh.ribs) g+=`<path d="M-30,-66 H30 M-32,-50 H32 M-30,-34 H30" stroke="#ff4fa8" stroke-width="1.2" opacity=".7"/>`;
+    if(sh.tongue) g+=`<path d="${sh.tongue}" fill="#ff2e93"/>`;
+    sh.eyes.forEach(([ex,ey,er])=>{ g+=`<circle cx="${ex}" cy="${ey}" r="${er}" fill="#C6FF00" filter="url(#glowSoft)"/>`; });
+    if(sh.hand){
+      // pole + small glowing lantern
+      const [hx,hy]=sh.hand;
+      g+=`<path d="M${hx},${hy} L${hx+14},${hy-46}" stroke="#ff4fa8" stroke-width="2"/>`;
+      g+=`<path d="M${hx+14},${hy-46} V${hy-38}" stroke="#ff4fa8" stroke-width="1.2"/>`;
+      g+=`<ellipse cx="${hx+14}" cy="${hy-26}" rx="20" ry="22" fill="url(#smallLantern)" opacity=".85"/>`;
+      g+=`<ellipse cx="${hx+14}" cy="${hy-26}" rx="9" ry="12" fill="none" stroke="#C6FF00" stroke-width="1.4"/>`;
+      g+=`<path d="M${hx+5},${hy-30} H${hx+23} M${hx+5},${hy-22} H${hx+23}" stroke="#C6FF00" stroke-width="1"/>`;
+    }
+    g+='</g>';
+    fig+=g;
+  });
+  let s=`<g id="parade">${fig}</g>`;
+  // glossy floor reflection
+  s+=`<g mask="url(#reflMask)"><g transform="translate(0,${2*HZ}) scale(1,-1)" opacity=".6">${fig}</g></g>`;
+  // footfall glow ticks
+  s+=mono(92,HZ+34,'PROCESSION 001 → 108',{size:11,fill:'#ffd0ea',op:.9,ls:2});
+  s+=mono(988,HZ+34,'Δt 00:00:13:08',{size:11,fill:'#ffd0ea',op:.9,ls:2,anchor:'end'});
+  $('L_parade').innerHTML=s;
+})();
+
+/* ---------- acid ticker band ---------- */
+(function(){
+  const phrase='百鬼夜行 // NIGHT PARADE // HYAKKI YAGYO // 2026.10.31 // ';
+  const line=phrase.repeat(4);
+  let s=`<g transform="rotate(-4 540 1712)">`;
+  s+=`<rect x="-80" y="1688" width="1240" height="50" fill="#C6FF00"/>`;
+  s+=`<text class="unb" x="-40" y="1722" font-size="24" font-weight="900" fill="#07040e" letter-spacing="1">${line}</text>`;
+  s+=`<rect x="-80" y="1684" width="1240" height="2" fill="#07040e" opacity=".0"/>`;
+  s+=`</g>`;
+  s+=`<g transform="rotate(3 540 1790)">`;
+  s+=`<rect x="-80" y="1772" width="1240" height="26" fill="none" stroke="#ff2e93" stroke-width="1.4"/>`;
+  s+=`<text class="mono" x="-40" y="1790" font-size="13" fill="#ff7cc0" letter-spacing="3">${'WARNING: SPIRITS CROSSING ▲ DO NOT LOOK BACK ▲ 一条戻橋 ▲ '.repeat(6)}</text>`;
+  s+=`</g>`;
+  $('L_band').innerHTML=s;
+})();
+
+/* ---------- micro type, barcodes, crosshairs, rulers ---------- */
+(function(){
+  let s='';
+  // header
+  s+=`<text class="unb" x="72" y="104" font-size="20" font-weight="900" fill="#e8f0ff" letter-spacing="2">HYAKKI_YAGYO.EXE</text>`;
+  s+=mono(72,128,'STYLE FRAME B — ACID GRAPHICS / 酸性设计',{size:12,fill:'#C6FF00',op:1});
+  s+=mono(72,148,'SYS.VER 2.0.26 · BUILD 1031 · SEED 0x6D2B',{size:11,fill:'#9fe8ff',op:.8});
+  s+=mono(72,166,'████████████░░░░ 76% LOADING SPIRITS',{size:10,fill:'#ff7cc0',op:.9,ls:1});
+  s+=mono(1008,104,'35°00\'41.8"N  135°46\'05.2"E',{size:12,fill:'#e8f0ff',op:.95,anchor:'end'});
+  s+=mono(1008,124,'ICHIJO-MODORIBASHI / KYOTO',{size:11,fill:'#9fe8ff',op:.85,anchor:'end'});
+  s+=barcode(858,136,150,26,9,'#e8f0ff');
+  s+=mono(1008,176,'NP-2026-1031-0108',{size:10,fill:'#e8f0ff',op:.7,anchor:'end',ls:2});
+  // corner brackets
+  const br=(x,y,dx,dy)=>`<path d="M${x},${y+dy*26} V${y} H${x+dx*26}" fill="none" stroke="#C6FF00" stroke-width="2"/>`;
+  s+=br(40,40,1,1)+br(1040,40,-1,1)+br(40,1880,1,-1)+br(1040,1880,-1,-1);
+  // edge rulers
+  for(let y=220;y<1500;y+=12){ const big=(y-220)%120===0; s+=`<line x1="40" y1="${y}" x2="${big?56:47}" y2="${y}" stroke="#9fe8ff" stroke-width="1" opacity="${big?.9:.45}"/>`; s+=`<line x1="1040" y1="${y}" x2="${big?1024:1033}" y2="${y}" stroke="#9fe8ff" stroke-width="1" opacity="${big?.9:.45}"/>`; }
+  // vertical side strips
+  s+=mono(66,980,'PROCESSION UNIT 001—108 /// ONI · KITSUNE · KASA-OBAKE · CHŌCHIN-OBAKE',{size:11,fill:'#9fe8ff',op:.8,rot:-90,ls:2.4});
+  s+=mono(1016,250,'LUNAR HALO R=360 · Δ0.0031 · PHASE 15/FULL · 満月',{size:11,fill:'#9fe8ff',op:.8,rot:90,ls:2.4});
+  // halo annotations
+  s+=cross(CX,CY-RR-46-34,7,'#C6FF00');
+  s+=mono(CX+16,CY-RR-46-30,'',{size:10});
+  s+=cross(200,250,8)+mono(214,254,'X0200 Y0250',{size:9,fill:'#9fe8ff',op:.7});
+  s+=cross(880,1120,8)+mono(866,1124,'X0880 Y1120',{size:9,fill:'#9fe8ff',op:.7,anchor:'end'});
+  s+=mono(CX,CY+RR+70,'',{size:10});
+  s+=`<path d="M${CX+RR+60},${CY-150} l26,-26 h70" fill="none" stroke="#C6FF00" stroke-width="1"/>`;
+  s+=mono(CX+RR+90,CY-182,'MASK_ID ONI-07',{size:10,fill:'#C6FF00',op:1});
+  s+=`<path d="M${CX-RR-50},${CY+170} l-20,24 h-50" fill="none" stroke="#ff7cc0" stroke-width="1"/>`;
+  s+=mono(CX-RR-120,CY+210,'CHROME/Cr-24',{size:10,fill:'#ff7cc0',op:1});
+  // bottom block (decorative only, stays out of the way)
+  s+=barcode(72,1828,180,30,3,'#e8f0ff');
+  s+=mono(72,1872,'NO.0108 / 0666',{size:10,fill:'#e8f0ff',op:.7,ls:2});
+  s+=mono(1008,1840,'© 2026 NIGHT PARADE COLLECTIVE',{size:10,fill:'#e8f0ff',op:.7,anchor:'end',ls:2});
+  s+=mono(1008,1858,'ALL SPIRITS RESERVED · REC ●',{size:10,fill:'#ff7cc0',op:.9,anchor:'end',ls:2});
+  $('L_micro').innerHTML=s;
+})();
+
+/* ---------- 4-point sparkles ---------- */
+(function(){
+  let s='';
+  const big=[[812,318,46],[1000,1046,38],[110,960,30],[300,1210,22],[722,1004,26],[612,262,20],[948,560,18],[176,620,16],[880,1430,22],[150,1540,14]];
+  big.forEach(([x,y,r])=>{
+    s+=`<g filter="url(#glow)"><path d="${star4(x,y,r,0.1)}" fill="#ffffff"/><path d="${star4(x,y,r*0.5,0.1)}" fill="#ffffff" transform="rotate(45 ${x} ${y})" opacity=".7"/></g>`;
+  });
+  const r=rng(5);
+  for(let i=0;i<26;i++){
+    const x=80+r()*920, y=200+r()*1300, rr=3+r()*6;
+    s+=`<path d="${star4(f1(x),f1(y),f1(rr),0.12)}" fill="${r()<0.5?'#C6FF00':'#e8f0ff'}" opacity=".85"/>`;
+  }
+  $('L_spark').innerHTML=s;
+})();
+</script>
+</body>
+</html>

@@ -7,3 +7,4 @@ dist
 out
 __pycache__/
 music/sounds/
+public/media/*.src
