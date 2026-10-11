@@ -6,9 +6,9 @@ mkdir -p release build/sheets
 n=$(ls frames/*.png | wc -l); [ "$n" -eq 900 ] || { echo "expected 900 frames, have $n"; exit 1; }
 
 ffmpeg -v error -y -framerate 30 -i frames/%04d.png -i build/music.wav -map 0:v -map 1:a \
-  -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -profile:v high -c:a aac -b:a 256k -ar 48000 \
+  -c:v libx264 -preset slow -crf 20 -maxrate 20M -bufsize 40M -pix_fmt yuv420p -profile:v high -c:a aac -b:a 256k -ar 48000 \
   -t 30 -movflags +faststart release/DISTORTION.mp4
-ffmpeg -v error -y -i release/DISTORTION.mp4 -map 0 -c:v libx264 -preset slow -crf 23 -pix_fmt yuv420p \
+ffmpeg -v error -y -i release/DISTORTION.mp4 -map 0 -c:v libx264 -preset slow -crf 23 -maxrate 7M -bufsize 14M -pix_fmt yuv420p \
   -c:a aac -b:a 160k -movflags +faststart release/DISTORTION_share.mp4
 
 for f in release/DISTORTION.mp4 release/DISTORTION_share.mp4; do
