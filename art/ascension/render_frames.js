@@ -12,18 +12,28 @@ jobs = jobs.filter(j => !fs.existsSync(path.join(out, j.name + (jpg ? '.jpg' : '
 (async () => {
   const exe = '/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell';
   const t0 = Date.now(); let done = 0;
-  const worker = async (wi) => {
+  const launch = async () => {
     const b = await chromium.launch({ executablePath: exe, args: ['--use-gl=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
     const p = await b.newPage({ viewport: { width: 1080, height: 1920 } });
     p.on('pageerror', e => console.log('pageerror', e.message));
     await p.goto('file://' + __dirname + '/index.html'); await p.evaluate(() => window.fontsReady);
+    return { b, p };
+  };
+  const withTimeout = (pr, ms) => Promise.race([pr, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
+  const worker = async (wi) => {
+    let B = await launch();
     for (let j = wi; j < jobs.length; j += W) {
       const job = jobs[j];
-      const data = await p.evaluate(([t, jpg]) => { window.renderAt(t); return document.getElementById('c').toDataURL(jpg ? 'image/jpeg' : 'image/png', 0.92); }, [job.t, jpg]);
-      fs.writeFileSync(path.join(out, job.name + (jpg ? '.jpg' : '.png')), Buffer.from(data.split(',')[1], 'base64'));
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const data = await withTimeout(B.p.evaluate(([t, jpg]) => { window.renderAt(t); return document.getElementById('c').toDataURL(jpg ? 'image/jpeg' : 'image/png', 0.92); }, [job.t, jpg]), 90000);
+          fs.writeFileSync(path.join(out, job.name + (jpg ? '.jpg' : '.png')), Buffer.from(data.split(',')[1], 'base64'));
+          break;
+        } catch (e) { console.log('retry', job.name, e.message); try { await B.b.close(); } catch (_) {} B = await launch(); }
+      }
       done++; if (done % 30 === 0) console.log(`${done}/${jobs.length} ${((Date.now() - t0) / done).toFixed(0)} ms/frame`);
     }
-    await b.close();
+    await B.b.close();
   };
   await Promise.all([...Array(Math.min(W, jobs.length)).keys()].map(worker));
   console.log('done', jobs.length, 'frames in', ((Date.now() - t0) / 1000).toFixed(1), 's');
