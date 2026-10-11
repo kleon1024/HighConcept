@@ -66,6 +66,7 @@ const tunnelGlow = new THREE.Mesh(new THREE.PlaneGeometry(2600, 2600), new THREE
 const wallRig = new THREE.Group(); scene.add(wallRig);
 const wallSpk = buildSpeaker({ res: 0.5, seg: 128, TW: 1024, TH: 256, liq: [0.03, 1 / 200, 0.25, 0.35] });
 wallSpk.setDamage({ cut: 1, open: 1, cracks: 1, holes: 3, light: 1 });
+wallSpk.mat.side = THREE.FrontSide;   // DoubleSide x15 cones costs ~14 s/frame in SwiftShader; the lit backdrop shows through the cuts instead
 const wallCells = [];
 for (let r = 0; r < 5; r++) for (let c = 0; c < 3; c++) {
   const g = wallSpk.group.clone(); g.scale.setScalar(0.47); g.position.set((c - 1) * 340, (2 - r) * 340, 0);
@@ -231,8 +232,8 @@ function bloom(src, strength = 0.6, thresh = 0.86, fringe = 0.45) {
 // ───────────── renderAt(t)
 const FPS = 30;
 const show = (o, v) => { o.visible = v; };
-function setLabels(t, t0, lines) {
-  labs.forEach((e, i) => { const k = seg(t, t0 + 0.12 + i * 0.07, t0 + 0.3 + i * 0.07); e.textContent = lines[i] || ''; set(e, { opacity: k, x: 70 + (1 - k) * -12 }); });
+function setLabels(t, t0, lines, y0 = 470) {
+  labs.forEach((e, i) => { const k = seg(t, t0 + 0.12 + i * 0.07, t0 + 0.3 + i * 0.07); e.textContent = lines[i] || ''; set(e, { opacity: k, x: 70 + (1 - k) * -12, y: y0 + 20 * i }); });
 }
 
 window.renderAt = function (t) {
@@ -391,7 +392,7 @@ window.renderAt = function (t) {
     show(ioWaves, t > TB(10, 8)); ioWaves.scale.set(1, smooth(seg(t, TB(10, 8), TB(10, 8) + 0.3)) + 0.001, 1);
     const sh = 12 * pulse(t, [TB(10, 8)], 0.08); shake = [(rs() - 0.5) * sh, (rs() - 0.5) * sh];
     headDate(dateState(t, S.y64, 16.7, '1964'));
-    labelSet = [S.y64, ['YOU REALLY GOT ME · THE KINKS', 'DAVE DAVIES SLASHES HIS AMP’S CONE WITH A RAZOR', 'THE RIFF THAT TAUGHT ROCK TO GROWL']];
+    labelSet = [S.y64, ['YOU REALLY GOT ME · THE KINKS', 'DAVE DAVIES SLASHES HIS AMP’S CONE WITH A RAZOR', 'THE RIFF THAT TAUGHT ROCK TO GROWL'], 1410];   // below the speaker: the thorns fill the upper band
     flashOp = 0.35 * smooth(seg(t, 17.15, S.dive));
     set(blob, { opacity: 0.07 });
     if (t > 15.3 && t < 16.8) { glint(272, 664, 30, 0.9); glint(842, 600, 20, 0.85); }
@@ -465,7 +466,7 @@ window.renderAt = function (t) {
   STOPS.forEach((st, i) => { const on = t >= st[4], cur = on && (i === 3 ? t < S.dive : t < STOPS[i + 1][4]); const col = cur ? '#c8ff1e' : on ? '#e6e7e9' : '#6c6d70'; set(stopEls[i].yr, { fill: col }); set(stopEls[i].a, { fill: on ? '#a9aaad' : '#5a5b5e' }); set(stopEls[i].tick, { stroke: cur ? '#c8ff1e' : '#e6e7e9' }); });
   const phx = t < S.y51 ? 70 : t < S.y58 ? lerp(70, 305, seg(t, S.y51 + 2.4, S.y58)) : t < S.y62 ? lerp(305, 540, seg(t, S.y58 + 2.4, S.y62)) : t < S.y64 ? lerp(540, 775, seg(t, S.y62 + 2.4, S.y64)) : lerp(775, 1010, seg(t, S.y64 + 2.4, S.fin));
   set(playhead, { x: phx - 1.5 });
-  if (labelSet) setLabels(t, labelSet[0], labelSet[1]); else labs.forEach(e => set(e, { opacity: 0 }));
+  if (labelSet) setLabels(t, labelSet[0], labelSet[1], labelSet[2]); else labs.forEach(e => set(e, { opacity: 0 }));
   set(flash, { opacity: clamp(flashOp, 0, 0.95) });
 
   // ── render + post
@@ -497,4 +498,4 @@ await document.fonts.load('400 13px "JetBrains Mono"', 'GAIN'); await document.f
 await document.fonts.load('700 46px "Noto Serif SC"', '失真，是最真的声音');
 pedal.drawFace(0, true);
 window.renderAt(0);
-window.__ready = true;
+window.__dbg = { renderer, scene, camera, wallRig, wallCells }; window.__ready = true;
