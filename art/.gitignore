@@ -12,3 +12,5 @@ package-lock.json
 */refs/*.webp
 */refs/*.gif
 !*/refs/board.jpg
+# release videos are force-added once final (avoid committing half-written renders)
+*/release/*.mp4
