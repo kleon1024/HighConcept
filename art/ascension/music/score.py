@@ -207,7 +207,7 @@ n('taiko', 24.0, 1.0, D2, 120); n('timp', 24.0, 1.0, D2, 100)
 for k in range(4): ch('choir', 24.0 + k * 0.25, 0.25, [D4, Fs4, A4], 80 + 10 * k); ch('strings', 24.0 + k * 0.25, 0.25, [D3, A3, D4, Fs4], 84 + 10 * k)
 n('swell', 24.1, 0.9, 60, 115)
 n('guqin', 25.5, 1.2, D6, 72); ch('choir', 25.2, 1.8, [D4, A4], 52); ch('drone', 25.0, 2.0, [D2, A2], 50)
-n('swell', 26.2, 0.8, 60, 95)
+n('swell', 25.7, 1.3, 60, 118)
 
 # ── bar 10 (27–30) 飞升: the biggest chord, gong + choir + guzheng gliss, final dizi line, long tail
 n('gong', 27.0, 3.0, D2, 120); n('taiko', 27.0, 1.5, D2, 127); n('timp', 27.0, 1.5, D2, 110)
