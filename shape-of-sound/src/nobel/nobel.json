@@ -1,0 +1,48 @@
+{
+  "fps": 30,
+  "width": 1080,
+  "height": 1920,
+  "bpm": 120,
+  "duration": 52,
+  "hook": { "start": 0, "end": 4 },
+  "cards": [
+    {
+      "id": "medicine", "start": 4, "end": 12, "cat": "生理学或医学", "catEn": "PHYSIOLOGY OR MEDICINE", "date": "10 · 05",
+      "head": ["用一束光", "开关大脑"], "bg": "#00C9A7", "ink": "#06221D", "accent": "#2D5BFF", "accent2": "#FFFFFF",
+      "people": [["卡尔·戴瑟罗斯", "Karl Deisseroth", "美国"], ["彼得·黑格曼", "Peter Hegemann", "德国"], ["格奥尔格·纳格尔", "Georg Nagel", "德国"]],
+      "explain": "藻类的感光蛋白装进神经元，蓝光一照就放电",
+      "cite": "表彰在光门控离子通道与光遗传学方面的发现"
+    },
+    {
+      "id": "physics", "start": 12, "end": 20, "cat": "物理学", "catEn": "PHYSICS", "date": "10 · 06",
+      "head": ["南极冰下的", "宇宙望远镜"], "bg": "#1B1F5E", "ink": "#EAF6FF", "accent": "#7FE3FF", "accent2": "#FFD23F",
+      "people": [["弗朗西斯·哈尔岑", "Francis Halzen", "比利时出生 · 美国威斯康星大学"]],
+      "explain": "1 立方公里冰 · 5160 个光学探测器，捕捉宇宙深处的中微子",
+      "cite": "表彰对冰立方中微子天文台的决定性贡献，以及发现天体来源的高能中微子"
+    },
+    {
+      "id": "chemistry", "start": 20, "end": 28, "cat": "化学", "catEn": "CHEMISTRY", "date": "10 · 07",
+      "head": ["生命为何", "只选一只“手”"], "bg": "#FF3D7F", "ink": "#24061A", "accent": "#FFD23F", "accent2": "#FFFFFF",
+      "people": [["亨利·B·卡冈", "Henri B. Kagan", "法国"], ["硖合宪三", "Kenso Soai", "日本"]],
+      "explain": "镜像分子中的一点点不对称，会自我复制、放大，最后只剩一种",
+      "cite": "表彰发现不对称有机合成中的非线性效应与自催化"
+    },
+    {
+      "id": "literature", "start": 28, "end": 36, "cat": "文学", "catEn": "LITERATURE", "date": "10 · 08",
+      "head": ["和古典", "玩对话的诗人"], "bg": "#F4EBDD", "ink": "#2A1E14", "accent": "#C8963E", "accent2": "#8C3B2E",
+      "people": [["安妮·卡森", "Anne Carson", "加拿大"]],
+      "explain": "古典学者 · 诗人，代表作《红的自传》",
+      "cite": "因其大胆而富有创造力的作品，与古典传统戏谑对话，为当代文学创造了新的形式"
+    },
+    {
+      "id": "peace", "start": 36, "end": 44, "cat": "和平", "catEn": "PEACE", "date": "10 · 09",
+      "head": ["让暴行", "必被审判"], "bg": "#2D5BFF", "ink": "#FFFFFF", "accent": "#FFD23F", "accent2": "#0E0E12",
+      "people": [["纳维·皮莱", "Navi Pillay", "南非"]],
+      "milestones": ["南非高等法院首位有色人种女法官", "卢旺达问题国际刑事法庭法官", "联合国人权事务高级专员 2008–2014"],
+      "explain": "推动把战争罪、反人类罪与种族灭绝罪诉诸审判",
+      "cite": "表彰她为促进和平与国际法所做的努力"
+    }
+  ],
+  "econ": { "start": 44, "end": 48, "date": "10 · 12" },
+  "outro": { "start": 48, "end": 52 }
+}
