@@ -1,0 +1,22 @@
+{
+  "fps": 30,
+  "duration": 76,
+  "bpm": 120,
+  "open": { "start": 0, "ping": 0.3, "wave": 1.0, "harmonics": 2.5, "kick": 3.0, "title": 4.0 },
+  "c1": { "start": 6.0, "circle": 6.8, "speedup": 9.0, "octave": 11.0, "end": 13.0 },
+  "c2": { "start": 13.0, "string": 13.6, "halve": 14.6, "liss": [15.6, 16.8, 18.0, 19.2, 20.4],
+          "ratios": [[1, 1], [2, 1], [3, 2], [4, 3], [45, 32]], "end": 22.0 },
+  "c3": { "start": 22.0, "chromatic": 22.6, "chromaticStep": 0.2, "keys": 25.0, "fifths": 27.0, "fifthStep": 0.25, "end": 31.0 },
+  "c4": { "start": 31.0, "scale": 31.6, "scaleStep": 0.35, "major": 34.4, "minor": 35.8, "prog": 37.2, "progStep": 1.45, "end": 43.0 },
+  "c5": { "start": 43.0, "meter": 43.6, "poly": 46.0, "polyCycle": 1.2, "e38": 48.4, "e58": 50.8, "euclidStep": 0.15, "end": 53.0 },
+  "c6": { "start": 53.0, "cards": 53.8, "cardLen": 2.6, "end": 69.4,
+          "genres": [
+            { "id": "classical", "cn": "古典", "en": "CLASSICAL", "bpm": 72, "meter": "3/4", "tag": "三拍子 · 弦乐琶音", "bg": "#F4EBDD", "ink": "#2A1E14", "a": "#C8963E", "b": "#8C3B2E" },
+            { "id": "jazz", "cn": "爵士", "en": "JAZZ", "bpm": 140, "meter": "4/4 swing", "tag": "摇摆 2:1 · 七和弦", "bg": "#0F1B3D", "ink": "#F5EFE3", "a": "#FF8A3D", "b": "#3DD6F5" },
+            { "id": "rock", "cn": "摇滚", "en": "ROCK", "bpm": 120, "meter": "4/4", "tag": "强力和弦 · 2/4 拍重音", "bg": "#E8202A", "ink": "#111111", "a": "#111111", "b": "#FFFFFF" },
+            { "id": "hiphop", "cn": "嘻哈", "en": "HIP-HOP", "bpm": 90, "meter": "4/4", "tag": "Boom-bap · 摇摆十六分", "bg": "#FFD23F", "ink": "#111111", "a": "#111111", "b": "#FF3D7F" },
+            { "id": "house", "cn": "浩室", "en": "HOUSE", "bpm": 124, "meter": "4/4", "tag": "四踩 · 侧链泵动", "bg": "#0B0B16", "ink": "#FFFFFF", "a": "#00F0FF", "b": "#FF2BD6" },
+            { "id": "latin", "cn": "拉丁", "en": "LATIN", "bpm": 100, "meter": "3-2 clave", "tag": "克拉维 = 欧几里得节奏", "bg": "#00B37A", "ink": "#0E0E12", "a": "#FF3D7F", "b": "#FFE9C7" }
+          ] },
+  "finale": { "start": 69.4, "text": 70.0, "collapse": 73.0, "ping": 75.0, "end": 76.0 }
+}
