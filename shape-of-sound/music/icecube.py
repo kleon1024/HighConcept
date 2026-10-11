@@ -1,31 +1,34 @@
 """IceCube vertical video — soundtrack synced to src/icecube/icecube.json. Run: python3 music/icecube.py → public/icecube_score.wav"""
-import json, os, subprocess
-import mido
+import json, os
 import numpy as np
 import soundfile as sf
-from mixutil import bloom, cap_velocity, jumps, master, swell
+from engine import SF2, Drums, Score, Synth
+from mixutil import bloom, jumps, master, swell
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 J = json.load(open(os.path.join(ROOT, 'src', 'icecube', 'icecube.json')))
-OUT = os.path.join(ROOT, 'out'); os.makedirs(OUT, exist_ok=True)
 SR, DUR = 48000, J['duration']; N = int(DUR * SR)
-SF2 = '/usr/share/sounds/sf2/FluidR3_GM.sf2'
 rng = np.random.default_rng(7)
-TPB = 480; tk = lambda s: int(round(s * 2 * TPB))
 S = {s['id']: s for s in J['sections']}; Q = J['cues']
-ev = []
-def msg(s, o, m): ev.append((tk(s), o, m))
-def note(ch, s, d, p, v=90):
-    v = int(max(1, min(127, cap_velocity(ch, p, v + rng.integers(-3, 4), DR, BRASS, TIMP, BASS))))
-    msg(s, 2, mido.Message('note_on', channel=ch, note=int(p), velocity=v)); msg(s + max(0.03, d) - 0.003, 0, mido.Message('note_off', channel=ch, note=int(p), velocity=0))
-def chord(ch, s, d, ps, v=85):
-    for p in ps: note(ch, s, d, p, v)
-DR = 9; KICK, SNARE, CLAP, HAT, OHAT, CRASH, WOOD, LTOM, HTOM, RIDE = 36, 38, 39, 42, 46, 49, 76, 45, 50, 51
-PAD, MAR, BASS, BRASS, CEL, VIB, STR, ARP, PIZZ, BELL, TIMP = 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11
-for ch, p in [(PAD, 94), (MAR, 12), (BASS, 38), (BRASS, 61), (CEL, 8), (VIB, 11), (STR, 48), (ARP, 81), (PIZZ, 45), (BELL, 14), (TIMP, 47)]:
-    msg(0, 0, mido.Message('program_change', channel=ch, program=p))
-for ch in range(16):
-    msg(0, 1, mido.Message('control_change', channel=ch, control=91, value=62))
+sc = Score(DUR, SR, seed=7)
+note, chord = sc.note, sc.chord
+DR = 'drums'; KICK, SNARE, CLAP, HAT, OHAT, CRASH, WOOD, LTOM, HTOM, RIDE = 36, 38, 39, 42, 46, 49, 76, 45, 50, 51
+PAD, MAR, BASS, BRASS, CEL, VIB, STR, ARP, PIZZ, BELL, TIMP = 'pad', 'kalimba', 'bass', 'horns', 'glass', 'bell', 'strings', 'arp', 'pizz', 'chime', 'timp'
+# palette: icy glass and FM bells over a warm analog pad and sub bass, a soft drum machine, real strings and horns
+PARTS = {
+    PAD: Synth('pad', level=-15, verb=0.35, duck=0.35, cutoff=2000),
+    MAR: SF2('kalimba', level=-17, verb=0.3),
+    BASS: Synth('sub', level=-16, verb=0.0, duck=0.5, cap=96),
+    BRASS: SF2('ms', 60, level=-17, verb=0.4, cap=88),          # French horns
+    CEL: SF2('glass', level=-15, verb=0.45),
+    VIB: Synth('bell', level=-17, verb=0.45),
+    STR: SF2('ms', 49, level=-15, verb=0.4),                    # slow strings
+    ARP: Synth('pluck', level=-18, verb=0.3, bright=0.8),
+    PIZZ: SF2('ms', 45, level=-18, verb=0.3),
+    BELL: SF2('ms', 14, level=-19, verb=0.5),                   # tubular bells
+    TIMP: SF2('ms', 47, level=-17, verb=0.35, cap=86),
+    DR: Drums({36: 'R8/kick', 38: 'R8/snare', 42: 'R8/hihat', 45: 'R8/tom3', 50: 'R8/tom1'}, fallback_kit=25, level=-15, verb=0.12),
+}
 
 E = 64  # E4 — E minor, i–VI–III–VII
 prog = [[0, 3, 7], [-4, 0, 3], [3, 7, 10], [-2, 2, 5]]   # Em C G D
@@ -132,16 +135,7 @@ chord(STR, z0, 5.8, [E - 24, E - 12, E - 5, E, E + 4, E + 7, E + 12], 90); note(
 for k, p in enumerate([19, 16, 12, 19, 24]): note(CEL, z0 + Q['nobel']['name'] + k * 0.4, 1.0, E + p, 88)
 chord(PAD, z0 + Q['nobel']['close'], 2.6, [E - 12, E, E + 4, E + 11], 75); note(BELL, z0 + Q['nobel']['close'], 2.5, E + 16, 95)
 
-mid = mido.MidiFile(ticks_per_beat=TPB); trk = mido.MidiTrack(); mid.tracks.append(trk)
-trk.append(mido.MetaMessage('set_tempo', tempo=mido.bpm2tempo(120), time=0))
-last = 0
-for t, _, mm in sorted(ev, key=lambda x: (x[0], x[1])): trk.append(mm.copy(time=t - last)); last = t
-trk.append(mido.MetaMessage('end_of_track', time=tk(DUR + 2) - last))
-mid.save(os.path.join(OUT, 'icecube.mid'))
-subprocess.run(['fluidsynth', '-ni', '-q', '-g', '0.55', '-r', str(SR), '-R', '1', '-C', '0', '-o', 'synth.reverb.level=0.5',
-                '-F', os.path.join(OUT, 'icecube_orch.wav'), SF2, os.path.join(OUT, 'icecube.mid')], check=True)
-x, _ = sf.read(os.path.join(OUT, 'icecube_orch.wav'), always_2d=True)
-x = np.pad(x, ((0, max(0, N - len(x))), (0, 0)))[:N]
+x, stems = sc.render(PARTS, kick_part=DR)
 
 def add(s, sig, gain):
     i0 = int(s * SR); seg = sig[:max(0, N - i0)]; x[i0:i0 + len(seg)] += (seg * gain)[:, None]

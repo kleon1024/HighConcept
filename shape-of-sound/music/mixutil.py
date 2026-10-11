@@ -44,7 +44,13 @@ def compress(x, sr, above_median_db=6.0, ratio=3.0, attack=0.012, release=0.3, b
     gain = np.interp(np.arange(len(m)), np.arange(nb) * bs + bs / 2, 10 ** (-gr / 20))
     return x * gain[:, None]
 
-def master(x, sr, lufs=-16.0, ceiling_db=-1.5):
+def tilt(x, sr, air=0.35, low_cut=0.2):
+    """Gentle master EQ: lift presence above ~3 kHz and trim the sub below ~90 Hz (phone speakers can't use it)."""
+    x = x + air * sosfilt(butter(1, 3000, 'high', fs=sr, output='sos'), x, axis=0)
+    return x - low_cut * sosfilt(butter(2, 90, 'low', fs=sr, output='sos'), x, axis=0)
+
+def master(x, sr, lufs=-16.0, ceiling_db=-1.5, eq=True):
+    if eq: x = tilt(x, sr)
     x = compress(x, sr)
     meter = pyln.Meter(sr)
     x = pyln.normalize.loudness(x, meter.integrated_loudness(x), lufs)

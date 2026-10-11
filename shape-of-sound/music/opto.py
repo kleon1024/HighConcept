@@ -1,32 +1,37 @@
 """Optogenetics vertical video — soundtrack synced to src/opto/opto.json. Run: python3 music/opto.py → public/opto_score.wav"""
-import json, os, subprocess
-import mido
+import json, os
 import numpy as np
 import soundfile as sf
-from mixutil import bloom, cap_velocity, jumps, master, swell
+from engine import SF2, Drums, Score, Synth
+from mixutil import bloom, jumps, master, swell
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 J = json.load(open(os.path.join(ROOT, 'src', 'opto', 'opto.json')))
-OUT = os.path.join(ROOT, 'out'); os.makedirs(OUT, exist_ok=True)
 SR, DUR = 48000, J['duration']; N = int(DUR * SR)
-SF2 = '/usr/share/sounds/sf2/FluidR3_GM.sf2'
 rng = np.random.default_rng(5)
-TPB = 480; tk = lambda s: int(round(s * 2 * TPB))
 S = {s['id']: s for s in J['sections']}; Q = J['cues']
 st = lambda k: S[k]['start']
-ev = []
-def msg(s, o, m): ev.append((tk(s), o, m))
-def note(ch, s, d, p, v=90):
-    v = int(max(1, min(127, cap_velocity(ch, p, v + rng.integers(-3, 4), DR, BRASS, TIMP, BASS))))
-    msg(s, 2, mido.Message('note_on', channel=ch, note=int(p), velocity=v)); msg(s + max(0.03, d) - 0.003, 0, mido.Message('note_off', channel=ch, note=int(p), velocity=0))
-def chord(ch, s, d, ps, v=85):
-    for p in ps: note(ch, s, d, p, v)
-DR = 9; KICK, SNARE, CLAP, HAT, OHAT, CRASH, WOOD, LTOM, HTOM, RIDE, RIM = 36, 38, 39, 42, 46, 49, 76, 45, 50, 51, 37
-PAD, MAR, BASS, BRASS, CEL, VIB, STR, ARP, PIZZ, BELL, TIMP, PNO, LEAD = 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13
-for ch, p in [(PAD, 89), (MAR, 12), (BASS, 38), (BRASS, 61), (CEL, 8), (VIB, 11), (STR, 48), (ARP, 81), (PIZZ, 45), (BELL, 14), (TIMP, 47), (PNO, 0), (LEAD, 80)]:
-    msg(0, 0, mido.Message('program_change', channel=ch, program=p))
-for ch in range(16):
-    msg(0, 1, mido.Message('control_change', channel=ch, control=91, value=60))
+sc = Score(DUR, SR, seed=5)
+note, chord = sc.note, sc.chord
+DR = 'drums'; KICK, SNARE, CLAP, HAT, OHAT, CRASH, WOOD, LTOM, HTOM, RIDE, RIM = 36, 38, 39, 42, 46, 49, 76, 45, 50, 51, 37
+PAD, MAR, BASS, BRASS, CEL, VIB, STR, ARP, PIZZ, BELL, TIMP, PNO, LEAD = 'pad', 'kalimba', 'bass', 'horns', 'glass', 'bell', 'strings', 'arp', 'harp', 'chime', 'timp', 'piano', 'lead'
+# palette: organic (kalimba, harp, grand piano) meets electric (analog pad, plucks, FM bells, drum machine)
+PARTS = {
+    PAD: Synth('pad', level=-15, verb=0.35, duck=0.35, cutoff=2000),
+    MAR: SF2('kalimba', level=-16, verb=0.3),
+    BASS: Synth('sub', level=-16, verb=0.0, duck=0.5, cap=96),
+    BRASS: SF2('ms', 60, level=-17, verb=0.4, cap=88),          # French horns
+    CEL: SF2('glass', level=-15, verb=0.45),
+    VIB: Synth('bell', level=-17, verb=0.45, ratio=2.0),
+    STR: SF2('ms', 49, level=-15, verb=0.4),                    # slow strings
+    ARP: Synth('pluck', level=-18, verb=0.3, bright=0.8),
+    PIZZ: SF2('ms', 46, level=-17, verb=0.35),                  # harp
+    BELL: SF2('ms', 14, level=-19, verb=0.5),                   # tubular bells
+    TIMP: SF2('ms', 47, level=-17, verb=0.35, cap=86),
+    PNO: SF2('piano', level=-14, verb=0.35),                    # Salamander grand
+    LEAD: Synth('pluck', level=-17, verb=0.25, bright=1.6, decay=4.0, length=0.3),
+    DR: Drums({36: 'R8/kick', 38: 'R8/snare', 42: 'R8/hihat', 45: 'R8/tom3', 50: 'R8/tom1'}, fallback_kit=25, level=-15, verb=0.12),
+}
 
 K = 57  # A3 — A minor, i–VI–III–VII; the ending turns to A major
 prog = [[0, 3, 7], [-4, 0, 3], [3, 7, 10], [-2, 2, 5]]   # Am F C G
@@ -169,16 +174,7 @@ note(DR, z + nb['a'], 2.5, CRASH, 118); note(TIMP, z + nb['a'], 1.0, K - 24, 118
 chord(STR, z + nb['a'], 8 - nb['a'], [K - 24, K - 12, K - 5, K, K + 4, K + 7, K + 12], 92); note(BASS, z + nb['a'], 8 - nb['a'], K - 24, 100)
 for k, x in enumerate([16, 12, 7, 16, 19]): note(CEL, z + nb['a'] + 0.3 + k * 0.4, 1.0, K + x, 86)
 
-mid = mido.MidiFile(ticks_per_beat=TPB); trk = mido.MidiTrack(); mid.tracks.append(trk)
-trk.append(mido.MetaMessage('set_tempo', tempo=mido.bpm2tempo(120), time=0))
-last = 0
-for t, _, mm in sorted(ev, key=lambda x: (x[0], x[1])): trk.append(mm.copy(time=t - last)); last = t
-trk.append(mido.MetaMessage('end_of_track', time=tk(DUR + 2) - last))
-mid.save(os.path.join(OUT, 'opto.mid'))
-subprocess.run(['fluidsynth', '-ni', '-q', '-g', '0.55', '-r', str(SR), '-R', '1', '-C', '0', '-o', 'synth.reverb.level=0.45',
-                '-F', os.path.join(OUT, 'opto_orch.wav'), SF2, os.path.join(OUT, 'opto.mid')], check=True)
-x, _ = sf.read(os.path.join(OUT, 'opto_orch.wav'), always_2d=True)
-x = np.pad(x, ((0, max(0, N - len(x))), (0, 0)))[:N]
+x, stems = sc.render(PARTS, kick_part=DR)
 
 def add(s, sig, gain):
     i0 = int(s * SR)
