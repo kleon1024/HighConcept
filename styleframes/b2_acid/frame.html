@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>Distortion Frame</title>
+<meta name="description" content="Style frame B2 · Acid Graphics · 失真 DISTORTION">
+<link rel="stylesheet" href="node_modules/@fontsource/big-shoulders-display/900.css">
+<link rel="stylesheet" href="node_modules/@fontsource/jetbrains-mono/400.css">
+<link rel="stylesheet" href="node_modules/@fontsource/jetbrains-mono/700.css">
+<link rel="stylesheet" href="node_modules/@fontsource/noto-serif-sc/700.css">
+<style>
+  :root {
+    --ink: #050506;
+    --silver: #d9dadc;
+    --dim: #6c6d70;
+    --acid: #c8ff1e;
+  }
+  html, body { margin: 0; padding: 0; background: var(--ink); }
+  #stage { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: var(--ink); }
+  #stage > * { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; }
+  #gl { z-index: 3; }
+  #bloom { z-index: 4; mix-blend-mode: screen; pointer-events: none; }
+  #under { z-index: 1; }
+  #over { z-index: 5; }
+  #grain { z-index: 6; mix-blend-mode: overlay; opacity: .55; }
+  svg text { font-family: 'JetBrains Mono', monospace; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "./node_modules/three/build/three.module.js",
+  "three/addons/": "./node_modules/three/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="stage">
+  <svg id="under" viewBox="0 0 1080 1920"></svg>
+  <canvas id="gl" width="1080" height="1920"></canvas>
+  <canvas id="bloom" width="1080" height="1920"></canvas>
+  <svg id="over" viewBox="0 0 1080 1920"></svg>
+  <canvas id="grain" width="1080" height="1920"></canvas>
+</div>
+<script type="module">
+import * as THREE from 'three';
+import opentype from './node_modules/opentype.js/dist/opentype.module.js';
+
+const W = 1080, H = 1920;
+const ACID = 0xc8ff1e;
+const SVGNS = 'http://www.w3.org/2000/svg';
+
+// ---------- deterministic PRNG ----------
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+// ---------- SVG helpers ----------
+function el(parent, tag, attrs = {}, text) {
+  const e = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text !== undefined) e.textContent = text;
+  parent.appendChild(e);
+  return e;
+}
+const P = (x, y) => new THREE.Vector3(x - W / 2, H / 2 - y, 0);   // page px -> world
+
+// =====================================================================
+// 1. renderer, camera, environment (procedural studio for real reflections)
+// =====================================================================
+const canvas = document.getElementById('gl');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1);
+renderer.setSize(W, H, false);
+renderer.setClearColor(0x000000, 0);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+const FOV = 22;
+const camera = new THREE.PerspectiveCamera(FOV, W / H, 10, 20000);
+const camZ = (H / 2) / Math.tan(THREE.MathUtils.degToRad(FOV / 2));
+camera.position.set(0, 0, camZ);
+camera.lookAt(0, 0, 0);
+
+function buildEnvironment() {
+  const env = new THREE.Scene();
+  const room = new THREE.Mesh(new THREE.SphereGeometry(60, 64, 32),
+    new THREE.MeshBasicMaterial({ color: 0x030303, side: THREE.BackSide }));
+  env.add(room);
+  const lightMat = (hex, k) => { const m = new THREE.MeshBasicMaterial({ color: hex, side: THREE.DoubleSide }); m.color.multiplyScalar(k); return m; };
+  const panel = (w, h, mat, pos, look) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat); m.position.copy(pos); m.lookAt(look || new THREE.Vector3()); env.add(m); return m; };
+  // overhead long softbox (hard edges = crisp chrome bands)
+  panel(46, 7, lightMat(0xffffff, 7), new THREE.Vector3(0, 34, 6));
+  // tall strip lights left / right
+  panel(3.2, 34, lightMat(0xffffff, 5.5), new THREE.Vector3(-34, 4, 10));
+  panel(2.0, 30, lightMat(0xf2f4ff, 3.5), new THREE.Vector3(33, 2, -6));
+  // thin back rim strips (edge highlights)
+  panel(1.0, 40, lightMat(0xffffff, 6), new THREE.Vector3(-14, 0, -40));
+  panel(1.0, 40, lightMat(0xffffff, 4), new THREE.Vector3(18, 0, -40));
+  // a horizon band all around (the classic chrome horizon line)
+  const band = new THREE.Mesh(new THREE.CylinderGeometry(55, 55, 2.4, 96, 1, true), lightMat(0x9a9ca2, 1.3));
+  band.position.y = -3; env.add(band);
+  // floor: dark grey gradient disc
+  const floor = new THREE.Mesh(new THREE.CircleGeometry(58, 64), lightMat(0x1a1b1e, 1.0));
+  floor.rotation.x = -Math.PI / 2; floor.position.y = -20; env.add(floor);
+  // the ONE acid accent in the reflections: low front strip + small card
+  panel(36, 1.6, lightMat(ACID, 3.2), new THREE.Vector3(-4, -12, 34));
+  panel(4, 4, lightMat(ACID, 2.0), new THREE.Vector3(30, -10, 18));
+  const pm = new THREE.PMREMGenerator(renderer);
+  const rt = pm.fromScene(env, 0.0, 0.1, 200);
+  return rt.texture;
+}
+const scene = new THREE.Scene();
+scene.environment = buildEnvironment();
+
+const key = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(-1.2, 2.0, 1.6); scene.add(key);
+const rim = new THREE.DirectionalLight(0xffffff, 1.2); rim.position.set(1.5, 0.4, -0.8); scene.add(rim);
+
+const chrome = (o = {}) => new THREE.MeshPhysicalMaterial(Object.assign({
+  color: 0xffffff, metalness: 1.0, roughness: 0.06, envMapIntensity: 1.0,
+}, o));
+
+// =====================================================================
+// 2. geometry helpers
+// =====================================================================
+// tapered tube along a curve -> chrome thorns, barbs
+function taperTube(curve, { segs = 140, radial = 28, r0 = 16, pow = 1.15, flat = 0.62, tip = 0.25 } = {}) {
+  const frames = curve.computeFrenetFrames(segs, false);
+  const pos = [], uv = [], idx = [];
+  for (let i = 0; i <= segs; i++) {
+    const s = i / segs, p = curve.getPointAt(s), N = frames.normals[i], B = frames.binormals[i];
+    const r = r0 * Math.pow(1 - s, pow) + tip;
+    for (let j = 0; j <= radial; j++) {
+      const a = j / radial * Math.PI * 2, c = Math.cos(a), sn = Math.sin(a);
+      pos.push(p.x + r * (c * N.x + sn * flat * B.x), p.y + r * (c * N.y + sn * flat * B.y), p.z + r * (c * N.z + sn * flat * B.z));
+      uv.push(j / radial, s);
+    }
+  }
+  for (let i = 0; i < segs; i++) for (let j = 0; j < radial; j++) {
+    const a = i * (radial + 1) + j, b = a + radial + 1;
+    idx.push(a, b, a + 1, b, b + 1, a + 1);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  g.setIndex(idx); g.computeVertexNormals();
+  return g;
+}
+
+// opentype glyph -> THREE.Shape[] (outer/hole detection by signed area + containment)
+function glyphShapes(font, ch, size) {
+  const path = font.getPath(ch, 0, 0, size);
+  const contours = []; let cur = null;
+  for (const c of path.commands) {
+    if (c.type === 'M') { cur = new THREE.Path(); cur.moveTo(c.x, -c.y); contours.push(cur); }
+    else if (c.type === 'L') cur.lineTo(c.x, -c.y);
+    else if (c.type === 'Q') cur.quadraticCurveTo(c.x1, -c.y1, c.x, -c.y);
+    else if (c.type === 'C') cur.bezierCurveTo(c.x1, -c.y1, c.x2, -c.y2, c.x, -c.y);
+  }
+  const info = contours.map(p => { const pts = p.getPoints(12); return { p, pts, area: THREE.ShapeUtils.area(pts) }; })
+    .filter(o => Math.abs(o.area) > 1);
+  const big = info.reduce((a, b) => Math.abs(b.area) > Math.abs(a.area) ? b : a);
+  const outerSign = Math.sign(big.area);
+  const inside = (pt, poly) => { let c = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const a = poly[i], b = poly[j]; if ((a.y > pt.y) !== (b.y > pt.y) && pt.x < (b.x - a.x) * (pt.y - a.y) / (b.y - a.y) + a.x) c = !c; } return c; };
+  const outers = info.filter(o => Math.sign(o.area) === outerSign).map(o => { const s = new THREE.Shape(); s.curves = o.p.curves; s.currentPoint = o.p.currentPoint; return { s, o }; });
+  for (const h of info.filter(o => Math.sign(o.area) !== outerSign)) {
+    const host = outers.filter(O => inside(h.pts[0], O.o.pts)).sort((a, b) => Math.abs(a.o.area) - Math.abs(b.o.area))[0];
+    if (host) host.s.holes.push(h.p);
+  }
+  return { shapes: outers.map(O => O.s), advance: font.charToGlyph(ch).advanceWidth * size / font.unitsPerEm };
+}
+
+// =====================================================================
+// 3. hero: chrome speaker, slashed (Dave Davies, 1964) + thorns + waveform
+// =====================================================================
+const SPK = { cx: 540, cy: 868, R: 336 };
+const SLASH = { a: new THREE.Vector2(-176, 150), b: new THREE.Vector2(196, -138) };   // speaker-local, y up
+
+function speakerProfile() {
+  const pts = [];
+  const push = (r, h) => pts.push(new THREE.Vector2(r, h));
+  for (let i = 0; i <= 36; i++) { const r = 70 * i / 36; push(r, -112 + 40 * Math.sqrt(Math.max(0, 1 - (r / 70) ** 2))); }  // dust cap dome
+  push(71, -114); push(76, -116);                                                                                      // crease
+  for (let i = 0; i <= 150; i++) { const u = i / 150, r = 76 + 176 * u;
+    const rib = 1.8 * Math.sin(u * Math.PI * 11) * Math.sin(u * Math.PI);
+    push(r, -116 + 116 * Math.pow(u, 1.55) + rib); }                                                                    // ribbed cone
+  for (let i = 1; i <= 40; i++) { const u = i / 40, r = 252 + 46 * u; push(r, 26 * Math.sin(Math.PI * u)); }            // surround roll
+  push(300, 3); push(304, 9);
+  for (let i = 0; i <= 10; i++) push(304 + 30 * i / 10, 10);                                                           // flat gasket
+  for (let i = 1; i <= 10; i++) { const a = i / 10 * Math.PI / 2; push(334 + 8 * Math.sin(a), 10 - 8 + 8 * Math.cos(a) - 30 * (i / 10) ** 2); } // rolled edge
+  return pts;
+}
+
+function distToSeg(p, a, b) {
+  const ab = b.clone().sub(a), t = THREE.MathUtils.clamp(p.clone().sub(a).dot(ab) / ab.lengthSq(), 0, 1);
+  return { d: p.distanceTo(a.clone().addScaledVector(ab, t)), t, side: Math.sign(ab.x * (p.y - a.y) - ab.y * (p.x - a.x)) };
+}
+const slashRand = mulberry32(303);
+const jag = Array.from({ length: 64 }, () => slashRand());
+const halfW = t => { const k = Math.floor(t * 63); const n = jag[k] * 0.5 + jag[Math.min(63, k + 1)] * 0.5; return (17 * Math.pow(Math.sin(Math.PI * t), 0.75)) * (0.75 + 0.5 * n); };
+
+function buildSpeaker(slash = 1) {
+  const g = new THREE.Group();
+  const prof = speakerProfile();
+  const SEG = 320;
+  const geo = new THREE.LatheGeometry(prof, SEG);
+  geo.rotateX(Math.PI / 2);       // disk in xy-plane, height -> +z
+  // torn lips: push vertices near the cut inward + apart
+  const pos = geo.attributes.position, v = new THREE.Vector2();
+  for (let i = 0; i < pos.count; i++) {
+    v.set(pos.getX(i), pos.getY(i));
+    const r = v.length(); if (r > 300) continue;
+    const { d, t, side } = distToSeg(v, SLASH.a, SLASH.b);
+    const w = 46;
+    if (d < w && t > 0 && t < 1) {
+      const k = Math.pow(1 - d / w, 2) * Math.sin(Math.PI * t) * slash;
+      pos.setZ(i, pos.getZ(i) - 34 * k);
+      const ab = SLASH.b.clone().sub(SLASH.a).normalize(), n = new THREE.Vector2(-ab.y, ab.x).multiplyScalar(side * 7 * k);
+      pos.setX(i, pos.getX(i) + n.x); pos.setY(i, pos.getY(i) + n.y);
+    }
+  }
+  geo.computeVertexNormals();
+  // alpha map: the actual cut (texel -> (u,v) -> lathe point -> distance to slash)
+  const TW = 2048, TH = 512, c = document.createElement('canvas'); c.width = TW; c.height = TH;
+  const ctx = c.getContext('2d'), img = ctx.createImageData(TW, TH);
+  // cumulative profile index for v
+  const n = prof.length;
+  for (let y = 0; y < TH; y++) {
+    const vv = 1 - (y + 0.5) / TH;                // canvas y flipped (flipY texture)
+    const fi = vv * (n - 1), i0 = Math.floor(fi), f = fi - i0;
+    const r = prof[i0].x * (1 - f) + prof[Math.min(n - 1, i0 + 1)].x * f;
+    for (let x = 0; x < TW; x++) {
+      const phi = (x + 0.5) / TW * Math.PI * 2;
+      v.set(r * Math.sin(phi), -r * Math.cos(phi));
+      const { d, t } = distToSeg(v, SLASH.a, SLASH.b);
+      const open = (t > 0.001 && t < 0.999 && r < 300) ? halfW(t) * slash : 0;
+      const a = d < open ? 0 : 255;
+      const o = (y * TW + x) * 4; img.data[o] = img.data[o + 1] = img.data[o + 2] = a; img.data[o + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  const alpha = new THREE.CanvasTexture(c); alpha.colorSpace = THREE.NoColorSpace; alpha.anisotropy = 4;
+  const cone = new THREE.Mesh(geo, chrome({ color: 0xe9ebef, roughness: 0.11, alphaMap: alpha, alphaTest: 0.5, side: THREE.DoubleSide }));
+  g.add(cone);
+  // inner darkness + the acid light leaking out of the wound
+  const back = new THREE.Mesh(new THREE.CircleGeometry(300, 96), new THREE.MeshBasicMaterial({ color: 0x000000 }));
+  back.position.z = -175; g.add(back);
+  const gc = document.createElement('canvas'); gc.width = gc.height = 256; const gx = gc.getContext('2d');
+  const grd = gx.createRadialGradient(128, 128, 0, 128, 128, 128);
+  grd.addColorStop(0, 'rgba(225,255,140,1)'); grd.addColorStop(0.25, 'rgba(200,255,30,0.85)'); grd.addColorStop(1, 'rgba(200,255,30,0)');
+  gx.fillStyle = grd; gx.fillRect(0, 0, 256, 256);
+  const glow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(gc), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+  const mid = SLASH.a.clone().add(SLASH.b).multiplyScalar(0.5), ang = Math.atan2(SLASH.b.y - SLASH.a.y, SLASH.b.x - SLASH.a.x);
+  glow.position.set(mid.x, mid.y, -150); glow.rotation.z = ang; glow.scale.set(560, 120, 1); g.add(glow);
+  glow.material.color.setScalar(1.6 * slash);
+  // bolts on the gasket
+  const boltGeo = new THREE.SphereGeometry(7, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2); boltGeo.rotateX(Math.PI / 2);
+  for (let k = 0; k < 8; k++) { const a = (k + 0.5) / 8 * Math.PI * 2; const b = new THREE.Mesh(boltGeo, chrome({ roughness: 0.04 })); b.position.set(319 * Math.cos(a), 319 * Math.sin(a), 10); g.add(b); }
+  return g;
+}
+
+function buildThorns() {
+  const g = new THREE.Group();
+  const mat = chrome({ roughness: 0.035 });
+  // [angle deg, length, base radius, bend, barb]
+  const defs = [
+    [52, 330, 22, 0.62, true], [77, 230, 15, 0.5, false], [-47, 270, 18, 0.55, true], [24, 150, 10, 0.45, false], [-74, 150, 11, 0.5, false],
+  ];
+  for (const side of [1, -1]) for (const [deg, L, r0, bend, barb] of defs) {
+    const a = THREE.MathUtils.degToRad(side > 0 ? deg : 180 - deg);
+    const dir = new THREE.Vector3(Math.cos(a), Math.sin(a), 0);
+    const nrm = new THREE.Vector3(-dir.y, dir.x, 0).multiplyScalar(-side * Math.sign(deg) || -side);   // curl away from the horizontal axis
+    const base = dir.clone().multiplyScalar(300);
+    const p0 = base.clone().setZ(-18);
+    const p1 = base.clone().addScaledVector(dir, L * 0.38).addScaledVector(nrm, -L * 0.12 * bend).setZ(-8);
+    const p2 = base.clone().addScaledVector(dir, L * 0.72).addScaledVector(nrm, L * 0.22 * bend).setZ(4);
+    const p3 = base.clone().addScaledVector(dir, L).addScaledVector(nrm, L * 0.52 * bend).setZ(10);
+    const curve = new THREE.CubicBezierCurve3(p0, p1, p2, p3);
+    g.add(new THREE.Mesh(taperTube(curve, { r0, pow: 1.05, flat: 0.58 }), mat));
+    if (barb) {
+      const q0 = curve.getPointAt(0.34), t0 = curve.getTangentAt(0.34);
+      const out = new THREE.Vector3(-t0.y, t0.x, 0).multiplyScalar(-side * Math.sign(deg));
+      const q1 = q0.clone().addScaledVector(out, L * 0.16).addScaledVector(t0, -L * 0.02);
+      const q2 = q0.clone().addScaledVector(out, L * 0.25).addScaledVector(t0, -L * 0.14).setZ(q0.z + 6);
+      g.add(new THREE.Mesh(taperTube(new THREE.QuadraticBezierCurve3(q0, q1, q2), { r0: r0 * 0.55, pow: 1.0, flat: 0.6, segs: 60 }), mat));
+    }
+  }
+  return g;
+}
+
+function buildWave() {
+  const g = new THREE.Group();
+  const mat = chrome({ roughness: 0.05 });
+  const A = 64, k = Math.PI * 2 / 150;
+  const mk = (x0, x1, G, z) => {
+    const pts = [];
+    for (let x = x0; x <= x1; x += 2) { const s = Math.sin(k * (x + 18)); const y = G < 0.5 ? A * s : A * Math.tanh(G * s) / Math.tanh(G); pts.push(new THREE.Vector3(x, y, z)); }
+    return new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, false, 'catmullrom', 0.0), pts.length * 3, 5.2, 16, false), mat);
+  };
+  g.add(mk(-700, -318, 0.0, -22));   // clean sine in
+  g.add(mk(318, 700, 9.0, -22));     // clipped square out
+  return g;
+}
+
+// =====================================================================
+// 4. chrome type 「失真」 (Noto Serif SC 900, extruded + bevelled)
+// =====================================================================
+async function buildTitle() {
+  const base = './node_modules/@fontsource/noto-serif-sc/files/';
+  const fA = await opentype.load(base + 'noto-serif-sc-115-900-normal.woff');   // 失
+  const fB = await opentype.load(base + 'noto-serif-sc-117-900-normal.woff');   // 真
+  const size = 300, gap = 18;
+  const gA = glyphShapes(fA, '失', size), gB = glyphShapes(fB, '真', size);
+  const opts = { depth: 46, bevelEnabled: true, bevelThickness: 9, bevelSize: 4.5, bevelSegments: 6, curveSegments: 14 };
+  const g = new THREE.Group();
+  const mat = chrome({ roughness: 0.045 });
+  const mA = new THREE.Mesh(new THREE.ExtrudeGeometry(gA.shapes, opts), mat);
+  const mB = new THREE.Mesh(new THREE.ExtrudeGeometry(gB.shapes, opts), mat);
+  mB.position.x = gA.advance + gap;
+  g.add(mA, mB);
+  const box = new THREE.Box3().setFromObject(g), c = box.getCenter(new THREE.Vector3());
+  g.children.forEach(m => m.position.sub(new THREE.Vector3(c.x, c.y, box.max.z)));
+  return g;
+}
+
+// =====================================================================
+// 5. 2D layers: grid, clipped flat headline, micro-type, sparkles, grain
+// =====================================================================
+function drawUnder() {
+  const s = document.getElementById('under');
+  const defs = el(s, 'defs');
+  const rg = el(defs, 'radialGradient', { id: 'haze', cx: '50%', cy: '46%', r: '55%' });
+  el(rg, 'stop', { offset: '0', 'stop-color': '#2a2b2e', 'stop-opacity': '1' });
+  el(rg, 'stop', { offset: '0.55', 'stop-color': '#0d0d0f', 'stop-opacity': '1' });
+  el(rg, 'stop', { offset: '1', 'stop-color': '#050506', 'stop-opacity': '1' });
+  el(s, 'rect', { x: 0, y: 0, width: W, height: H, fill: 'url(#haze)' });
+  const blur = el(defs, 'filter', { id: 'soft', x: '-50%', y: '-50%', width: '200%', height: '200%' });
+  el(blur, 'feGaussianBlur', { stdDeviation: 70 });
+  el(s, 'ellipse', { cx: 600, cy: 900, rx: 240, ry: 90, fill: '#c8ff1e', opacity: 0.07, filter: 'url(#soft)', transform: 'rotate(-38 600 900)' });
+  // 12-column layout grid (70 margin, 940 content, 12 cols)
+  const gG = el(s, 'g', { stroke: '#ffffff', 'stroke-opacity': 0.055, 'stroke-width': 1 });
+  for (let i = 0; i <= 12; i++) { const x = 70 + i * (940 / 12); el(gG, 'line', { x1: x, y1: 0, x2: x, y2: H }); }
+  for (let y = 160; y < H; y += 160) el(gG, 'line', { x1: 0, y1: y, x2: W, y2: y });
+  // headline, flat, clipped like a waveform hitting the rails
+  const clip = el(defs, 'clipPath', { id: 'rails' });
+  const TOP = 222, BOT = 404;
+  el(clip, 'rect', { x: 0, y: TOP, width: W, height: BOT - TOP });
+  const t = el(s, 'text', { x: 70, y: 430, 'font-family': "'Big Shoulders Display'", 'font-weight': 900, 'font-size': 318,
+    textLength: 940, lengthAdjust: 'spacingAndGlyphs', fill: '#e6e7e9', 'clip-path': 'url(#rails)', 'letter-spacing': '-2' }, 'DISTORTION');
+  // ghost of what was clipped off (hairline outline outside the rails)
+  const clipOut = el(defs, 'clipPath', { id: 'outside' });
+  el(clipOut, 'rect', { x: 0, y: 150, width: W, height: TOP - 150 });
+  el(clipOut, 'rect', { x: 0, y: BOT, width: W, height: 60 });
+  el(s, 'text', { x: 70, y: 430, 'font-family': "'Big Shoulders Display'", 'font-weight': 900, 'font-size': 318,
+    textLength: 940, lengthAdjust: 'spacingAndGlyphs', fill: 'none', stroke: '#e6e7e9', 'stroke-opacity': 0.35, 'stroke-width': 1.2, 'clip-path': 'url(#outside)', 'letter-spacing': '-2' }, 'DISTORTION');
+  // the rails
+  el(s, 'line', { x1: 70, y1: TOP, x2: 1010, y2: TOP, stroke: '#c8ff1e', 'stroke-width': 2 });
+  el(s, 'line', { x1: 70, y1: BOT, x2: 1010, y2: BOT, stroke: '#c8ff1e', 'stroke-width': 2 });
+  return { TOP, BOT };
+}
+
+function drawOver(rails) {
+  const s = document.getElementById('over');
+  const defs = el(s, 'defs');
+  const f = el(defs, 'filter', { id: 'glint', x: '-100%', y: '-100%', width: '300%', height: '300%' });
+  el(f, 'feGaussianBlur', { stdDeviation: 3, result: 'b' });
+  const m = el(f, 'feMerge'); el(m, 'feMergeNode', { in: 'b' }); el(m, 'feMergeNode', { in: 'SourceGraphic' });
+  const mono = (x, y, str, o = {}) => el(s, 'text', Object.assign({ x, y, 'font-size': 13, fill: '#a9aaad', 'letter-spacing': '1.3' }, o), str);
+
+  // registration marks
+  for (const [x, y] of [[40, 40], [1040, 40], [40, 1880], [1040, 1880]]) {
+    el(s, 'path', { d: `M${x - 12} ${y}H${x + 12}M${x} ${y - 12}V${y + 12}`, stroke: '#8d8e91', 'stroke-width': 1 });
+    el(s, 'circle', { cx: x, cy: y, r: 5, fill: 'none', stroke: '#8d8e91', 'stroke-width': 1 });
+  }
+  // header
+  mono(70, 104, 'DST—01', { fill: '#e6e7e9', 'font-weight': 700, 'font-size': 15 });
+  mono(160, 104, '失真 / DISTORTION / SIGNAL CHAIN STUDY', { 'font-family': "'JetBrains Mono','Noto Serif SC'" });
+  mono(70, 128, 'GTR → AMP → CONE(SLASHED) → TAPE');
+  el(s, 'rect', { x: 836, y: 88, width: 174, height: 24, fill: '#c8ff1e' });
+  mono(846, 105, 'GAIN  +∞ dB', { fill: '#050506', 'font-weight': 700, 'font-size': 14 });
+  mono(1010, 136, 'CLIP 0 dBFS · 3RD 5TH 7TH HARM.', { 'text-anchor': 'end' });
+  el(s, 'line', { x1: 70, y1: 150, x2: 1010, y2: 150, stroke: '#ffffff', 'stroke-opacity': 0.25 });
+  // rail labels
+  mono(1010, rails.TOP - 8, '+ RAIL', { 'text-anchor': 'end', fill: '#c8ff1e', 'font-size': 11 });
+  mono(1010, rails.BOT + 18, '− RAIL', { 'text-anchor': 'end', fill: '#c8ff1e', 'font-size': 11 });
+  // waveform labels
+  mono(70, 760, 'IN', { fill: '#e6e7e9', 'font-weight': 700 });
+  mono(70, 778, 'SINE · 110 Hz', { 'font-size': 11 });
+  mono(1010, 760, 'OUT', { fill: '#e6e7e9', 'font-weight': 700, 'text-anchor': 'end' });
+  mono(1010, 778, 'CLIPPED · SQUARE', { 'font-size': 11, 'text-anchor': 'end' });
+  // slash callout with leader
+  el(s, 'path', { d: 'M742 1040 L812 1110 H1010', stroke: '#e6e7e9', 'stroke-opacity': 0.7, fill: 'none', 'stroke-width': 1 });
+  el(s, 'circle', { cx: 742, cy: 1040, r: 3.5, fill: '#c8ff1e' });
+  mono(1010, 1100, 'CUT / RAZOR / 1964', { 'text-anchor': 'end', fill: '#e6e7e9' });
+  // left vertical spine text
+  const v = el(s, 'text', { x: 0, y: 0, 'font-size': 11, fill: '#7d7e81', 'letter-spacing': '3', transform: 'translate(44 1180) rotate(-90)' }, 'BROKEN SPEAKERS — FUZZ — OVERDRIVE — 1951 → 1964');
+  // footer (bottom 300 px: micro-type only)
+  const fy = 1700;
+  el(s, 'line', { x1: 70, y1: fy - 40, x2: 1010, y2: fy - 40, stroke: '#ffffff', 'stroke-opacity': 0.25 });
+  const stops = [[70, '1951', 'ROCKET 88', 'AMP FELL · CONE BURST'], [305, '1958', 'RUMBLE', 'PENCIL HOLES'], [540, '1962', 'FZ-1', 'FIRST FUZZ BOX'], [775, '1964', 'YOU REALLY GOT ME', 'RAZOR · CONE']];
+  stops.forEach(([x, y1, a, b], i) => {
+    el(s, 'line', { x1: x, y1: fy - 40, x2: x, y2: fy - 28, stroke: i === 3 ? '#c8ff1e' : '#e6e7e9', 'stroke-width': 2 });
+    mono(x, fy - 6, y1, { fill: i === 3 ? '#c8ff1e' : '#e6e7e9', 'font-weight': 700, 'font-size': 15 });
+    mono(x, fy + 14, a, { 'font-size': 11 });
+    mono(x, fy + 30, b, { 'font-size': 10, fill: '#7d7e81' });
+  });
+  // tick ruler
+  const tg = el(s, 'g', { stroke: '#8d8e91', 'stroke-width': 1 });
+  for (let i = 0; i <= 94; i++) { const x = 70 + i * 10; el(tg, 'line', { x1: x, y1: 1790, x2: x, y2: 1790 + (i % 10 === 0 ? 14 : i % 5 === 0 ? 9 : 5) }); }
+  mono(70, 1832, 'STYLE FRAME B2 · ACID GRAPHICS · 1080×1920', { 'font-size': 10, fill: '#6c6d70' });
+  mono(1010, 1832, '失真 · DISTORTION', { 'font-size': 10, fill: '#6c6d70', 'text-anchor': 'end', 'font-family': "'JetBrains Mono','Noto Serif SC'" });
+  return { s, glint: (x, y, r, rot = 0, op = 1) => {
+    const k = 0.11;
+    el(s, 'path', { d: `M0 ${-r} L${r * k} ${-r * k} L${r} 0 L${r * k} ${r * k} L0 ${r} L${-r * k} ${r * k} L${-r} 0 L${-r * k} ${-r * k} Z`, fill: '#ffffff', opacity: op, filter: 'url(#glint)', transform: `translate(${x} ${y}) rotate(${rot})` });
+  } };
+}
+
+function drawGrain(seed = 7) {
+  const c = document.getElementById('grain'), ctx = c.getContext('2d'), img = ctx.createImageData(W, H), rnd = mulberry32(seed);
+  for (let i = 0; i < W * H; i++) { const v = 128 + (rnd() + rnd() + rnd() - 1.5) * 70; const o = i * 4; img.data[o] = img.data[o + 1] = img.data[o + 2] = v; img.data[o + 3] = 255; }
+  ctx.putImageData(img, 0, 0);
+}
+
+// cheap, controllable bloom: threshold the GL frame at 1/4 res, blur, screen on top
+function bloom(strength = 0.85, thresh = 0.82) {
+  const q = 4, w = W / q, h = H / q;
+  const tmp = document.createElement('canvas'); tmp.width = w; tmp.height = h;
+  const t = tmp.getContext('2d'); t.drawImage(canvas, 0, 0, w, h);
+  const d = t.getImageData(0, 0, w, h), a = d.data;
+  for (let i = 0; i < a.length; i += 4) {
+    const al = a[i + 3] / 255, l = (0.2126 * a[i] + 0.7152 * a[i + 1] + 0.0722 * a[i + 2]) / 255;
+    const k = Math.max(0, (l - thresh) / (1 - thresh)) * al;
+    a[i] *= k; a[i + 1] *= k; a[i + 2] *= k; a[i + 3] = 255;
+  }
+  t.putImageData(d, 0, 0);
+  const out = document.getElementById('bloom').getContext('2d');
+  out.clearRect(0, 0, W, H); out.globalAlpha = strength;
+  out.filter = 'blur(10px)'; out.drawImage(tmp, 0, 0, W, H);
+  out.filter = 'blur(34px)'; out.drawImage(tmp, 0, 0, W, H);
+  out.filter = 'none'; out.globalAlpha = 1;
+}
+
+// =====================================================================
+// 6. assemble + renderAt(t)
+// =====================================================================
+const hero = new THREE.Group();
+const speaker = buildSpeaker(1);
+const thorns = buildThorns();
+const wave = buildWave();
+hero.add(speaker, thorns, wave);
+const hp = P(SPK.cx, SPK.cy);
+hero.position.copy(hp);
+hero.rotation.set(-0.16, 0.24, 0.0);
+scene.add(hero);
+
+const title = await buildTitle();
+title.position.copy(P(540, 1392)).setZ(40);
+title.rotation.set(-0.2, 0, 0);
+scene.add(title);
+
+const rails = drawUnder();
+const over = drawOver(rails);
+drawGrain();
+
+window.renderAt = (t = 0) => {
+  renderer.render(scene, camera);
+  bloom();
+};
+
+await document.fonts.ready;
+window.renderAt(0);
+// sparkles, placed on chrome highlights
+over.glint(271, 666, 34, 0, 0.95);
+over.glint(842, 600, 22, 0, 0.85);
+over.glint(668, 1292, 26, 0, 0.9);
+window.__ready = true;
+</script>
+</body>
+</html>
