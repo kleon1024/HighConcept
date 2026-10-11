@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>Distortion Film</title>
+<link rel="stylesheet" href="node_modules/@fontsource/big-shoulders-display/900.css">
+<link rel="stylesheet" href="node_modules/@fontsource/jetbrains-mono/400.css">
+<link rel="stylesheet" href="node_modules/@fontsource/jetbrains-mono/700.css">
+<link rel="stylesheet" href="node_modules/@fontsource/noto-serif-sc/700.css">
+<style>
+  html, body { margin: 0; padding: 0; background: #050506; }
+  #stage { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #050506; }
+  #stage > * { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; }
+  #under { z-index: 1; } #gl, #post { z-index: 3; } #post { visibility: hidden; }
+  #bloom { z-index: 4; mix-blend-mode: screen; } #over { z-index: 5; } #grain { z-index: 6; mix-blend-mode: overlay; opacity: .42; }
+  svg text { font-family: 'JetBrains Mono', monospace; }
+</style>
+<script type="importmap">{ "imports": { "three": "./node_modules/three/build/three.module.js", "three/addons/": "./node_modules/three/examples/jsm/" } }</script>
+</head>
+<body>
+<div id="stage">
+  <svg id="under" viewBox="0 0 1080 1920"></svg>
+  <canvas id="gl" width="1080" height="1920"></canvas>
+  <canvas id="post" width="1080" height="1920"></canvas>
+  <canvas id="bloom" width="1080" height="1920"></canvas>
+  <svg id="over" viewBox="0 0 1080 1920"></svg>
+  <canvas id="grain" width="1080" height="1920"></canvas>
+</div>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>

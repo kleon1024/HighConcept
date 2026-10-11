@@ -83,7 +83,7 @@ float cloudField(vec2 p, int oct){
   return fbm(p + 1.4*q, oct);
 }
 // heightfield for the sea of clouds (cheap, used while marching)
-float HF(vec2 p, float cov){ float f = fbm(p, 4) + 0.06*vnoise(p*7.0); float k = smoothstep(cov, cov + 0.42, f); return sqrt(k)*0.85 + k*0.15; }
+float HF(vec2 p, float cov){ vec2 q = vec2(vnoise(p*0.7+3.0), vnoise(p*0.7+9.0)); float f = fbm(p + q*0.8, 3) + 0.16*abs(vnoise(p*2.6)*2.0-1.0) + 0.07*abs(vnoise(p*6.1+4.0)*2.0-1.0); float k = smoothstep(cov, cov + 0.55, f); return k*k*(3.0-2.0*k); }
 void main(){
   vec2 uv = vUv; vec2 px = uv*uRes; float asp = uRes.x/uRes.y;
   vec2 toCore = normalize(uCore - px + 1e-4);
@@ -97,9 +97,9 @@ void main(){
     vec3 ro = vec3(uCDrift.x, 1.0*s, uCDrift.y);
     float amp = Q.y; float ry = -rd.y*s;
     float t0 = (1.0 - amp)/ry, t1 = 1.0/ry;
-    float t = t0, tl = t0; float hit = -1.0; float h = 0.0;
-    const int N = 40;
+    const int N = 48;
     float dt = (t1 - t0)/float(N);
+    float t = t0 + dt*hash(px + 0.37), tl = t0; float hit = -1.0; float h = 0.0;
     for (int i = 0; i < N; i++) {
       vec3 p = ro + rd*t; float hh = amp * HF(p.xz*P.z, P.w);
       if (p.y*s <= hh) { hit = t; h = hh; break; }
@@ -108,7 +108,7 @@ void main(){
     if (hit < 0.0) { hit = t1; h = 0.0; }
     else { // refine
       float a = tl, b = hit;
-      for (int k = 0; k < 5; k++) { float m = 0.5*(a+b); vec3 p = ro + rd*m; if (p.y*s <= amp*HF(p.xz*P.z, P.w)) b = m; else a = m; }
+      for (int k = 0; k < 6; k++) { float m = 0.5*(a+b); vec3 p = ro + rd*m; if (p.y*s <= amp*HF(p.xz*P.z, P.w)) b = m; else a = m; }
       hit = b; vec3 p = ro + rd*hit; h = amp*HF(p.xz*P.z, P.w);
     }
     vec3 p = ro + rd*hit; vec2 w = p.xz*P.z;
@@ -122,19 +122,49 @@ void main(){
     float det = cloudField(w*2.3 + vec2(uTime*0.02, 0.0), 4);
     float hn = h/amp;
     float dif = clamp(dot(n, L)*0.5 + 0.5, 0.0, 1.0);
-    float rim = pow(1.0 - clamp(dot(n, -rd), 0.0, 1.0), 4.0) * (0.3 + 0.7*clamp(dot(rd, L), 0.0, 1.0));
+    float rim = pow(1.0 - clamp(dot(n, -rd), 0.0, 1.0), 3.0) * (0.3 + 0.7*clamp(dot(rd, L), 0.0, 1.0)) * (0.6 + 0.8*det);
     float hv = smoothstep(0.3, 0.75, vnoise(w*0.45 + 11.0));
     vec3 litc = mix(uCLit, uCAlt, hv);
-    vec3 col = mix(uCSh, litc, clamp(dif*0.5 + hn*0.6 + (det-0.5)*Q.w, 0.0, 1.0));
+    vec3 col = mix(uCSh, litc, clamp(dif*0.55 + hn*0.35 + (det-0.5)*Q.w, 0.0, 1.0));
     float bs = vnoise(vec2(w.x*1.2 - w.y*0.4, w.y*10.0)); col *= 0.9 + 0.2*bs;
     col *= 0.55 + 0.45*smoothstep(0.0, 0.35, hn);                  // valleys sink into shadow
     col += uCRim * rim * Q.z * (0.5 + 1.5*exp(-coreD*2.5)) * smoothstep(0.05, 0.4, hn);
     float fwd = pow(clamp(dot(rd, L), 0.0, 1.0), 6.0);
-    vec3 hzc = uCHaze * (1.0 + 1.2*fwd);
+    vec3 hzc = uCHaze * (1.0 + 0.45*fwd);
     float f = 1.0 - exp(-(hit - t0*0.9) * Q.x);
     col = mix(col, hzc, clamp(f, 0.0, 1.0));
-    float a = uCOp * smoothstep(0.0, 0.006, ry);
+    float a = uCOp * smoothstep(0.0, 0.035, ry);
     o = vec4(col*a, a); return;
+  }
+  if (uCT == 4) {
+    // layered sea of cloud rows (云海): P x=horizonY, y=nearTopY, z=scale, w=coverage ; Q x=haze, y=rows, z=rimK, w=detail
+    int NR = int(Q.y);
+    vec4 acc = vec4(0.0);
+    for (int i = 0; i < 9; i++) {
+      if (i >= NR) break;
+      float u = float(i)/max(1.0, float(NR-1));            // 0 far → 1 near
+      float top = mix(P.x - 0.004, P.y, pow(u, 1.5));
+      float rowH = mix(0.025, 0.32, pow(u, 1.4));
+      if (uv.y > top + rowH*0.6) continue;
+      float sc = P.z * mix(7.0, 1.0, pow(u, 0.8));
+      vec2 q = vec2((uv.x-0.5)*asp*sc, (uv.y - top)/rowH*1.6) + vec2(float(i)*13.7, float(i)*3.1) + uCDrift*mix(0.3, 1.0, u)*vec2(1.0, 0.0);
+      float n1 = cloudField(q, 5);
+      float edge = (top - uv.y)/rowH + (n1 - 0.5)*1.25 + 0.25 - P.w*0.5;
+      float a = smoothstep(-0.01, 0.07, edge);
+      if (a <= 0.001) continue;
+      float n2 = cloudField(q + vec2(-toCore.x, 1.0)*0.12, 5);
+      float rim = clamp((n1 - n2)*Q.z + 0.5, 0.0, 1.0);
+      float depthIn = clamp(edge*1.6, 0.0, 1.0);
+      vec3 litc = mix(uCLit, uCAlt, smoothstep(0.35, 0.7, vnoise(q*0.35 + 5.0)));
+      vec3 col = mix(litc, uCSh, smoothstep(0.05, 0.9, depthIn) * 0.85);
+      col = mix(col, litc*1.15, rim*0.45*(1.0-depthIn));
+      col += uCRim * pow(1.0 - smoothstep(0.0, 0.22, edge), 2.0) * (0.35 + 1.4*exp(-coreD*2.2)) * 0.9;
+      col *= 0.9 + 0.2*vnoise(vec2(q.x*1.4, q.y*10.0));
+      float hz = (1.0 - u) * Q.x;
+      col = mix(col, uCHaze, clamp(hz, 0.0, 0.95));
+      acc = vec4(col*a, a) + acc*(1.0 - a);   // nearer rows go over farther ones
+    }
+    o = acc * uCOp; return;
   }
   if (uCT == 2) {
     // screen bank — P: x=yTop, y=yBottom, z=scale, w=coverage ; Q: x=edge softness, y=softness, z=lightK, w=haze
@@ -179,8 +209,12 @@ void main(){
   c.r = texture(uScene, uv + off).r; c.g = texture(uScene, uv).g; c.b = texture(uScene, uv - off).b;
   vec3 b = texture(uB1,uv).rgb*0.7 + texture(uB2,uv).rgb*0.7 + texture(uB3,uv).rgb*0.5 + texture(uB4,uv).rgb*0.35;
   c += b * uBloom * uBloomTint;
-  // filmic shoulder that keeps hue
-  c = vec3(1.0) - exp(-c * uExpo);
+  // tone map on luminance (keeps saturation), blended with a per-channel shoulder for the hottest highlights
+  float L0 = dot(c, vec3(0.2126,0.7152,0.0722));
+  vec3 cl = c * (1.0 - exp(-L0*uExpo)) / max(L0, 1e-4);
+  vec3 cp = vec3(1.0) - exp(-c * uExpo);
+  float hot = smoothstep(0.75, 1.6, max(cl.r, max(cl.g, cl.b)));
+  c = mix(cl, cp, 0.25 + 0.75*hot);
   float l = dot(c, vec3(0.2126,0.7152,0.0722));
   c = mix(vec3(l), c, uSat);
   c = uLift + c*(uGain - uLift);

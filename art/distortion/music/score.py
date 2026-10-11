@@ -225,7 +225,7 @@ def build():
     ld = vibrato_delay(ld, T(15, 8) + 0.05, T(17))
     ld = chain(ld, bw(2, 4200, 'low'), peq(1400, 2.5, 1.0))
     ld = delay_fx(ld, BEAT * 0.75, fb=0.35, mix=0.28)
-    stems['lead'] = pan(level(ld, -15.5), 0.12)
+    stems['lead'] = pan(level(ld, -12.5), 0.12)
 
     # drums + bass through the engine (levelled stems + shared reverb)
     mix_db, eng_stems = sc.render({'drums': SF2('mkit', 0, drum=False, level=-11.5, verb=0.16, cap=127),
@@ -263,16 +263,16 @@ def build():
 
     # ───── SFX (shared library, read-only, by id; nothing harsh, all low-passed on the bus)
     fx = Sfx(DUR, SR)
-    fx.play(0.06, '2792', -18.0, align='peak')            # razor swipe across the cone
-    fx.play(0.18, '2996', -24.0, align='onset', rate=0.85)  # paper cone tearing
+    fx.play(0.20, '2792', -18.0, align='peak')            # razor swipe across the cone (blade crosses 0.0-0.42 s)
+    fx.play(0.10, '2996', -24.0, align='onset', rate=0.85)  # paper cone tearing
     fx.play(T(2), '168', -24.0, align='peak')             # T1 zoom-through the wound
     fx.play(T(4), '1092', -23.0, align='peak')            # T2 rewind (the slash heals)
     fx.play(T(5), '752', -20.0, align='onset')            # 1951: the speaker lands
     fx.play(T(5) + 0.35, '386', -28.0, align='onset')     #   … paper stuffed in the cone
     fx.play(T(6), '2951', -26.0, align='onset')           # T3 slice cut
     for tj in timeline['jabs']: fx.play(tj, '2182', -24.0, align='onset')   # pencil jabs (wood)
-    fx.play(T(8), '3049', -21.0, align='onset')           # 1962: stomp on the box
-    fx.play(T(10) - 0.12, '2792', -20.0, align='peak')    # 1964: the razor again
+    fx.play(11.625, '3049', -21.0, align='onset')         # 1962: stomp on the box (footswitch on beat 2)
+    fx.play(14.80, '2792', -20.0, align='peak')           # 1964: the razor again (blade crosses 14.58-15.02 s)
     fx.play(T(12), '166', -23.0, align='peak')            # T6 dive
     fx.play(T(16) + 0.2, '790', -27.0, align='onset', maxlen=1.25)   # riser into the final chord
     sfxbus = fx.mix(ir, verb=0.12, lp=7000)

@@ -420,13 +420,13 @@ function drawUnder() {
   const clip = el(defs, 'clipPath', { id: 'rails' });
   const TOP = 222, BOT = 404;
   el(clip, 'rect', { x: 0, y: TOP, width: W, height: BOT - TOP });
-  const t = el(s, 'text', { x: 70, y: 430, 'font-family': "'Big Shoulders Display'", 'font-weight': 900, 'font-size': 318,
+  const t = el(s, 'text', { x: 70, y: 430, style: "font-family:'Big Shoulders Display';font-weight:900", 'font-size': 318,
     textLength: 940, lengthAdjust: 'spacingAndGlyphs', fill: '#c3c4c7', 'clip-path': 'url(#rails)', 'letter-spacing': '-2' }, 'DISTORTION');
   // ghost of what was clipped off (hairline outline outside the rails)
   const clipOut = el(defs, 'clipPath', { id: 'outside' });
   el(clipOut, 'rect', { x: 0, y: 150, width: W, height: TOP - 150 });
   el(clipOut, 'rect', { x: 0, y: BOT, width: W, height: 60 });
-  el(s, 'text', { x: 70, y: 430, 'font-family': "'Big Shoulders Display'", 'font-weight': 900, 'font-size': 318,
+  el(s, 'text', { x: 70, y: 430, style: "font-family:'Big Shoulders Display';font-weight:900", 'font-size': 318,
     textLength: 940, lengthAdjust: 'spacingAndGlyphs', fill: 'none', stroke: '#e6e7e9', 'stroke-opacity': 0.35, 'stroke-width': 1.2, 'clip-path': 'url(#outside)', 'letter-spacing': '-2' }, 'DISTORTION');
   // the rails
   el(s, 'line', { x1: 70, y1: TOP, x2: 1010, y2: TOP, stroke: '#c8ff1e', 'stroke-width': 2 });
@@ -472,7 +472,7 @@ function drawOver(rails) {
   // footer (bottom 300 px: micro-type only)
   const fy = 1700;
   el(s, 'line', { x1: 70, y1: fy - 40, x2: 1010, y2: fy - 40, stroke: '#ffffff', 'stroke-opacity': 0.25 });
-  const stops = [[70, '1951', 'ROCKET 88', 'AMP FELL · CONE BURST'], [305, '1958', 'RUMBLE', 'PENCIL HOLES'], [540, '1962', 'FZ-1', 'FIRST FUZZ BOX'], [775, '1964', 'YOU REALLY GOT ME', 'RAZOR · CONE']];
+  const stops = [[70, '1951', 'ROCKET 88', 'DAMAGED AMP · CONE BURST'], [305, '1958', 'RUMBLE', 'PENCIL HOLES'], [540, '1962', 'FZ-1', 'FIRST FUZZ BOX'], [775, '1964', 'YOU REALLY GOT ME', 'RAZOR · CONE']];
   stops.forEach(([x, y1, a, b], i) => {
     el(s, 'line', { x1: x, y1: fy - 40, x2: x, y2: fy - 28, stroke: i === 3 ? '#c8ff1e' : '#e6e7e9', 'stroke-width': 2 });
     mono(x, fy - 6, y1, { fill: i === 3 ? '#c8ff1e' : '#e6e7e9', 'font-weight': 700, 'font-size': 15 });

@@ -173,12 +173,14 @@ A.stair = (ctx, o) => {
     if (s0.w < 0.2) continue;
     const hz = hazeOf(s0.z); const gap = s1.y - s0.y; if (gap < 0.15) { continue; }
     const lip = s0.y + gap * 0.38;
-    // tread (lit from the core above)
-    ctx.fillStyle = A.css(A.mix(P.tread, hzc, hz), a0);
+    // tread (lit from the core above), varied per step
+    const vr = 0.85 + 0.3 * hh(s0.i * 3.7 + 1.3);
+    const tg = ctx.createLinearGradient(s0.x - s0.w, 0, s0.x + s0.w, 0); const tc = A.mix(A.mul(P.tread, vr), hzc, hz);
+    tg.addColorStop(0, A.css(A.mul(tc, 0.6), a0)); tg.addColorStop(0.5, A.css(A.mul(tc, 1.15), a0)); tg.addColorStop(1, A.css(A.mul(tc, 0.6), a0)); ctx.fillStyle = tg;
     ctx.beginPath(); ctx.moveTo(s0.x - s0.w, s0.y); ctx.lineTo(s0.x + s0.w, s0.y); ctx.lineTo(A.lerp(s0.x, s1.x, .38) + A.lerp(s0.w, s1.w, .38), lip); ctx.lineTo(A.lerp(s0.x, s1.x, .38) - A.lerp(s0.w, s1.w, .38), lip); ctx.fill();
     // riser (in shadow, coloured)
-    const rg = ctx.createLinearGradient(0, lip, 0, s1.y);
-    rg.addColorStop(0, A.css(A.mix(P.riserTop, hzc, hz), a0)); rg.addColorStop(1, A.css(A.mix(P.riser, hzc, hz), a0));
+    const rg = ctx.createLinearGradient(s0.x - s0.w, lip, s0.x + s0.w, s1.y);
+    rg.addColorStop(0, A.css(A.mix(A.mul(P.riser, 0.7), hzc, hz), a0)); rg.addColorStop(0.5, A.css(A.mix(A.mul(P.riserTop, vr), hzc, hz), a0)); rg.addColorStop(1, A.css(A.mix(A.mul(P.riser, 0.7), hzc, hz), a0));
     ctx.fillStyle = rg; ctx.beginPath();
     ctx.moveTo(A.lerp(s0.x, s1.x, .38) - A.lerp(s0.w, s1.w, .38), lip); ctx.lineTo(A.lerp(s0.x, s1.x, .38) + A.lerp(s0.w, s1.w, .38), lip);
     ctx.lineTo(s1.x + s1.w, s1.y); ctx.lineTo(s1.x - s1.w, s1.y); ctx.fill();
@@ -212,7 +214,8 @@ A.stair = (ctx, o) => {
     ctx.lineWidth = 1.0; ctx.stroke();
     for (let k = S.length - 1; k >= 0; k--) { const s = S[k]; if (s.w < 0.6) continue; const h = s.w * 0.22, hz = hazeOf(s.z);
       if (s.i % 2 === 0) { ctx.strokeStyle = A.css(A.mix(P.rail, hzc, hz), a0 * 0.8); ctx.lineWidth = Math.max(0.6, s.w / 160);
-        ctx.beginPath(); ctx.moveTo(s.x + side * s.w, s.y); ctx.lineTo(s.x + side * s.w, s.y - h); ctx.stroke(); }
+        ctx.beginPath(); ctx.moveTo(s.x + side * s.w, s.y); ctx.lineTo(s.x + side * s.w, s.y - h); ctx.stroke();
+        if (s.w > 25) { ctx.fillStyle = A.css(A.mix(P.rail, hzc, hz), a0 * 0.9); ctx.beginPath(); ctx.arc(s.x + side * s.w, s.y - h, Math.max(1, s.w * 0.018), 0, TAU); ctx.fill(); } }
       if (s.i % 8 === 0) { // lamp
         ctx.globalCompositeOperation = 'lighter';
         const rr = Math.max(1.2, s.w * 0.045), lx = s.x + side * s.w, ly = s.y - h * 1.25;
@@ -234,9 +237,9 @@ const peakCache = {};
 const peakShape = (seed) => {
   if (peakCache[seed]) return peakCache[seed];
   const r = A.rng(seed); const cols = [];
-  const nc = 3 + Math.floor(r() * 3);
+  const nc = 5 + Math.floor(r() * 4);
   for (let i = 0; i < nc; i++) { const main = i === 0;
-    cols.push({ x: main ? (r() - 0.5) * 0.15 : (r() - 0.5) * 0.75, w: main ? 0.2 + r() * 0.08 : 0.08 + r() * 0.12, h: main ? 1.0 : 0.35 + r() * 0.5, seed: r() * 100, tilt: (r() - 0.5) * 0.08 }); }
+    cols.push({ x: main ? (r() - 0.5) * 0.12 : (r() - 0.5) * 0.8, w: main ? 0.26 + r() * 0.08 : 0.09 + r() * 0.13, h: main ? 1.0 : 0.3 + r() * 0.55, seed: r() * 100, tilt: (r() - 0.5) * 0.1 }); }
   cols.sort((a, b) => a.h - b.h);
   peakCache[seed] = { cols, r: A.rng(seed + 77) };
   return peakCache[seed];
@@ -251,9 +254,11 @@ A.peak = (ctx, o) => {
   cols.forEach((c, ci) => {
     const cx = o.x + c.x * o.w, cw = c.w * o.w, ch = c.h * o.h, top = o.y - ch;
     const N = 26, Lp = [], Rp = [];
-    for (let i = 0; i <= N; i++) { const u = i / N; const y = A.lerp(top, o.y + o.h * 0.42 * (1 - Math.abs(c.x)), u);
-      const taper = u < 0.06 ? Math.sqrt(u / 0.06) * 0.85 + 0.15 : (u > 0.62 ? Math.max(0.02, 1 - (u - 0.62) / 0.38) : 1);
-      const jag = (A.fbm1(u * 9 + c.seed, 3, 3) - 0.5) * 0.35, jag2 = (A.fbm1(u * 9 + c.seed + 40, 5, 3) - 0.5) * 0.35;
+    for (let i = 0; i <= N; i++) { const u = i / N; const y = A.lerp(top, o.y + o.h * 0.22 * (1 - Math.abs(c.x)), u);
+      const taper = u < 0.22 ? 0.12 + 0.88 * Math.pow(u / 0.22, 0.6) : (u > 0.6 ? Math.max(0.02, Math.pow(1 - (u - 0.6) / 0.4, 1.3)) : 1);
+      const q = (x) => Math.floor(x * 5) / 5; // ledges
+      const jag = (q(A.fbm1(u * 6 + c.seed, 3, 3)) - 0.5) * 0.45 + (A.n1(u * 40 + c.seed, 7) - 0.5) * 0.12;
+      const jag2 = (q(A.fbm1(u * 6 + c.seed + 40, 5, 3)) - 0.5) * 0.45 + (A.n1(u * 40 + c.seed + 9, 8) - 0.5) * 0.12;
       Lp.push([cx - cw / 2 * taper * (1 + jag) + c.tilt * (top - y), y]); Rp.push([cx + cw / 2 * taper * (1 + jag2) + c.tilt * (top - y), y]); }
     const path = () => { ctx.beginPath(); Lp.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); for (let i = N; i >= 0; i--) ctx.lineTo(Rp[i][0], Rp[i][1]); ctx.closePath(); };
     // rim
@@ -262,16 +267,16 @@ A.peak = (ctx, o) => {
     path(); ctx.save(); ctx.clip();
     // cylinder shading: shadow face → lit face (towards the light)
     const g = ctx.createLinearGradient(cx - lx * cw / 2, 0, cx + lx * cw / 2, 0);
-    g.addColorStop(0, A.css(C(P.shade), a0)); g.addColorStop(0.45, A.css(C(P.mid), a0)); g.addColorStop(0.8, A.css(C(P.top), a0)); g.addColorStop(1, A.css(C(P.litFace || P.top), a0));
+    g.addColorStop(0, A.css(C(P.shade), a0)); g.addColorStop(0.55, A.css(C(P.mid), a0)); g.addColorStop(0.88, A.css(C(P.top), a0)); g.addColorStop(1, A.css(C(P.litFace || P.top), a0));
     ctx.fillStyle = g; ctx.fillRect(cx - cw, top - 10, cw * 2, o.h * 1.6);
     // vertical value: darker and cooler towards the base
     const vg = ctx.createLinearGradient(0, top, 0, o.y + o.h * 0.4);
-    vg.addColorStop(0, A.css(C(P.low), 0)); vg.addColorStop(0.55, A.css(C(P.low), 0.55 * a0)); vg.addColorStop(1, A.css(C(P.base), 0.95 * a0));
+    vg.addColorStop(0, A.css(C(P.low), 0.1 * a0)); vg.addColorStop(0.35, A.css(C(P.low), 0.6 * a0)); vg.addColorStop(1, A.css(C(P.base), 0.98 * a0));
     ctx.fillStyle = vg; ctx.fillRect(cx - cw, top - 10, cw * 2, o.h * 1.6);
     if (det) { // vertical cun hairlines + horizontal strata
       const r = A.rng(Math.floor(c.seed * 1000)); ctx.lineCap = 'round';
-      for (let k = 0; k < 18 + cw / 4; k++) { const fx = r(), x = cx - cw / 2 + fx * cw, y0 = top + r() * ch * 0.7, ln = (0.08 + r() * 0.3) * ch;
-        const lit = (fx - 0.5) * lx > 0.1; ctx.strokeStyle = A.css(C(lit ? P.cun : P.cun2), (lit ? 0.55 : 0.4) * a0); ctx.lineWidth = Math.max(0.5, cw / 120);
+      for (let k = 0; k < 26 + cw / 2.5; k++) { const fx = r(), x = cx - cw / 2 + fx * cw, y0 = top + r() * ch * 0.7, ln = (0.08 + r() * 0.3) * ch;
+        const lit = (fx - 0.5) * lx > 0.1; ctx.strokeStyle = A.css(C(lit ? P.cun : P.cun2), (lit ? 0.75 : 0.5) * a0); ctx.lineWidth = Math.max(0.6, cw / 90);
         ctx.beginPath(); ctx.moveTo(x, y0); ctx.quadraticCurveTo(x + (r() - 0.5) * cw * 0.08, y0 + ln * 0.5, x + (r() - 0.5) * cw * 0.05, y0 + ln); ctx.stroke(); }
       for (let k = 0; k < 6; k++) { const y = top + ch * (0.12 + r() * 0.5); ctx.strokeStyle = A.css(C(P.cun2), 0.35 * a0); ctx.lineWidth = Math.max(0.5, cw / 160);
         ctx.beginPath(); ctx.moveTo(cx - cw / 2, y); ctx.quadraticCurveTo(cx, y + (r() - 0.5) * ch * 0.04, cx + cw / 2, y + (r() - 0.5) * ch * 0.03); ctx.stroke(); }
@@ -366,6 +371,24 @@ A.figure = (ctx, o) => {
     ctx.beginPath(); ctx.arc(0, 0, 0.04, 0, TAU); ctx.stroke(); ctx.beginPath(); ctx.arc(0, 0, 0.031, 0, TAU); ctx.stroke();
     for (let i = 0; i < 8; i++) { ctx.save(); ctx.rotate(i / 8 * TAU); ctx.beginPath(); ctx.moveTo(-0.009, -0.035); ctx.lineTo(0.009, -0.035); ctx.stroke(); ctx.restore(); }
     ctx.beginPath(); ctx.arc(0, 0, 0.014, 0, TAU); ctx.stroke(); ctx.restore(); }
+  // close-up detail: hair strands with coloured highlights, collar / cuff embroidery, swinging hairpin pendants
+  if (s > 500) {
+    const rr = A.rng(17); ctx.lineCap = 'round';
+    const h = sw(1.3, 0.5) * 0.02 + wx * 0.04, ln = 0.4 - fly * 0.04;
+    for (let k = 0; k < 70; k++) { const f = rr() * 2 - 1, x0 = f * 0.034, c = rr();
+      ctx.strokeStyle = A.css(c < 0.12 ? P.ribbonB : (c < 0.22 ? P.sash : (c < 0.5 ? P.figRim : P.figTop)), (c < 0.5 ? 0.55 : 0.35) * a0); ctx.lineWidth = (0.6 + rr() * 1.4) / s;
+      ctx.beginPath(); ctx.moveTo(x0, -0.9); ctx.bezierCurveTo(x0 * 1.3 - 0.01, -0.78, x0 + h * 0.5, -0.66, x0 * 0.5 + h * (0.8 + rr() * 0.4), -0.9 + ln * (0.85 + rr() * 0.25)); ctx.stroke(); }
+    // collar band
+    ctx.strokeStyle = A.css(P.gold, 0.8 * a0); ctx.lineWidth = 1.2 / s;
+    for (const off of [0, 0.008]) { ctx.beginPath(); ctx.moveTo(-0.075, -0.83 + off); ctx.quadraticCurveTo(0, -0.81 + off, 0.075, -0.83 + off); ctx.stroke(); }
+    // cloud-scroll embroidery along the hem of each sleeve
+    for (const sd of [-1, 1]) { const b = wx * 0.05; for (let k = 0; k < 6; k++) { const u = k / 5, x = sd * (0.17 + b + u * 0.02), y = -0.47 + u * 0.1;
+      ctx.beginPath(); ctx.arc(x, y, 0.008, 0, Math.PI * 1.5); ctx.stroke(); } }
+    // hairpin pendants (步摇)
+    for (let k = 0; k < 3; k++) { const px = 0.045 + k * 0.012, py = -0.945 + k * 0.01, sway = Math.sin(t * 2.2 + k) * 0.01;
+      ctx.strokeStyle = A.css(P.gold, 0.9 * a0); ctx.lineWidth = 0.8 / s; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + sway, py + 0.05 + k * 0.01); ctx.stroke();
+      ctx.fillStyle = A.css(k === 1 ? P.ribbonB : P.lining, a0); ctx.beginPath(); ctx.arc(px + sway, py + 0.055 + k * 0.01, 0.0045, 0, TAU); ctx.fill(); }
+  }
   // hairpin glint
   ctx.strokeStyle = A.css(P.gold, a0); ctx.lineWidth = 1.2 / s; ctx.beginPath(); ctx.moveTo(-0.045, -0.975); ctx.lineTo(0.05, -0.94); ctx.stroke();
   ctx.restore();
@@ -468,6 +491,74 @@ A.flow = (ctx, o) => {
   ctx.restore();
 };
 
+// ───────── rising flakes: hard-edged colour chips (talisman paper / petals / paint chips) tumbling upward
+// o: {t, n, seed, area:[x0,y0,x1,y1], speed, size, pal, alpha, glowFrac}
+A.flakes = (ctx, o) => {
+  const r = A.rng(o.seed || 31), [x0, y0, x1, y1] = o.area, Hh = y1 - y0, Ww = x1 - x0, a0 = o.alpha ?? 1;
+  ctx.save();
+  for (let i = 0; i < (o.n || 200); i++) {
+    const d = r(), sp = (o.speed || 120) * (0.4 + d), sz = (o.size || 8) * (0.3 + d * d * 1.4), ph = r(), c = o.pal[Math.floor(r() * o.pal.length)];
+    const x = x0 + ((r() * Ww + Math.sin(o.t * (0.5 + r()) + i) * 20 * d) % Ww + Ww) % Ww;
+    const y = y1 - (((ph * Hh) + o.t * sp) % Hh);
+    const rot = r() * TAU + o.t * (r() - 0.5) * 4, flip = Math.cos(o.t * (1 + r() * 3) + i);
+    const kind = r();
+    ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(1, 0.25 + 0.75 * Math.abs(flip));
+    ctx.globalCompositeOperation = r() < (o.glowFrac ?? 0.35) ? 'lighter' : 'source-over';
+    ctx.fillStyle = A.css(c, (0.55 + 0.45 * d) * a0); ctx.beginPath();
+    if (kind < 0.4) { ctx.moveTo(-sz, -sz * 0.4); ctx.lineTo(sz * 0.9, -sz * 0.2); ctx.lineTo(sz * 0.3, sz * 0.6); }          // shard
+    else if (kind < 0.75) { ctx.moveTo(0, -sz); ctx.quadraticCurveTo(sz * 0.6, 0, 0, sz); ctx.quadraticCurveTo(-sz * 0.6, 0, 0, -sz); } // petal
+    else { ctx.rect(-sz * 0.35, -sz * 0.7, sz * 0.7, sz * 1.4); }                                                           // talisman strip
+    ctx.fill();
+    if (sz > 6 && kind >= 0.75) { ctx.strokeStyle = A.css([1, 0.85, 0.5], 0.8 * a0); ctx.lineWidth = 0.6; ctx.beginPath(); ctx.moveTo(-sz * 0.2, -sz * 0.4); ctx.lineTo(sz * 0.2, -sz * 0.4); ctx.moveTo(0, -sz * 0.5); ctx.lineTo(0, sz * 0.5); ctx.stroke(); }
+    ctx.restore();
+  }
+  // fine glowing dust
+  ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < (o.dust || 0); i++) { const x = x0 + r() * Ww, sp = (o.speed || 120) * 0.3 * (0.5 + r()), y = y1 - (((r() * Hh) + o.t * sp) % Hh);
+    ctx.fillStyle = A.css(o.pal[i % o.pal.length], 0.7 * a0 * (0.5 + 0.5 * Math.sin(o.t * 3 + i))); ctx.fillRect(x, y, 1.6, 1.6); }
+  ctx.restore();
+};
+// ───────── birds / cranes: small brush "V" strokes with a gold edge, flapping
+// o: {t, n, seed, cx, cy, spread, dir:[x,y], speed, size, col, rim, alpha}
+A.birds = (ctx, o) => {
+  const r = A.rng(o.seed || 9), a0 = o.alpha ?? 1;
+  for (let i = 0; i < (o.n || 10); i++) {
+    const ox = (r() - 0.5) * o.spread, oy = (r() - 0.5) * o.spread * 0.5, sp = (o.speed || 40) * (0.8 + r() * 0.4), ph = r() * TAU, sz = (o.size || 10) * (0.6 + r() * 0.8);
+    const x = o.cx + ox + o.dir[0] * sp * o.t, y = o.cy + oy + o.dir[1] * sp * o.t + Math.sin(o.t * 1.3 + ph) * 3;
+    const flap = Math.sin(o.t * 7 + ph); const wy = -sz * (0.25 + 0.45 * flap);
+    ctx.save(); ctx.translate(x, y); ctx.scale(o.dir[0] < 0 ? -1 : 1, 1);
+    for (const [c, off, lw] of [[o.rim, -0.6, 1.0], [o.col, 0, 1.0]]) {
+      ctx.fillStyle = A.css(c, a0); ctx.beginPath(); ctx.moveTo(-sz, wy + off);
+      ctx.quadraticCurveTo(-sz * 0.45, wy * 0.2 + off, 0, sz * 0.12 + off); ctx.quadraticCurveTo(sz * 0.5, wy * 0.2 + off, sz * 1.05, wy + off);
+      ctx.quadraticCurveTo(sz * 0.45, wy * 0.1 + sz * 0.22 + off, 0, sz * 0.3 + off); ctx.quadraticCurveTo(-sz * 0.45, wy * 0.1 + sz * 0.22 + off, -sz, wy + off); ctx.fill(); }
+    ctx.restore();
+  }
+};
+// ───────── pine branch (迎客松) framing a corner: dark limb with hairline needle fans and a rim light
+// o: {x,y (root, off-frame), ang, len, s, pal, alpha, t, seed}
+A.pine = (ctx, o) => {
+  const r = A.rng(o.seed || 21), P = o.pal, a0 = o.alpha ?? 1;
+  const seg = (x, y, ang, len, w, depth) => {
+    const sway = Math.sin((o.t || 0) * 0.8 + depth) * 0.02;
+    const x2 = x + Math.cos(ang + sway) * len, y2 = y + Math.sin(ang + sway) * len;
+    const mx = (x + x2) / 2 + Math.cos(ang + 1.57) * len * 0.12 * (r() - 0.5), my = (y + y2) / 2 + Math.sin(ang + 1.57) * len * 0.12 * (r() - 0.5);
+    ctx.strokeStyle = A.css(P.rim, 0.8 * a0); ctx.lineWidth = w + 1.6; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x, y - 0.8); ctx.quadraticCurveTo(mx, my - 0.8, x2, y2 - 0.8); ctx.stroke();
+    ctx.strokeStyle = A.css(P.bark, a0); ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(mx, my, x2, y2); ctx.stroke();
+    if (depth > 0) { const nb = 2 + Math.floor(r() * 2);
+      for (let i = 0; i < nb; i++) seg(x2, y2, ang + (r() - 0.5) * 1.3, len * (0.55 + r() * 0.25), w * 0.62, depth - 1); }
+    if (depth <= 1) { // needle fan (pad)
+      const pr = o.s * (0.5 + r() * 0.5); const cx = x2, cy = y2;
+      ctx.save(); ctx.translate(cx, cy);
+      ctx.fillStyle = A.css(P.pad, 0.92 * a0); ctx.beginPath(); ctx.ellipse(0, 0, pr, pr * 0.32, (r() - 0.5) * 0.3, 0, TAU); ctx.fill();
+      ctx.strokeStyle = A.css(P.needle, 0.75 * a0); ctx.lineWidth = 0.7;
+      ctx.beginPath(); for (let k = 0; k < 46; k++) { const a = Math.PI + (k / 45) * Math.PI; const l = pr * (0.75 + r() * 0.35);
+        ctx.moveTo(0, pr * 0.12); ctx.lineTo(Math.cos(a) * l, Math.sin(a) * l * 0.38); } ctx.stroke();
+      ctx.strokeStyle = A.css(P.rim, 0.85 * a0); ctx.lineWidth = 1.1; ctx.beginPath(); ctx.ellipse(0, 0, pr, pr * 0.32, 0, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke();
+      ctx.restore(); }
+  };
+  seg(o.x, o.y, o.ang, o.len, o.w || 16, o.depth || 3);
+};
 // ───────── tiered ring palace (巨构): stacked elliptical tiers with eaves, windows and light shafts
 // o: {x,y (base of lowest tier), r (radius px of lowest), tiers, gap, pal, haze, hazeCol, t, alpha}
 A.palace = (ctx, o) => {
@@ -524,4 +615,165 @@ A.seal = (ctx, o) => { // vermilion seal with two characters
   ctx.fillText(o.text[0], 0, -s * 0.21); ctx.fillText(o.text[1], 0, s * 0.23); ctx.restore(); };
 
 window.ASC = A;
+})();
+
+// ═════════ additional painters for the film
+(function () {
+const A = window.ASC, TAU = Math.PI * 2;
+// horizontal caption with per-character stagger (fade + rise)
+A.htext = (ctx, o) => {
+  const a0 = o.alpha ?? 1; if (a0 <= 0) return; const chars = [...o.text];
+  ctx.save(); ctx.font = `${o.size}px ${o.font}`; ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
+  const ws = chars.map(c => ctx.measureText(c).width * (o.track ?? 1.0)); const tw = ws.reduce((a, b) => a + b, 0);
+  let x = o.x - tw / 2;
+  chars.forEach((c, i) => { const k = A.eo(A.clamp((o.reveal ?? 1) * (chars.length + 3) - i, 0, 3) / 3);
+    if (k > 0) { ctx.globalAlpha = a0 * k; if (o.shadow) { ctx.shadowColor = A.css(o.shadow, 0.8); ctx.shadowBlur = o.size * 0.35; }
+      const g = ctx.createLinearGradient(0, o.y - o.size / 2, 0, o.y + o.size / 2); g.addColorStop(0, A.css(o.col, 1)); g.addColorStop(1, A.css(o.col2 || o.col, 1));
+      ctx.fillStyle = g; ctx.fillText(c, x + ws[i] / 2, o.y + (1 - k) * o.size * 0.25); }
+    x += ws[i]; });
+  ctx.restore();
+};
+// the heaven counter: small vertical serif label with a hairline
+A.counter = (ctx, o) => {
+  const a0 = o.alpha ?? 1; if (a0 <= 0) return;
+  ctx.save(); ctx.globalAlpha = a0; ctx.strokeStyle = A.css(o.col, 0.8); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(o.x, o.y - 70); ctx.lineTo(o.x, o.y - 20); ctx.stroke();
+  ctx.font = `500 ${o.size || 30}px "Noto Serif SC"`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.shadowColor = 'rgba(10,6,40,0.8)'; ctx.shadowBlur = 12; ctx.fillStyle = A.css(o.col, 1);
+  [...o.text].forEach((c, i) => ctx.fillText(c, o.x, o.y + 10 + i * (o.size || 30) * 1.3));
+  ctx.restore();
+};
+// a rising raindrop lens that holds a world inside (drawn by inner(ctx, cx, cy, R))
+A.drop = (ctx, o) => {
+  const { x, y, r } = o, a0 = o.alpha ?? 1;
+  ctx.save(); ctx.translate(x, y);
+  // tail streak below (it rises)
+  if (o.tail) { ctx.globalCompositeOperation = 'lighter'; const g = ctx.createLinearGradient(0, r * 0.3, 0, r * 0.3 + o.tail);
+    g.addColorStop(0, A.css(o.rim, 0.5 * a0)); g.addColorStop(1, A.css(o.rim, 0)); ctx.fillStyle = g;
+    ctx.beginPath(); ctx.moveTo(-r * 0.35, r * 0.5); ctx.lineTo(r * 0.35, r * 0.5); ctx.lineTo(0, r * 0.3 + o.tail); ctx.fill(); ctx.globalCompositeOperation = 'source-over'; }
+  // inner world
+  ctx.save(); ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.clip();
+  if (o.inner) o.inner(ctx, 0, 0, r);
+  // lens shading: darker refracted edge, bright fresnel rim
+  const g = ctx.createRadialGradient(0, 0, r * 0.55, 0, 0, r);
+  g.addColorStop(0, A.css(o.edge, 0)); g.addColorStop(0.85, A.css(o.edge, 0.35 * a0)); g.addColorStop(1, A.css(o.edge, 0.75 * a0));
+  ctx.fillStyle = g; ctx.fillRect(-r, -r, r * 2, r * 2);
+  ctx.restore();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.strokeStyle = A.css(o.rim, 0.9 * a0); ctx.lineWidth = Math.max(1, r * 0.012); ctx.beginPath(); ctx.arc(0, 0, r * 0.995, 0, TAU); ctx.stroke();
+  // specular highlights
+  const sg = ctx.createRadialGradient(-r * 0.38, -r * 0.42, 0, -r * 0.38, -r * 0.42, r * 0.28);
+  sg.addColorStop(0, A.css([1, 1, 1], 0.85 * a0)); sg.addColorStop(1, A.css([1, 1, 1], 0)); ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(-r * 0.38, -r * 0.42, r * 0.28, 0, TAU); ctx.fill();
+  ctx.strokeStyle = A.css([1, 1, 1], 0.5 * a0); ctx.lineWidth = Math.max(1, r * 0.02); ctx.beginPath(); ctx.arc(0, 0, r * 0.86, Math.PI * 0.15, Math.PI * 0.55); ctx.stroke();
+  ctx.restore();
+};
+// large lotus petal (for the S4→S5 morph and S9)
+A.petal = (ctx, o) => {
+  const a0 = o.alpha ?? 1; if (a0 <= 0) return; ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.rot || 0); const s = o.s;
+  const g = ctx.createLinearGradient(0, s * 0.5, 0, -s * 0.5); g.addColorStop(0, A.css(o.base, a0)); g.addColorStop(0.6, A.css(o.mid, a0)); g.addColorStop(1, A.css(o.tip, a0));
+  ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(0, s * 0.5); ctx.bezierCurveTo(s * 0.42, s * 0.3, s * 0.36, -s * 0.2, 0, -s * 0.5); ctx.bezierCurveTo(-s * 0.36, -s * 0.2, -s * 0.42, s * 0.3, 0, s * 0.5); ctx.fill();
+  ctx.strokeStyle = A.css(o.vein, 0.7 * a0); ctx.lineWidth = Math.max(0.6, s / 260);
+  for (let k = -3; k <= 3; k++) { ctx.beginPath(); ctx.moveTo(0, s * 0.48); ctx.quadraticCurveTo(k * s * 0.07, 0, k * s * 0.03, -s * 0.44); ctx.stroke(); }
+  ctx.strokeStyle = A.css(o.edgeCol || o.vein, 0.9 * a0); ctx.lineWidth = Math.max(0.8, s / 200); ctx.beginPath(); ctx.moveTo(0, s * 0.5); ctx.bezierCurveTo(s * 0.42, s * 0.3, s * 0.36, -s * 0.2, 0, -s * 0.5); ctx.bezierCurveTo(-s * 0.36, -s * 0.2, -s * 0.42, s * 0.3, 0, s * 0.5); ctx.stroke();
+  ctx.restore();
+};
+// bagua array: rings of trigrams, ticks and seal glyphs, drawn with perspective tilt
+A.bagua = (ctx, o) => {
+  const a0 = o.alpha ?? 1; if (a0 <= 0) return; const r = o.r, P = o.pal;
+  ctx.save(); ctx.translate(o.x, o.y); ctx.scale(1, o.tilt ?? 1); ctx.rotate(o.rot || 0);
+  const lw = (w) => w * Math.max(0.6, Math.min(2.2, r / 420));
+  // glow disc behind
+  ctx.globalCompositeOperation = 'lighter';
+  const gg = ctx.createRadialGradient(0, 0, r * 0.1, 0, 0, r * 1.15); gg.addColorStop(0, A.css(P.glow, 0.45 * a0)); gg.addColorStop(0.6, A.css(P.glow2, 0.18 * a0)); gg.addColorStop(1, A.css(P.glow2, 0));
+  ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(0, 0, r * 1.15, 0, TAU); ctx.fill();
+  ctx.strokeStyle = A.css(P.line, a0);
+  const circ = (rr, w) => { ctx.lineWidth = lw(w); ctx.beginPath(); ctx.arc(0, 0, rr, 0, TAU); ctx.stroke(); };
+  [1, 0.97, 0.8, 0.77, 0.52, 0.5, 0.3].forEach((k, i) => circ(r * k, i % 2 ? 0.8 : 1.6));
+  // ticks
+  ctx.lineWidth = lw(0.8); ctx.beginPath(); for (let i = 0; i < 240; i++) { const a = i / 240 * TAU, l = i % 10 ? 0.025 : 0.06;
+    ctx.moveTo(Math.cos(a) * r * 0.97, Math.sin(a) * r * 0.97); ctx.lineTo(Math.cos(a) * r * (0.97 - l), Math.sin(a) * r * (0.97 - l)); } ctx.stroke();
+  // trigrams
+  const tri = ['111', '011', '101', '001', '110', '010', '100', '000']; ctx.lineWidth = lw(5);
+  for (let i = 0; i < 8; i++) { ctx.save(); ctx.rotate(i / 8 * TAU + Math.PI / 2);
+    for (let k = 0; k < 3; k++) { const yy = -r * (0.72 - k * 0.055), hw = r * 0.09; ctx.beginPath();
+      if (tri[i][k] === '1') { ctx.moveTo(-hw, yy); ctx.lineTo(hw, yy); } else { ctx.moveTo(-hw, yy); ctx.lineTo(-hw * 0.15, yy); ctx.moveTo(hw * 0.15, yy); ctx.lineTo(hw, yy); } ctx.stroke(); }
+    // radial divider
+    ctx.lineWidth = lw(0.8); ctx.beginPath(); ctx.moveTo(0, -r * 0.5); ctx.lineTo(0, -r * 0.3); ctx.stroke(); ctx.lineWidth = lw(5);
+    ctx.restore(); }
+  // seal glyph band between 0.8 and 0.97
+  const rr = A.rng(o.seed || 5); ctx.lineWidth = lw(0.9);
+  for (let i = 0; i < 64; i++) { ctx.save(); ctx.rotate(i / 64 * TAU); const y0 = -r * 0.885; ctx.beginPath();
+    for (let m = 0; m < 3; m++) { const x1 = (rr() - 0.5) * r * 0.05, y1 = y0 + (rr() - 0.5) * r * 0.06; ctx.moveTo(x1, y1); ctx.lineTo(x1 + (rr() - 0.5) * r * 0.05, y1 + (rr() - 0.5) * r * 0.04); }
+    ctx.stroke(); ctx.restore(); }
+  // taiji
+  ctx.save(); ctx.rotate(-(o.rot || 0) * 2.5);
+  const tr = r * 0.26;
+  ctx.fillStyle = A.css(P.yang, 0.95 * a0); ctx.beginPath(); ctx.arc(0, 0, tr, -Math.PI / 2, Math.PI / 2); ctx.arc(0, tr / 2, tr / 2, Math.PI / 2, -Math.PI / 2, true); ctx.arc(0, -tr / 2, tr / 2, Math.PI / 2, -Math.PI / 2); ctx.fill();
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = A.css(P.yin, 0.95 * a0); ctx.beginPath(); ctx.arc(0, 0, tr, Math.PI / 2, -Math.PI / 2); ctx.arc(0, -tr / 2, tr / 2, -Math.PI / 2, Math.PI / 2, true); ctx.arc(0, tr / 2, tr / 2, -Math.PI / 2, Math.PI / 2); ctx.fill();
+  ctx.fillStyle = A.css(P.yang, a0); ctx.beginPath(); ctx.arc(0, -tr / 2, tr * 0.12, 0, TAU); ctx.fill();
+  ctx.fillStyle = A.css(P.yin, a0); ctx.beginPath(); ctx.arc(0, tr / 2, tr * 0.12, 0, TAU); ctx.fill();
+  ctx.strokeStyle = A.css(P.line, a0); ctx.lineWidth = lw(1.4); ctx.beginPath(); ctx.arc(0, 0, tr, 0, TAU); ctx.stroke();
+  ctx.restore();
+  ctx.restore();
+};
+// gold hairline lightning
+A.lightning = (ctx, o) => {
+  const r = A.rng(o.seed), a0 = o.alpha ?? 1; if (a0 <= 0) return;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineJoin = 'round';
+  const bolt = (x, y, ang, len, w, depth) => {
+    let px = x, py = y; ctx.beginPath(); ctx.moveTo(px, py); const n = 9;
+    for (let i = 1; i <= n; i++) { const a = ang + (r() - 0.5) * 0.9; px += Math.cos(a) * len / n; py += Math.sin(a) * len / n; ctx.lineTo(px, py);
+      if (depth > 0 && r() < 0.18) bolt(px, py, ang + (r() - 0.5) * 1.4, len * 0.4, w * 0.6, depth - 1); }
+    ctx.strokeStyle = A.css(o.glow, 0.25 * a0); ctx.lineWidth = w * 5; ctx.stroke(); ctx.strokeStyle = A.css(o.col, a0); ctx.lineWidth = w; ctx.stroke(); };
+  for (let i = 0; i < (o.n || 3); i++) bolt(o.x + (r() - 0.5) * o.spread, o.y + (r() - 0.5) * o.spread * 0.3, o.ang + (r() - 0.5) * 0.6, o.len * (0.6 + r() * 0.6), o.w || 1.4, 2);
+  ctx.restore();
+};
+// stair fragments tumbling in the vortex
+A.fragments = (ctx, o) => {
+  const r = A.rng(o.seed || 41), a0 = o.alpha ?? 1;
+  for (let i = 0; i < (o.n || 20); i++) {
+    const rad = A.lerp(o.r0, o.r1, r()), a = r() * TAU + o.t * (o.swirl || 0.4) * (o.r0 / rad), sz = (o.size || 40) * (0.5 + r());
+    const x = o.cx + Math.cos(a) * rad, y = o.cy + Math.sin(a) * rad * (o.tilt ?? 1);
+    ctx.save(); ctx.translate(x, y); ctx.rotate(a + r() * 3 + o.t * (r() - 0.5) * 2);
+    ctx.fillStyle = A.css(o.pal.top, a0); ctx.fillRect(-sz, -sz * 0.18, sz * 2, sz * 0.18);
+    ctx.fillStyle = A.css(o.pal.side, a0); ctx.fillRect(-sz, 0, sz * 2, sz * 0.32);
+    ctx.strokeStyle = A.css(o.pal.lip, a0); ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(-sz, 0); ctx.lineTo(sz, 0); ctx.stroke();
+    ctx.restore(); }
+};
+// octagonal well (天井) seen from below: concentric tiers converging to the core
+A.well = (ctx, o) => {
+  const P = o.pal, a0 = o.alpha ?? 1, N = o.tiers || 12;
+  const oct = (rr, rot) => { ctx.beginPath(); for (let i = 0; i <= 8; i++) { const a = rot + (i + 0.5) / 8 * TAU; const x = o.x + Math.cos(a) * rr, y = o.y + Math.sin(a) * rr; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.closePath(); };
+  for (let k = 0; k < N; k++) {
+    const r0 = o.r * Math.pow(o.k || 0.72, k + (o.phase || 0)), r1 = r0 * (o.k || 0.72), rot = (o.rot || 0) * (1 + k * 0.08);
+    if (r0 < 6) break; const hz = A.clamp(1 - r0 / o.r) * 0.75; const C = (c) => A.mix(c, P.haze, hz);
+    // band (wall of the tier) with gradient: outer dark, inner lit
+    ctx.save(); oct(r0, rot); oct(r1, rot); 
+    const g = ctx.createRadialGradient(o.x, o.y, r1, o.x, o.y, r0); g.addColorStop(0, A.css(C(P.wallLit), a0)); g.addColorStop(0.35, A.css(C(P.wall), a0)); g.addColorStop(1, A.css(C(P.wallDark), a0));
+    ctx.fillStyle = g; ctx.fill('evenodd');
+    // window rows (lights)
+    ctx.globalCompositeOperation = 'lighter';
+    const rows = r0 > 300 ? 3 : (r0 > 80 ? 2 : 1);
+    for (let j = 0; j < rows; j++) { const rr = A.lerp(r1, r0, (j + 0.6) / (rows + 0.4)); const nw = Math.max(16, Math.floor(rr / 5)); const sz = Math.max(0.8, (r0 - r1) / (rows * 5));
+      for (let i = 0; i < nw; i++) { const a = rot + i / nw * TAU; const fl = 0.6 + 0.4 * A.n1(i * 0.7 + k * 13 + j * 5 + (o.t || 0) * 1.5, 2);
+        ctx.fillStyle = A.css(C(i % 7 === 0 ? P.win2 : P.win), 0.8 * a0 * fl); ctx.fillRect(o.x + Math.cos(a) * rr - sz / 2, o.y + Math.sin(a) * rr - sz, sz, sz * 2); } }
+    ctx.globalCompositeOperation = 'source-over';
+    // gold edges and eaves
+    ctx.strokeStyle = A.css(C(P.gold), 0.9 * a0); ctx.lineWidth = Math.max(0.6, r0 / 500); oct(r0, rot); ctx.stroke(); oct(r1 * 1.04, rot); ctx.stroke();
+    // radial beams (pillars) at the octagon corners
+    ctx.strokeStyle = A.css(C(P.beam), 0.85 * a0); ctx.lineWidth = Math.max(1, (r0 - r1) * 0.06);
+    for (let i = 0; i < 8; i++) { const a = rot + (i + 0.5) / 8 * TAU; ctx.beginPath(); ctx.moveTo(o.x + Math.cos(a) * r0, o.y + Math.sin(a) * r0); ctx.lineTo(o.x + Math.cos(a) * r1, o.y + Math.sin(a) * r1); ctx.stroke(); }
+    ctx.restore();
+  }
+};
+// light motes (bookend rain in the white)
+A.motes = (ctx, o) => {
+  const r = A.rng(o.seed || 77), a0 = o.alpha ?? 1; ctx.save(); ctx.globalCompositeOperation = o.add === false ? 'source-over' : 'lighter';
+  for (let i = 0; i < (o.n || 80); i++) { const x = r() * 1080, sp = (o.speed || 90) * (0.4 + r()), y = 2000 - ((r() * 2100 + o.t * sp) % 2100), s = (o.size || 3) * (0.5 + r());
+    const c = o.pal[i % o.pal.length]; const g = ctx.createLinearGradient(x, y, x, y + s * 14); g.addColorStop(0, A.css(c, 0.9 * a0)); g.addColorStop(1, A.css(c, 0));
+    ctx.strokeStyle = g; ctx.lineWidth = s * 0.6; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + s * 14); ctx.stroke();
+    ctx.fillStyle = A.css(c, a0); ctx.beginPath(); ctx.arc(x, y, s * 0.7, 0, TAU); ctx.fill(); }
+  ctx.restore();
+};
 })();

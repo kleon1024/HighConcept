@@ -89,6 +89,13 @@ one*) on the biggest chord, then ~1.5 s of breath as the chrome settles.
 - **1962** the Maestro FZ-1 Fuzz-Tone, the first widely marketed fuzz effect. [Wikipedia](https://en.wikipedia.org/wiki/Maestro_FZ-1_Fuzz-Tone)
 - **1964** "You Really Got Me": Dave Davies cut the speaker cone of his small Elpico amp with a razor blade.
   [Wikipedia: Dave Davies](https://en.wikipedia.org/wiki/Dave_Davies)
-On screen these appear only as dates plus micro-labels (ROCKET 88 · DAMAGED AMP, RUMBLE · PENCIL, FZ-1 · FUZZ IN A BOX,
-YOU REALLY GOT ME · RAZOR). The fall in 1951 is a visual metaphor for "damaged on the road" (accounts differ: fell from the
-car roof vs. rain in the trunk), so the label says only DAMAGED AMP.
+On screen these appear as big dates plus three micro-type lines each (exact text, `src/main.js`):
+- 1951 — ROCKET 88 · JACKIE BRENSTON & HIS DELTA CATS / GUITAR AMP DAMAGED ON THE ROAD → CONE BURST / STUFFED WITH PAPER · RECORDED ANYWAY
+- 1958 — RUMBLE · LINK WRAY / HOLES PUNCHED IN THE SPEAKER WITH A PENCIL / DAMAGE ON PURPOSE
+- 1962 — MAESTRO FZ-1 FUZZ-TONE / THE SOUND OF DAMAGE, SOLD IN A BOX / KNOB → n / 10
+- 1964 — YOU REALLY GOT ME · THE KINKS / DAVE DAVIES SLASHES HIS AMP’S CONE WITH A RAZOR / THE RIFF THAT TAUGHT ROCK TO GROWL (paraphrase)
+- CLIP — SIGNAL > RAIL = CLIPPED / FLAT TOPS → ODD HARMONICS / THE SOUND OF OVERLOAD (symmetric clipping adds odd harmonics)
+
+The fall in 1951 is a visual metaphor for "damaged on the road" (accounts differ: fell from the car roof vs. rain in the
+trunk), so the label says only DAMAGED ON THE ROAD. Brand logos are never drawn; the pedal on screen is a generic
+chrome box labelled FUZZ.

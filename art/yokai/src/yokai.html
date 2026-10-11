@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>百鬼夜行 · 今夜，摘下面具</title>
+<link rel="stylesheet" href="../node_modules/@fontsource/noto-serif-sc/900.css">
+<link rel="stylesheet" href="../node_modules/@fontsource/noto-sans-sc/900.css">
+<link rel="stylesheet" href="../node_modules/@fontsource/zcool-qingke-huangyou/400.css">
+<link rel="stylesheet" href="../node_modules/@fontsource/zhi-mang-xing/400.css">
+<link rel="stylesheet" href="../node_modules/@fontsource/anton/400.css">
+<link rel="stylesheet" href="../node_modules/@fontsource/bebas-neue/400.css">
+<style>
+  html, body { margin: 0; padding: 0; background: #0B0B0C; }
+  #stage { width: 1080px; height: 1920px; overflow: hidden; position: relative; }
+  #stage.inv { filter: invert(1) hue-rotate(180deg); }
+  svg { display: block; }
+  .sil * { fill: var(--c) !important; stroke: var(--c) !important; stroke-width: var(--w) !important; stroke-linejoin: miter !important; stroke-miterlimit: 3; }
+  .sil clipPath * { stroke-width: 0 !important; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script src="lib.js"></script>
+<script src="hero.js"></script>
+<script src="scenes.js"></script>
+<script>
+const { C, P, poly, strand, strand2, dots, cracks, splat, cutout, kitsune, oni, hannya, pumpkin, glyph, f1, rng } = P5K;
+const { MASKS, clamp, lerp, E, prog, slam, ransom, walker, tornSlit, tornRim, zSlab, starburst, jagPlate } = P5S;
+const W = 1080, H = 1920, TAN = Math.tan(28 * Math.PI / 180);
+const rect = (c) => `<rect x="-50" y="-50" width="${W + 100}" height="${H + 100}" fill="${c}"/>`;
+const at = (x, y, rot, sc, inner) => `<g transform="translate(${f1(x)},${f1(y)}) rotate(${f1(rot)}) scale(${(+sc).toFixed(4)})">${inner}</g>`;
+const silhouette = (inner, c = C.K) => `<g class="sil" style="--c:${c};--w:0px">${inner}</g>`;
+// camera: move point (mx,my) toward (cx,cy) while scaling by z
+const cam = (inner, z, mx, my, cx, cy) => `<g transform="translate(${f1(cx)},${f1(cy)}) scale(${z.toFixed(4)}) translate(${f1(-mx)},${f1(-my)})">${inner}</g>`;
+
+// ───────────────────────── shared pieces
+function band(y0, y1, color = C.R) { return poly([[-60, y0 + TAN * 60], [W + 60, y0 - TAN * (W + 60)], [W + 60, y1 - TAN * (W + 60)], [-60, y1 + TAN * 60]], color); }
+function bandDots(y1, color = C.K, reach = 150) {
+  return dots(-20, 0, W + 20, H, 15, 28, (x, y) => { const d = (y1 - TAN * x) - y; return d < reach && d > -8 ? 6.2 * Math.pow(1 - Math.max(0, d) / reach, 1.3) : 0; }, color);
+}
+function q(chs) { return chs; }
+const T = {
+  sansW: { font: "'Noto Sans SC'", fill: C.W },
+  serifK_W: { font: "'Noto Serif SC'", fill: C.K, bg: C.W },
+};
+
+// ───────────────────────── 1+2 · hook and flips (f0–79)
+const QUESTION = [
+  ['今', 0, { size: 128, font: "'Noto Serif SC'", fill: C.K, bg: C.W, rot: -5 }],
+  ['夜', 132, { size: 136, font: "'Noto Sans SC'", fill: C.R, stroke: C.W, strokeW: 14, rot: 4 }],
+  ['，', 236, { size: 110, font: "'Noto Sans SC'", fill: C.W, dy: -18 }],
+  ['你', 330, { size: 124, font: "'Noto Sans SC'", fill: C.W, bg: C.K, border: C.W, borderW: 7, rot: -3 }],
+  ['戴', 470, { size: 150, font: "'Noto Serif SC'", fill: C.K, bg: C.W, rot: 6, shadow: [12, 12], shadowColor: C.R }],
+];
+const QUESTION2 = [
+  ['哪', 0, { size: 140, font: "'Noto Sans SC'", fill: C.W, bg: C.R, rot: -6, shadow: [12, 12], shadowColor: C.K }],
+  ['一', 150, { size: 128, font: "'ZCOOL QingKe HuangYou'", weight: 400, fill: C.K, bg: C.G1, rot: 5 }],
+  ['张', 292, { size: 136, font: "'Noto Serif SC'", fill: C.K, bg: C.W, rot: -4 }],
+  ['？', 432, { size: 170, font: "'Noto Sans SC'", fill: C.R, stroke: C.W, strokeW: 14, rot: 10 }],
+];
+const HOOKMASK = { x: 540, y: 1150, s: 1.5, rot: -6 };
+function sHook(f) {
+  let s = '';
+  const flash = f < 2;
+  s += rect(flash ? C.R : C.K);
+  if (!flash) {
+    const cp = E.out3(prog(f, 1, 9));
+    s += cracks(HOOKMASK.x, HOOKMASK.y - 40, 12, 260 * cp + 1, 900 * cp + 2, 3, C.R, 12);
+    s += cracks(HOOKMASK.x, HOOKMASK.y - 40, 7, 120 * cp + 1, 420 * cp + 2, 9, C.G3, 8);
+  }
+  const k = slam(f, 0, 3, 1.6);
+  const m = flash ? silhouette(kitsune()) : cutout(kitsune(), { outline: 22, shadow: [20, 20], shadowColor: C.R });
+  s += at(HOOKMASK.x, HOOKMASK.y, HOOKMASK.rot, HOOKMASK.s * k, m);
+  s += questionTiles(f);
+  return s;
+}
+function questionTiles(f) {
+  return ransom(f, QUESTION.slice(0, 3), 150, 330, -8, 10, 2) + ransom(f, QUESTION.slice(3), 150, 330, -8, 20, 2) + ransom(f, QUESTION2, 270, 560, -8, 30, 2);
+}
+const FLIP = [['oni', C.G1], ['hannya', C.K], ['pumpkin', C.R], ['kitsune', C.K]];
+function sFlip(f) {
+  const b = Math.min(3, Math.floor((f - 40) / 10)), lf = (f - 40) % 10;
+  const cur = FLIP[b], prev = b === 0 ? ['kitsune', C.K] : FLIP[b - 1];
+  const showPrev = lf === 0;
+  const [mk, bg] = showPrev ? prev : cur;
+  let s = rect(bg);
+  s += cracks(HOOKMASK.x, HOOKMASK.y - 40, 12, 260, 900, 3 + b, bg === C.R ? C.K : C.R, 12);
+  const sx = lf === 0 ? 0.35 : lf === 1 ? 0.6 : lf === 2 ? 1.06 : 1;
+  let mz = HOOKMASK.s, mx = HOOKMASK.x, my = HOOKMASK.y, rot = HOOKMASK.rot + (b % 2 ? 6 : -4);
+  let inner = `<g transform="scale(${sx},1)">${cutout(MASKS[mk](), { outline: 22, shadow: [20, 20], shadowColor: bg === C.R ? C.K : C.R })}</g>`;
+  // zoom-through the kitsune's right eye-hole (f74–79)
+  if (f >= 74) {
+    const p = E.io3(prog(f, 74, 79));
+    const ez = Math.exp(Math.log(70) * Math.pow(prog(f, 74, 79), 1.6));
+    const ex = 74, ey = -36; // eye in mask-local coords
+    const a = rot * Math.PI / 180;
+    const ewx = mx + (ex * Math.cos(a) - ey * Math.sin(a)) * mz, ewy = my + (ex * Math.sin(a) + ey * Math.cos(a)) * mz;
+    s += cam(questionTiles(f) + at(mx, my, rot, mz, inner), ez, ewx, ewy, lerp(ewx, 540, p), lerp(ewy, 960, p));
+    return s;
+  }
+  s += at(mx, my, rot, mz, inner);
+  s += questionTiles(f);
+  return s;
+}
+
+// ───────────────────────── 3 · the parade (f80–159) — also reused by later scenes
+const PARADE = [['umbrella', 'kitsune'], ['staff', 'hannya'], ['lantern', 'oni'], ['lantern', 'pumpkin'], ['fan', 'kitsune']];
+const WS = 1.45;
+const ground = (x) => 1560 - TAN * x;
+function walkerPos(i, f) { const x = -300 + i * 330 + (f - 80) * 2.2; return [x, ground(x)]; }
+function walkerMask(i, f) { const [x, y] = walkerPos(i, f); const ph = (f + i * 5) / 10; return [x + (20 + 380 * 0.16) * WS, y + (-366 - 10 * Math.abs(Math.sin(ph * Math.PI))) * WS]; }
+function sParade(f) {
+  let s = rect(C.K);
+  // moon with halftone shade
+  s += `<circle cx="790" cy="430" r="190" fill="${C.G1}"/>`;
+  s += `<clipPath id="moonC"><circle cx="790" cy="430" r="190"/></clipPath><g clip-path="url(#moonC)">` + dots(590, 230, 990, 630, 14, 28, (x, y) => { const d = (x - 700) / 260 + (y - 360) / 400; return d > 0 ? Math.min(6.5, d * 9) : 0; }, C.G2) + `</g>`;
+  s += poly([[560, 470], [1100, 330], [1100, 360], [600, 486]], C.K);
+  // the red band = the street
+  s += band(1040, 1650) + `<clipPath id="pbC"><path d="${P([[-60, 1040 + TAN * 60], [W + 60, 1040 - TAN * (W + 60)], [W + 60, 1650 - TAN * (W + 60)], [-60, 1650 + TAN * 60]])}"/></clipPath>`;
+  s += `<g clip-path="url(#pbC)">${bandDots(1650)}</g>`;
+  // far row: small grey-black silhouettes higher up the band
+  for (let i = 0; i < 9; i++) {
+    const x = -120 + i * 150 + (f - 80) * 1.2, y = 1250 - TAN * x;
+    s += at(x, y, 0, 0.5, walker(['lantern', 'staff', 'umbrella'][i % 3], null, (f + i * 3) / 10, 1, i));
+  }
+  // main row on the street edge
+  PARADE.forEach(([type, mask], i) => {
+    const [x, y] = walkerPos(i, f);
+    s += at(x, y, 0, WS, cutout(walker(type, mask, (f + i * 5) / 10, 1, i + 20), { outline: 7 }));
+  });
+  // foreground: hanging lantern string sliding past (parallax)
+  const lx = 1180 - (f - 80) * 7;
+  s += `<path d="M${lx - 700},140 Q${lx - 350},260 ${lx},150" stroke="${C.W}" stroke-width="4" fill="none"/>`;
+  for (let k = 0; k < 4; k++) {
+    const x = lx - 700 + k * 230, y = 150 + 80 * Math.sin((k + 0.5) / 4 * Math.PI);
+    s += `<g transform="translate(${f1(x)},${f1(y)}) rotate(${f1(4 * Math.sin((f + k * 7) / 9))})"><path d="M0,0 L0,30" stroke="${C.W}" stroke-width="4"/>` +
+      `<ellipse cx="0" cy="96" rx="60" ry="74" fill="${C.R}" stroke="${C.W}" stroke-width="8"/>` +
+      [-2, -1, 0, 1, 2].map((j) => `<path d="M${f1(-58 * Math.cos(j * 0.5))},${96 + j * 24} L${f1(58 * Math.cos(j * 0.5))},${96 + j * 24}" stroke="${C.K}" stroke-width="4"/>`).join('') +
+      `<rect x="-34" y="20" width="68" height="16" fill="${C.K}"/><rect x="-34" y="160" width="68" height="16" fill="${C.K}"/>` +
+      `<text x="0" y="104" font-family="'Noto Serif SC'" font-weight="900" font-size="56" text-anchor="middle" dominant-baseline="central" fill="${C.K}">${'百鬼夜行'[k]}</text></g>`;
+  }
+  // caption
+  s += ransom(f, [
+    ['子', 0, { size: 96, font: "'Noto Serif SC'", fill: C.K, bg: C.W, rot: -4 }], ['时', 104, { size: 96, font: "'Noto Serif SC'", fill: C.W, bg: C.K, border: C.W, borderW: 6, rot: 3 }],
+    ['·', 180, { size: 90, font: "'Noto Sans SC'", fill: C.R }],
+    ['百', 260, { size: 104, font: "'Noto Sans SC'", fill: C.W, bg: C.R, rot: -5 }], ['鬼', 372, { size: 118, font: "'Noto Sans SC'", fill: C.R, stroke: C.W, strokeW: 12, rot: 5 }],
+    ['出', 480, { size: 96, font: "'ZCOOL QingKe HuangYou'", weight: 400, fill: C.K, bg: C.W, rot: -3 }], ['巡', 584, { size: 100, font: "'Noto Serif SC'", fill: C.W, rot: 4 }],
+  ], 160, 400, -8, 96, 2);
+  return s;
+}
+
+// ───────────────────────── 4–7 · call-out cards (f160–319)
+const CARDS = [
+  { mask: 'oni', bg: C.K, plate: C.R, name: '鬼', en: 'ONI', word: ['逞', '强'], gloss: 'ACTING TOUGH', no: '01', side: 1, sc: 1.32 },
+  { mask: 'kitsune', bg: C.R, plate: C.K, name: '狐', en: 'KITSUNE', word: ['讨', '好'], gloss: 'PEOPLE-PLEASING', no: '02', side: -1, sc: 1.4 },
+  { mask: 'hannya', bg: C.G1, plate: C.K, name: '般若', en: 'HANNYA', word: ['忍', '着'], gloss: 'SWALLOWING IT', no: '03', side: 1, sc: 1.3 },
+  { mask: 'pumpkin', bg: C.K, plate: C.W, name: '南瓜灯', en: 'JACK', word: ['假', '笑'], gloss: 'FAKE SMILE', no: '04', side: -1, sc: 1.38 },
+];
+const CARDMASK = { x: 540, y: 760 };
+function card(i, lf, f) {
+  const c = CARDS[i];
+  let s = rect(c.bg);
+  // diagonal plate behind the mask + its halftone edge
+  s += band(820, 1180, c.plate);
+  s += `<clipPath id="cpl${i}"><path d="${P([[-60, 820 + TAN * 60], [W + 60, 820 - TAN * (W + 60)], [W + 60, 1180 - TAN * (W + 60)], [-60, 1180 + TAN * 60]])}"/></clipPath>`;
+  s += `<g clip-path="url(#cpl${i})">${bandDots(1180, c.bg === C.R ? C.K : (c.plate === C.W ? C.G1 : C.K), 120)}</g>`;
+  s += cracks(CARDMASK.x, CARDMASK.y, 10, 300, 820, 30 + i, c.bg === C.R ? C.K : C.R, 10);
+  // the mask: slam, then a slow breathing drift (freeze-frame feel)
+  const k = slam(lf, 0, 4, 1.5) || 1;
+  const drift = Math.sin(lf / 13) * 1.5;
+  s += at(CARDMASK.x, CARDMASK.y + drift * 4, c.side * 5 + drift, c.sc * k, cutout(MASKS[c.mask](), { outline: 24, shadow: [22, 22], shadowColor: c.bg === C.K ? C.R : C.K }));
+  // number tag
+  s += ransom(lf, [['No.' + c.no, 0, { size: 46, font: "'Anton'", weight: 400, fill: c.bg === C.K ? C.K : C.W, bg: c.bg === C.K ? C.W : C.K, tw: 150, th: 58, rot: -6, skew: -12 }]], c.side > 0 ? 170 : 900, 230, 0, 2);
+  // name plate (jagged) + ransom name + English
+  const nx = c.side > 0 ? 610 : 110, ny = 1170;
+  if (lf >= 4) s += jagPlate(nx, ny, 360, 150, 7 + i, C.K, C.W);
+  const nameItems = [...c.name].map((ch, j) => [ch, j * (c.name.length > 2 ? 100 : 128), { size: c.name.length > 2 ? 96 : 120, font: j % 2 ? "'Noto Serif SC'" : "'Noto Sans SC'", fill: j === 0 ? C.R : C.W, stroke: j === 0 ? C.W : null, strokeW: 10, rot: j % 2 ? 4 : -4 }]);
+  s += ransom(lf, nameItems, nx + 80, ny + 74, -6, 5, 2);
+  s += ransom(lf, [[c.en, 0, { size: 52, font: "'Anton'", weight: 400, fill: C.K, bg: C.W, tw: c.en.length * 30 + 40, th: 64, rot: 4, skew: -10 }]], nx + 250, ny + 186, -6, 8);
+  // the word (what the mask hides) — big ransom on the other side
+  const wx = c.side > 0 ? 170 : 640, wy = 1440;
+  s += ransom(lf, [
+    [c.word[0], 0, { size: 170, font: "'Noto Serif SC'", fill: C.K, bg: C.W, rot: -6, shadow: [14, 14], shadowColor: C.R }],
+    [c.word[1], 196, { size: 180, font: "'Noto Sans SC'", fill: C.W, bg: C.R, rot: 5, shadow: [14, 14], shadowColor: C.K }],
+  ], wx, wy, -8, 10, 3);
+  s += ransom(lf, [[c.gloss, 0, { size: 44, font: "'Bebas Neue'", weight: 400, fill: c.bg === C.G1 ? C.K : C.W, rot: 0, ls: 4 }]], wx + 150, wy + 140, -8, 14);
+  return s;
+}
+function sCards(f) {
+  const i = Math.min(3, Math.floor((f - 160) / 40)), lf = (f - 160) % 40;
+  let s = card(i, lf, f);
+  // outgoing transitions (drawn over the end of each card)
+  if (i === 0 && lf >= 35) { // slash: next card's red plate sweeps in along the diagonal
+    const p = E.in3(prog(lf, 35, 40));
+    s += `<g transform="translate(${f1(lerp(-1400, 0, p))},${f1(lerp(744, 0, p))})">${poly([[-200, 2400], [-200, 1400], [1400, 400], [1400, -400], [2400, -400], [2400, 2400]], C.R)}</g>`;
+  }
+  if (i === 2 && lf < 6) { // shards: the kitsune card shatters off the hannya card
+    const p = E.out3(lf / 6), prev = card(1, 39, f - lf - 1);
+    const SH = [[[0, 0], [620, 0], [380, 820]], [[620, 0], [1080, 0], [1080, 700], [380, 820]], [[0, 0], [380, 820], [0, 1240]], [[380, 820], [1080, 700], [1080, 1920], [560, 1920]], [[0, 1240], [380, 820], [560, 1920], [0, 1920]]];
+    SH.forEach((pts, k) => {
+      const cx = pts.reduce((a, b) => a + b[0], 0) / pts.length, cy = pts.reduce((a, b) => a + b[1], 0) / pts.length;
+      const dx = (cx - 540) * 1.6 * p, dy = (cy - 900) * 1.6 * p + 300 * p * p, rot = (k % 2 ? 1 : -1) * 28 * p;
+      s += `<clipPath id="shd${k}"><path d="${P(pts)}"/></clipPath><g transform="translate(${f1(cx + dx)},${f1(cy + dy)}) rotate(${f1(rot)}) translate(${f1(-cx)},${f1(-cy)})"><g clip-path="url(#shd${k})">${prev}</g><path d="${P(pts)}" fill="none" stroke="${C.W}" stroke-width="12"/></g>`;
+    });
+  }
+  if (i === 3 && lf >= 30) { // the pumpkin shrinks into its orbit slot of the next scene
+    const p = E.io3(prog(lf, 30, 40));
+    s += `<rect x="0" y="0" width="${W}" height="${H}" fill="${C.K}" opacity="${f1(p * 100) / 100}"/>`;
+    s += at(lerp(CARDMASK.x, 340, p), lerp(CARDMASK.y, 678, p), lerp(-5, 0, p), lerp(1.38, 0.567, p), cutout(pumpkin(), { outline: 26, shadow: [20, 20], shadowColor: C.R }));
+  }
+  return s;
+}
+
+// ───────────────────────── 8–9 · twist and grip (f320–439): the masked hero
+const HERO_T = { x: 560, y: 1080, s: 0.92 };
+function maskedHero() { return `${P5H.body()}<g transform="rotate(-5)">${P5H.head({ mask: true })}</g>`; }
+function orbit(f, behind) {
+  let s = '';
+  ['oni', 'hannya', 'pumpkin', 'kitsune'].forEach((m, k) => {
+    if (m === 'kitsune') return;
+    const a = (f - 320) / 80 * Math.PI * 2 + k * (Math.PI * 2 / 3);
+    const z = Math.sin(a);
+    if ((z < 0) !== behind) return;
+    const x = 560 + Math.cos(a) * 440, y = 780 + Math.sin(a) * 170 - Math.cos(a) * 90;
+    const sc = 0.74 + 0.2 * z;
+    s += at(x, y, Math.cos(a) * 12, sc, cutout(MASKS[m](), { outline: 26, shadow: [20, 20], shadowColor: C.R }));
+  });
+  return s;
+}
+function sTwist(f) {
+  const lf = f - 320, beat = Math.floor(lf / 10);
+  let s = rect(C.K);
+  s += band(560, 1460) + `<clipPath id="twC"><path d="${P([[-60, 560 + TAN * 60], [W + 60, 560 - TAN * (W + 60)], [W + 60, 1460 - TAN * (W + 60)], [-60, 1460 + TAN * 60]])}"/></clipPath><g clip-path="url(#twC)">${bandDots(1460)}</g>`;
+  const cp = E.out3(prog(lf % 10, 0, 4));
+  s += cracks(560, 760, 5 + beat, 120 + beat * 40 + 30 * cp, 300 + beat * 90 + 60 * cp, 41, C.K, 8 + beat);
+  const z = lerp(1, 1.12, E.io3(lf / 80));
+  let inner = orbit(f, true) + at(HERO_T.x, HERO_T.y, 0, HERO_T.s, cutout(maskedHero(), { outline: 22, shadow: [20, 14], shadowColor: C.R })) + orbit(f, false);
+  s += cam(inner, z, 560, 900, 560, 900);
+  s += ransom(lf, [
+    ['白', 0, { size: 126, font: "'Noto Serif SC'", fill: C.K, bg: C.W, rot: -5 }], ['天', 134, { size: 126, font: "'Noto Sans SC'", fill: C.W, bg: C.K, border: C.W, borderW: 7, rot: 4 }],
+    ['戴', 280, { size: 150, font: "'Noto Sans SC'", fill: C.R, stroke: C.W, strokeW: 14, rot: -3 }], ['的', 420, { size: 120, font: "'ZCOOL QingKe HuangYou'", weight: 400, fill: C.K, bg: C.G1, rot: 6 }],
+    ['，', 520, { size: 110, font: "'Noto Sans SC'", fill: C.W, dy: -18 }],
+  ], 170, 270, -8, 4, 2);
+  s += ransom(lf, [
+    ['才', 0, { size: 124, font: "'Noto Sans SC'", fill: C.W, rot: -4, stroke: C.K, strokeW: 10 }], ['是', 130, { size: 126, font: "'Noto Serif SC'", fill: C.K, bg: C.W, rot: 5 }],
+    ['面', 280, { size: 160, font: "'Noto Sans SC'", fill: C.W, bg: C.R, rot: -6, shadow: [14, 14], shadowColor: C.K }], ['具', 440, { size: 150, font: "'Noto Serif SC'", fill: C.K, bg: C.W, rot: 4, shadow: [14, 14], shadowColor: C.R }],
+    ['。', 560, { size: 110, font: "'Noto Sans SC'", fill: C.R, dy: 10 }],
+  ], 230, 470, -8, 44, 2);
+  return s;
+}
+// pose-A hand (gripping the mask's chin while it is still on the face), hero-local
+const HAND_A = [357, 247];
+function armA() {
+  return poly([[-40, 352], [80, 344], [170, 820], [-170, 840]], C.G3) + poly([[-40, 352], [80, 344], [70, 400], [-30, 404]], C.R) +
+    `<path d="${strand2(40, 420, 110, 800, 14, -6, 4)}" fill="${C.K}"/>`;
+}
+function sGrip(f) {
+  const lf = f - 400;
+  let s = rect(C.K);
+  s += band(560, 1460) + `<clipPath id="grC"><path d="${P([[-60, 560 + TAN * 60], [W + 60, 560 - TAN * (W + 60)], [W + 60, 1460 - TAN * (W + 60)], [-60, 1460 + TAN * 60]])}"/></clipPath><g clip-path="url(#grC)">${bandDots(1460)}</g>`;
+  s += cracks(560, 760, 13, 520, 1100, 41, C.K, 16);
+  const hero = maskedHero() + armA() + `<g transform="translate(${HAND_A[0]},${HAND_A[1]})">${cutout(P5H.hand(), { outline: 10 })}</g>`;
+  const z = lerp(1.55, 1.75, E.out3(lf / 40));
+  const shake = lf >= 20 ? Math.sin(lf * 2.3) * 2 : 0;
+  s += cam(at(HERO_T.x, HERO_T.y, 0, HERO_T.s, cutout(hero, { outline: 22, shadow: [20, 14], shadowColor: C.R })), z, 590 + shake, 1000, 540, 1080);
+  s += ransom(lf, [
+    ['所', 0, { size: 120, font: "'Noto Serif SC'", fill: C.K, bg: C.W, rot: -5 }], ['以', 128, { size: 120, font: "'Noto Sans SC'", fill: C.W, rot: 4, stroke: C.K, strokeW: 10 }],
+    ['今', 270, { size: 140, font: "'Noto Sans SC'", fill: C.W, bg: C.R, rot: -4, shadow: [12, 12], shadowColor: C.K }], ['夜', 420, { size: 150, font: "'Noto Serif SC'", fill: C.K, bg: C.W, rot: 6 }],
+    ['——', 590, { size: 110, font: "'Noto Sans SC'", fill: C.R, stroke: C.W, strokeW: 8, dy: -6 }],
+  ], 150, 300, -8, 2, 3);
+  return s;
+}
+
+// ───────────────────────── 10 · RIP (f440–479): the style-frame pose, animated
+const HX = 650, HY = 720;
+const MASK_A = { x: 644, y: 745, rot: -9, s: 1.12 }, MASK_B = { x: 260, y: 530, rot: -18, s: 1.0 };
+function finishBackground(f, cp = 1) {
+  const yTop = (x) => 300 - TAN * x, yBot = (x) => 1250 - TAN * x;
+  let s = rect(C.K);
+  s += poly([[0, yTop(0)], [W, yTop(W)], [W, yBot(W)], [0, yBot(0)]], C.R);
+  s += `<clipPath id="redClip"><path d="${P([[0, yTop(0)], [W, yTop(W)], [W, yBot(W)], [0, yBot(0)]])}"/></clipPath>`;
+  s += `<g clip-path="url(#redClip)">` + dots(0, 560, 520, 1260, 15, 28, (x, y) => { const d = yBot(x) - y; return d < 150 && d > -10 ? 6.4 * Math.pow(1 - Math.max(0, d) / 150, 1.3) : 0; }, C.K) + `</g>`;
+  const xS = (y) => (1920 - y) / Math.tan(62 * Math.PI / 180);
+  const gp = [[xS(986), 986], [W, yBot(W)], [W, H], [0, H]];
+  s += poly(gp, C.G1);
+  s += `<clipPath id="greyClip"><path d="${P(gp)}"/></clipPath><g clip-path="url(#greyClip)">` + dots(300, 900, 1080, 1920, 13, 28, (x, y) => { const d = y - yBot(x); return d > -5 && d < 170 ? 5.2 * Math.pow(1 - Math.max(0, d) / 170, 1.2) : 0; }, C.G2) + `</g>`;
+  s += poly([[0, 1760], [xS(1760), 1760], [xS(1920), H], [0, H]], C.R);
+  s += splat(150, 1800, 64, 7, C.K, 14);
+  s += `<g clip-path="url(#redClip)">` + cracks(440, 690, 9, 200 * cp + 1, 700 * cp + 2, 5, C.K, 15) + `</g>`;
+  return s;
+}
+function heroB(withHand = true) {
+  return { body: `<g transform="translate(${HX},${HY})">${P5H.body()}${P5H.arm()}<g transform="rotate(-5)">${P5H.head()}</g></g>`, hand: `<g transform="translate(${HX},${HY})">${cutout(P5H.hand(), { outline: 12 })}</g>` };
+}
+function cord(op = 1) {
+  const d = 'M-266,-293 C-200,-430 -40,-440 70,-366';
+  return `<g transform="translate(${HX},${HY})" opacity="${op}"><path d="${d}" fill="none" stroke="${C.K}" stroke-width="18" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${C.R}" stroke-width="8" stroke-linecap="round"/></g>`;
+}
+function sRip(f) {
+  const lf = f - 440;
+  if (lf === 0) { // one white frame: the hero as a black silhouette mid-swing
+    return rect(C.W) + silhouette(`<g transform="translate(${HX},${HY})">${P5H.body()}<g transform="rotate(-5)">${P5H.head()}</g></g>`) +
+      `<path d="${strand2(620, 760, 200, 470, 60, 30, -10)}" fill="${C.K}"/>`;
+  }
+  const p = E.out3(prog(lf, 0, 4));
+  let s = finishBackground(f, E.out3(prog(lf, 1, 8)));
+  const hb = heroB();
+  if (lf >= 2) s += cutout(hb.body, { outline: 22, shadow: [20, 14], shadowColor: C.R });
+  else s += cutout(`<g transform="translate(${HX},${HY})">${P5H.body()}<g transform="rotate(-5)">${P5H.head()}</g></g>`, { outline: 22, shadow: [20, 14], shadowColor: C.R });
+  if (lf >= 3) s += cord();
+  // speed slashes along the swing
+  if (lf < 8) { const o = 1 - lf / 8; s += `<g opacity="${f1(o * 100) / 100}"><path d="${strand2(660, 700, 150, 420, 40, 40, -10)}" fill="${C.W}"/><path d="${strand2(640, 800, 220, 560, 18, 30, -8)}" fill="${C.W}"/></g>`; }
+  // the mask flying from face to hand position
+  const mx = lerp(MASK_A.x, MASK_B.x, p), my = lerp(MASK_A.y, MASK_B.y, p) - 60 * Math.sin(p * Math.PI);
+  const settle = lf > 4 ? Math.sin((lf - 4) / 2.2) * 6 * Math.exp(-(lf - 4) / 6) : 0;
+  s += at(mx, my, lerp(MASK_A.rot, MASK_B.rot, p) + settle, lerp(MASK_A.s, MASK_B.s, p), cutout(kitsune(), { outline: 16, shadow: [18, 18], shadowColor: C.K }));
+  if (lf >= 2) s += `<g transform="translate(${f1(lerp(HAND_A[0], 0, p))},${f1(lerp(HAND_A[1], 0, p))})">${hb.hand}</g>`;
+  // flying glass shards
+  const r = rng(77);
+  for (let k = 0; k < 14; k++) {
+    const a = r() * Math.PI * 2, d = (120 + r() * 600) * E.out3(prog(lf, 1, 14)), sz = 20 + r() * 50;
+    const x = 450 + Math.cos(a) * d, y = 640 + Math.sin(a) * d;
+    if (lf >= 1) s += poly([[x, y], [x + sz, y - sz * 0.4], [x + sz * 0.3, y + sz * 0.7]], k % 3 ? C.W : C.K, `transform="rotate(${f1(lf * 20 + k * 30)},${f1(x)},${f1(y)})"`);
+  }
+  // glint pulse on the near eye
+  const g = Math.max(0, Math.sin((lf - 6) / 3)) * (lf > 6 ? 1 : 0);
+  if (g > 0.2) s += `<g transform="translate(706,715)">${starburst(0, 0, 40 + 30 * g, 4, 3, C.W)}</g>`;
+  // prepare the eye cut-in: push toward the eye
+  if (lf >= 34) { const z = lerp(1, 1.8, E.in3(prog(lf, 34, 40))); return `<g transform="translate(706,715) scale(${z.toFixed(3)}) translate(-706,-715)">${s}</g>`; }
+  return s;
+}
+
+// ───────────────────────── 11 · eye cut-in (f480–519)
+function sEye(f) {
+  const lf = f - 480;
+  let s = rect(C.R);
+  s += dots(0, 0, W, H, 18, 28, (x, y) => { const d = Math.hypot(x - 540, y - 900) / 900; return d > 0.55 ? Math.min(7, (d - 0.55) * 22) : 0; }, C.RD);
+  const open = lf < 33 ? E.out3(prog(lf, 0, 5)) : 1 - E.in3(prog(lf, 33, 39));
+  const h = 430 * open + 2;
+  s += `<g transform="rotate(-12,540,900)">`;
+  s += tornRim(540, 900, 1400, h, 5);
+  s += `<clipPath id="slit"><path d="${tornSlit(540, 900, 1400, h, 5)}"/></clipPath>`;
+  const z = 2.7 + lf * 0.006;
+  s += `<g clip-path="url(#slit)"><rect x="-200" y="0" width="1500" height="1900" fill="${C.K}"/>` +
+    `<g transform="translate(540,900) rotate(12) scale(${z.toFixed(3)}) translate(25,4)"><g transform="rotate(-5)">${P5H.head()}</g></g></g>`;
+  s += `</g>`;
+  // brush onomatopoeia (one original character: 醒 = awaken)
+  const k = slam(lf, 3, 3, 1.8);
+  if (k) s += at(860, 560, 12, k, `<text x="0" y="0" font-family="'Zhi Mang Xing'" font-size="330" text-anchor="middle" dominant-baseline="central" fill="${C.W}" stroke="${C.K}" stroke-width="10" paint-order="stroke">醒</text>`);
+  return s;
+}
+
+// ───────────────────────── 12 · masks burst + Z wipe + title (f520–599)
+const BURST = [['oni', 300, 640, -8, 0], ['hannya', 760, 980, 10, 10], ['pumpkin', 380, 1360, -4, 20]];
+const TITLE = [
+  ['百', 0, { size: 230, font: "'Noto Serif SC'", fill: C.K, bg: C.W, border: C.K, borderW: 8, rot: -6, shadow: [16, 16], shadowColor: C.R }],
+  ['鬼', 236, { size: 280, font: "'Noto Sans SC'", fill: C.R, stroke: C.K, strokeW: 18, rot: 5 }],
+  ['夜', 480, { size: 220, font: "'ZCOOL QingKe HuangYou'", weight: 400, fill: C.W, bg: C.K, rot: -4 }],
+  ['行', 710, { size: 220, font: "'Noto Serif SC'", fill: C.W, bg: C.R, rot: 7, shadow: [16, 16], shadowColor: C.K }],
+];
+function sBurst(f) {
+  const lf = f - 520;
+  let s = rect(C.R);
+  s += dots(0, 0, W, H, 18, 28, (x, y) => { const d = Math.hypot(x - 540, y - 960) / 980; return d > 0.5 ? Math.min(7, (d - 0.5) * 20) : 0; }, C.RD);
+  BURST.forEach(([m, x, y, rot, fb], k) => {
+    const kin = slam(lf, k, 3, 1.7);
+    if (!kin) return;
+    if (lf < fb + 10) {
+      const shake = lf >= fb + 7 ? (lf % 2 ? 12 : -12) : 0;
+      s += at(x + shake, y, rot, 0.95 * kin * (lf >= fb + 8 ? 1.08 : 1), cutout(MASKS[m](), { outline: 24, shadow: [22, 22], shadowColor: C.K }));
+    } else {
+      const p = E.out3(prog(lf, fb + 10, fb + 15));
+      s += splat(x, y, 40 + 150 * p, 50 + k, C.K, 18);
+      s += splat(x + 30, y - 20, 10 + 40 * p, 60 + k, C.W, 10);
+      if (lf < fb + 12) s += at(x, y, 0, 1, starburst(0, 0, 260, 12, 4 + k, C.W));
+    }
+  });
+  if (lf >= 50) s += zSlab(prog(lf, 50, 60));
+  if (lf >= 60) {
+    s += rect(C.W);
+    s += splat(880, 1500, 60, 81, C.R, 12) + splat(180, 520, 40, 82, C.K, 10);
+    s += ransom(lf - 60, TITLE, 160, 1010, -8, 0, 5);
+    s += ransom(lf - 60, [['HYAKKI YAKŌ · NIGHT PARADE · 10.31', 0, { size: 46, font: "'Bebas Neue'", weight: 400, fill: C.W, bg: C.K, tw: 700, th: 66, rot: 0, skew: -12 }]], 520, 1290, -8, 14);
+  }
+  return s;
+}
+
+// ───────────────────────── 13 · finish card (f600–759) = the style frame, built layer by layer
+function finishCard(lf, opts = {}) {
+  let s = finishBackground(0, E.out3(prog(lf, 2, 10)));
+  // parade masks overhead
+  const pop = (fi, x, y, rot, sc, inner) => { const k = slam(lf, fi, 4, 1.6); return k ? at(x, y, rot, sc * k, inner) : ''; };
+  s += pop(16, 600, 196, -10, 0.56, cutout(oni(), { outline: 26, shadow: [22, 22] }));
+  s += pop(20, 894, 250, 12, 0.54, cutout(hannya(), { outline: 26, shadow: [22, 22] }));
+  s += pop(24, 960, 1066, 8, 0.42, cutout(pumpkin(), { outline: 30, shadow: [26, 26], shadowColor: C.R }));
+  // hero slides in from the right
+  const hx = lerp(420, 0, E.out3(prog(lf, 4, 14)));
+  const hb = heroB();
+  let hero = cutout(hb.body, { outline: 22, shadow: [20, 14], shadowColor: C.R }) + cord() +
+    at(MASK_B.x, MASK_B.y, MASK_B.rot + Math.sin(lf / 9) * 1.5, 1, cutout(kitsune(), { outline: 16, shadow: [18, 18], shadowColor: C.K })) + hb.hand;
+  s += `<g transform="translate(${f1(hx)},0)">${hero}</g>`;
+  // eye glint every bar
+  const g = (lf % 40) / 40; if (lf > 14 && g < 0.15) s += `<g transform="translate(706,715)">${starburst(0, 0, 70 * (1 - g / 0.15) + 20, 4, 3, C.W)}</g>`;
+  // type
+  s += ransom(lf, [['10', 0, { size: 100, font: "'Anton'", weight: 400, fill: C.R, stroke: C.W, strokeW: 10, rot: -8, tshadow: [7, 7], tshadowColor: C.K, ls: -4 }]], 130, 128, 0, 40);
+  s += ransom(lf, [['31', 0, { size: 76, font: "'Anton'", weight: 400, fill: C.W, stroke: C.K, strokeW: 9, rot: 6, tshadow: [6, 6], tshadowColor: C.R }]], 228, 140, 0, 42);
+  s += ransom(lf, [['子时', 0, { size: 34, font: "'Noto Serif SC'", fill: C.W, bg: C.K, border: C.W, borderW: 5, tw: 88, th: 46, rot: -4, skew: -10 }]], 128, 206, 0, 44);
+  s += ransom(lf, [['SAT', 0, { size: 30, font: "'Bebas Neue'", weight: 400, fill: C.K, bg: C.W, tw: 70, th: 34, rot: -10, skew: -12 }]], 236, 196, 0, 45);
+  if (lf >= 36) s += `<g transform="translate(372,1360) rotate(-90)"><text font-family="'Bebas Neue'" font-size="40" fill="${C.W}" letter-spacing="5">HYAKKI YAKŌ · NIGHT PARADE · 10.31</text></g>`;
+  const col = [
+    ['百', 178, 900, { size: 176, font: "'Noto Serif SC'", fill: C.K, bg: C.W, rot: -7, shadow: [14, 14], shadowColor: C.R, tw: 196, th: 196 }],
+    ['鬼', 196, 1108, { size: 252, font: "'Noto Sans SC'", fill: C.R, stroke: C.W, strokeW: 16, rot: 5, tshadow: [12, 12], tshadowColor: C.K }],
+    ['夜', 160, 1320, { size: 168, font: "'ZCOOL QingKe HuangYou'", weight: 400, fill: C.W, bg: C.K, border: C.W, borderW: 8, rot: -4, tw: 190, th: 190 }],
+    ['行', 212, 1494, { size: 160, font: "'Noto Serif SC'", fill: C.W, bg: C.R, rot: 7, shadow: [14, 14], shadowColor: C.K, tw: 184, th: 184 }],
+  ];
+  col.forEach(([ch, x, y, o], k) => { s += ransom(lf, [[ch, 0, o]], x, y, 0, 26 + k * 3); });
+  // slogan
+  const a = -12 * Math.PI / 180, ox = 392, oy = 1548;
+  if (lf >= 38) {
+    const pk = E.out3(prog(lf, 38, 43));
+    s += `<g transform="translate(${ox - 40 - (1 - pk) * 700},${oy}) rotate(-12)"><rect x="0" y="-62" width="660" height="124" fill="${C.R}" transform="translate(16,14) skewX(-18)"/><rect x="0" y="-62" width="660" height="124" fill="${C.K}" stroke="${C.W}" stroke-width="6" transform="skewX(-18)"/></g>`;
+  }
+  s += ransom(lf, [
+    ['今', 30, { size: 88, font: "'Noto Serif SC'", fill: C.K, bg: C.W, rot: -6, tw: 104, th: 104 }],
+    ['夜', 124, { size: 92, font: "'Noto Sans SC'", fill: C.W, rot: 4 }],
+    ['，', 188, { size: 90, font: "'Noto Sans SC'", fill: C.R, rot: 0, dy: -10 }],
+    ['摘', 270, { size: 118, font: "'Noto Sans SC'", fill: C.W, bg: C.R, rot: 6, tw: 132, th: 132, shadow: [10, 10], shadowColor: C.W }],
+    ['下', 380, { size: 86, font: "'ZCOOL QingKe HuangYou'", weight: 400, fill: C.K, bg: C.W, rot: -2, tw: 104, th: 104 }],
+    ['面', 474, { size: 96, font: "'Noto Serif SC'", fill: C.W, rot: 3 }],
+    ['具', 568, { size: 90, font: "'Noto Sans SC'", fill: C.K, bg: C.G1, rot: -5, tw: 106, th: 106 }],
+  ], ox, oy, -12, 40, 5);
+  return s;
+}
+function sFinish(f) {
+  const lf = f - 600;
+  if (lf < 5) { // star-burst from 鬼 grows into the red band
+    let s = sBurst(599);
+    s += at(396, 950, lf * 8, 0.2 + E.in3(lf / 5) * 9, starburst(0, 0, 300, 14, 9, C.R));
+    return s;
+  }
+  const z = lerp(1, 1.045, E.io3(prog(lf, 40, 150)));
+  const card = `<g transform="translate(540,960) scale(${z.toFixed(4)}) translate(-540,-960)">${finishCard(lf - 5)}</g>`;
+  if (lf >= 152) { // zoom-through the red eye into the next scene
+    const p = prog(lf, 152, 160), ez = Math.exp(Math.log(9) * Math.pow(p, 1.5));
+    const ex = 540 + (706 - 540) * 1.045, ey = 960 + (715 - 960) * 1.045;
+    return cam(card, ez, ex, ey, lerp(ex, 540, p), lerp(ey, 1012, p));
+  }
+  return card;
+}
+
+// ───────────────────────── 14–15 · the lift (f760–899): the parade parts for the unmasked
+function frontHero(phase) {
+  const sw = Math.sin(phase * Math.PI) * 10;
+  let g = '';
+  // hakama (black, grey pleats) + geta
+  g += poly([[-70, -290], [70, -290], [112 + sw, -14], [8, -14], [0, -64], [-8, -14], [-112 + sw, -14]], C.K);
+  [[-30, -280, -64 + sw, -24], [30, -280, 66 + sw, -24], [0, -280, 0, -80]].forEach((a) => { g += `<path d="${strand2(a[0], a[1], a[2], a[3], 9, 3, -2)}" fill="${C.G3}"/>`; });
+  g += poly([[-54, -14], [-14, -14], [-12, 4], [-56, 4]], C.K) + poly([[14, -14], [54, -14], [56, 4], [12, 4]], C.K);
+  // haori (dark grey) with sleeves streaming out in the wind
+  g += poly([[-92, -470], [92, -470], [126, -250], [-126, -250]], C.G3);
+  g += poly([[-92, -466], [-140, -440], [-250, -318], [-214, -268], [-120, -282]], C.G3) + poly([[92, -466], [140, -440], [262, -340], [226, -276], [120, -282]], C.G3);
+  [[-130, -430, -230, -300, 10], [130, -430, 240, -320, 10], [-70, -440, -100, -260, 8], [70, -440, 100, -260, 8]].forEach((a) => { g += `<path d="${strand2(a[0], a[1], a[2], a[3], a[4], 4, -2)}" fill="${C.K}"/>`; });
+  g += poly([[-22, -470], [22, -470], [6, -360], [-6, -360]], C.W);
+  g += poly([[-32, -470], [-22, -470], [-12, -250], [-24, -250]], C.R) + poly([[22, -470], [32, -470], [24, -250], [12, -250]], C.R);
+  g += `<path d="M-28,-350 Q0,-336 28,-350" stroke="${C.R}" stroke-width="8" fill="none"/><circle cx="0" cy="-343" r="9" fill="${C.R}" stroke="${C.K}" stroke-width="3"/>`;
+  // right hand holds the kitsune mask at his side
+  g += poly([[-170, -282], [-146, -282], [-142, -250], [-174, -250]], C.K);
+  g += at(-162, -170, -10, 0.25, cutout(kitsune(), { outline: 26 }));
+  // head: spiky hair, half-lit face, two red eyes, kumadori streak
+  g += `<g transform="translate(0,-540)">` +
+    poly([[-18, 50], [18, 50], [16, 76], [-16, 76]], C.K) +
+    poly([[-44, -34], [-42, 26], [-24, 56], [0, 66], [24, 56], [42, 26], [44, -34]], C.W) + poly([[2, -34], [44, -34], [42, 26], [24, 56], [6, 66]], C.K) +
+    `<path d="M-64,16 C-82,-60 -56,-104 0,-106 C58,-104 86,-60 70,18 L56,-12 L44,16 L32,-22 L16,12 L4,-26 L-10,10 L-24,-24 L-38,8 L-52,-16 Z" fill="${C.K}"/>` +
+    `<path d="${strand2(-50, -80, -100, -110, 26, 6, -4)}" fill="${C.K}"/><path d="${strand2(40, -90, 96, -128, 30, -6, 4)}" fill="${C.K}"/><path d="${strand2(0, -100, 20, -150, 26, -4, 2)}" fill="${C.K}"/>` +
+    `<ellipse cx="-20" cy="12" rx="8" ry="10" fill="${C.R}"/><ellipse cx="20" cy="12" rx="9" ry="11" fill="${C.R}"/><circle cx="-22" cy="8" r="3" fill="${C.W}"/><circle cx="18" cy="8" r="3" fill="${C.W}"/>` +
+    poly([[-34, 0], [-10, -4], [-10, 2], [-32, 5]], C.K) + `<path d="${strand2(12, 26, 44, 48, 8, -2, 1)}" fill="${C.R}"/>` +
+    poly([[-18, 42], [-4, 40], [-6, 44]], C.K) + `</g>`;
+  return g;
+}
+function sLift(f) {
+  const lf = Math.min(f, 839) - 760;
+  let s = rect(C.K);
+  // moon + sky
+  s += `<circle cx="540" cy="470" r="220" fill="${C.G1}"/><clipPath id="lmC"><circle cx="540" cy="470" r="220"/></clipPath><g clip-path="url(#lmC)">` + dots(320, 250, 760, 690, 14, 28, (x, y) => { const d = (x - 470) / 300 + (y - 520) / 420; return d > 0 ? Math.min(6.5, d * 8) : 0; }, C.G2) + `</g>`;
+  // perspective street (red) to the vanishing point
+  const VY = 980;
+  s += poly([[470, VY], [610, VY], [W + 600, H + 40], [-600, H + 40]], C.R);
+  s += `<clipPath id="stC"><path d="${P([[470, VY], [610, VY], [W + 600, H + 40], [-600, H + 40]])}"/></clipPath><g clip-path="url(#stC)">` +
+    dots(0, VY, W, H, 16, 0, (x, y) => { const d = Math.abs(x - 540) / ((y - VY) * 0.9 + 60); return d > 0.6 ? Math.min(7, (d - 0.6) * 10) : 0; }, C.K) + `</g>`;
+  s += poly([[536, VY], [544, VY], [560, H], [520, H]], C.K);
+  // lantern strings converging to the vanishing point
+  [[-1, 0], [1, 0]].forEach(([side]) => {
+    for (let k = 0; k < 6; k++) {
+      const t = k / 6, x = 540 + side * lerp(560, 30, Math.pow(t, 0.7)), y = lerp(240, 900, Math.pow(t, 0.7)), sc = lerp(1.1, 0.18, Math.pow(t, 0.6));
+      const sway = Math.sin((lf + k * 5) / 10) * 4;
+      s += `<g transform="translate(${f1(x)},${f1(y)}) rotate(${f1(sway)}) scale(${sc.toFixed(3)})"><ellipse cx="0" cy="70" rx="58" ry="72" fill="${C.R}" stroke="${C.W}" stroke-width="8"/>` +
+        [-2, -1, 0, 1, 2].map((j) => `<path d="M${f1(-56 * Math.cos(j * 0.5))},${70 + j * 24} L${f1(56 * Math.cos(j * 0.5))},${70 + j * 24}" stroke="${C.K}" stroke-width="5"/>`).join('') +
+        `<rect x="-32" y="-6" width="64" height="16" fill="${C.K}"/><rect x="-32" y="134" width="64" height="16" fill="${C.K}"/></g>`;
+    }
+    s += `<path d="M${540 + side * 600},200 Q${540 + side * 300},560 ${540 + side * 30},900" stroke="${C.W}" stroke-width="3" fill="none"/>`;
+  });
+  // the demons step aside: rows on both sides, facing the corridor, bowing as he passes
+  const part = E.out3(prog(lf, 0, 40));
+  for (let k = 5; k >= 0; k--) {
+    const t = k / 6, y = lerp(1900, 1010, Math.pow(t, 0.75)), sc = lerp(1.2, 0.22, Math.pow(t, 0.7));
+    const off = lerp(400, 70, Math.pow(t, 0.7)) * (1 + 0.3 * part);
+    const types = ['lantern', 'umbrella', 'staff', 'fan'], masks = ['oni', 'hannya', 'pumpkin', 'kitsune'];
+    const bow = -8 * part;
+    s += `<g transform="translate(${f1(540 - off)},${f1(y)}) rotate(${f1(-bow)}) scale(${sc.toFixed(3)})">${cutout(walker(types[k % 4], masks[k % 4], 0.25, 1, k), { outline: 8 })}</g>`;
+    s += `<g transform="translate(${f1(540 + off)},${f1(y)}) rotate(${f1(bow)}) scale(${(-sc).toFixed(3)},${sc.toFixed(3)})">${cutout(walker(types[(k + 2) % 4], masks[(k + 1) % 4], 0.75, 1, k + 9), { outline: 8 })}</g>`;
+  }
+  // the hero walks toward us down the corridor
+  const hs = lerp(0.86, 1.0, E.io3(lf / 80));
+  s += at(540, lerp(1470, 1530, lf / 80), 0, hs, cutout(frontHero(lf / 10), { outline: 16, shadow: [14, 12], shadowColor: C.K }));
+  // the line
+  s += ransom(lf, [
+    ['摘', 0, { size: 150, font: "'Noto Sans SC'", fill: C.W, bg: C.R, rot: -5, shadow: [14, 14], shadowColor: C.K }], ['下', 158, { size: 132, font: "'Noto Serif SC'", fill: C.K, bg: C.W, rot: 4 }],
+    ['它', 300, { size: 136, font: "'Noto Sans SC'", fill: C.W, rot: -3, stroke: C.K, strokeW: 10 }], ['，', 400, { size: 110, font: "'Noto Sans SC'", fill: C.R, dy: -16 }],
+  ], 200, 250, -8, 4, 3);
+  s += ransom(lf, [
+    ['百', 0, { size: 104, font: "'Noto Serif SC'", fill: C.K, bg: C.W, rot: -5 }], ['鬼', 112, { size: 126, font: "'Noto Sans SC'", fill: C.R, stroke: C.W, strokeW: 12, rot: 5 }],
+    ['也', 226, { size: 100, font: "'ZCOOL QingKe HuangYou'", weight: 400, fill: C.W, bg: C.K, border: C.W, borderW: 6, rot: -3 }], ['为', 334, { size: 104, font: "'Noto Serif SC'", fill: C.K, bg: C.G1, rot: 4 }],
+    ['你', 446, { size: 118, font: "'Noto Sans SC'", fill: C.W, bg: C.R, rot: -6, shadow: [10, 10], shadowColor: C.K }], ['让', 566, { size: 104, font: "'Noto Serif SC'", fill: C.W, rot: 3, stroke: C.K, strokeW: 8 }],
+    ['路', 676, { size: 108, font: "'Noto Sans SC'", fill: C.K, bg: C.W, rot: -4 }], ['。', 770, { size: 90, font: "'Noto Sans SC'", fill: C.R, dy: 8 }],
+  ], 130, 440, -8, 30, 3);
+  if (f >= 842) s += ransom(f - 842, [['百鬼夜行 · 今夜，摘下面具', 0, { size: 44, font: "'Noto Serif SC'", fill: C.W, bg: C.K, border: C.W, borderW: 5, tw: 620, th: 76, rot: -4, skew: -10 }]], 540, 1580, 0, 0);
+  // pull back from the finish card scale
+  const z = Math.exp(Math.log(2.6) * (1 - E.out3(prog(lf, 0, 26))));
+  return `<g transform="translate(540,1012) scale(${z.toFixed(4)}) translate(-540,-1012)">${s}</g>`;
+}
+
+// ───────────────────────── frame router
+function renderFrame(f) {
+  let body, inv = false;
+  if (f < 40) body = sHook(f);
+  else if (f < 80) body = sFlip(f);
+  else if (f < 160) body = sParade(f);
+  else if (f < 320) { body = sCards(f); inv = (f === 280 || f === 281); }
+  else if (f < 400) body = sTwist(f);
+  else if (f < 440) body = sGrip(f);
+  else if (f < 480) body = sRip(f);
+  else if (f < 520) body = sEye(f);
+  else if (f < 600) body = sBurst(f);
+  else if (f < 760) body = sFinish(f);
+  else { body = sLift(f); inv = (f === 840 || f === 841); }
+  // parade: the push into the oni walker before the first card (f150–159) and the eye-shaped reveal (f80–88)
+  if (f >= 80 && f < 90) {
+    const p = E.out3(prog(f, 80, 90)), w = 40 + 2600 * p, h = 10 + 1500 * p;
+    body = rect(C.K) + `<clipPath id="eyeR"><path d="M${540 - w / 2},960 Q540,${960 - h} ${540 + w / 2},960 Q540,${960 + h} ${540 - w / 2},960 Z"/></clipPath><g clip-path="url(#eyeR)">${body}</g>`;
+  }
+  if (f >= 150 && f < 160) {
+    const [mx, my] = walkerMask(2, f);
+    const p = E.in3(prog(f, 150, 160));
+    body = cam(body, lerp(1, 5.5, p), mx, my, lerp(mx, CARDMASK.x, p), lerp(my, CARDMASK.y, p));
+  }
+  return { svg: `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${body}</svg>`, inv };
+}
+
+window.renderAt = async (t) => {
+  const f = Math.round(t * 30);
+  const { svg, inv } = renderFrame(f);
+  const st = document.getElementById('stage');
+  st.className = inv ? 'inv' : '';
+  st.innerHTML = svg;
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  return f;
+};
+(async () => {
+  const fams = ["900 40px 'Noto Serif SC'", "900 40px 'Noto Sans SC'", "40px 'ZCOOL QingKe HuangYou'", "40px 'Zhi Mang Xing'", "40px 'Anton'", "40px 'Bebas Neue'"];
+  const txt = '百鬼夜行今夜你戴哪一张？子时出巡逞强讨好忍着假笑狐般若南瓜灯白天的才是面具。所以——摘下它为让路醒，10 31 SAT ONI KITSUNE HANNYA JACK No.01020304 ACTING TOUGH PEOPLE-PLEASING SWALLOWING IT FAKE SMILE HYAKKI YAKŌ · NIGHT PARADE';
+  await Promise.all(fams.map((f) => document.fonts.load(f, txt)));
+  await document.fonts.ready;
+  window.__ready = true;
+})();
+</script>
+</body>
+</html>
