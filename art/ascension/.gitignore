@@ -1,0 +1,5 @@
+frames/
+sounds/
+node_modules/
+package-lock.json
+release/*.wav
