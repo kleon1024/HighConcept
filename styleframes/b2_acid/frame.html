@@ -22,7 +22,7 @@
   #bloom { z-index: 4; mix-blend-mode: screen; pointer-events: none; }
   #under { z-index: 1; }
   #over { z-index: 5; }
-  #grain { z-index: 6; mix-blend-mode: overlay; opacity: .55; }
+  #grain { z-index: 6; mix-blend-mode: overlay; opacity: .42; }
   svg text { font-family: 'JetBrains Mono', monospace; }
 </style>
 <script type="importmap">
@@ -100,6 +100,9 @@ function buildEnvironment() {
   // floor: dark grey gradient disc
   const floor = new THREE.Mesh(new THREE.CircleGeometry(58, 64), lightMat(0x1a1b1e, 1.0));
   floor.rotation.x = -Math.PI / 2; floor.position.y = -20; env.add(floor);
+  // big front softbox above/behind the camera + a narrow second one: front faces mirror these
+  panel(70, 22, lightMat(0xffffff, 3.4), new THREE.Vector3(0, 24, 40));
+  panel(60, 2.2, lightMat(0xffffff, 5.0), new THREE.Vector3(0, 6, 46));
   // the ONE acid accent in the reflections: low front strip + small card
   panel(36, 1.6, lightMat(ACID, 3.2), new THREE.Vector3(-4, -12, 34));
   panel(4, 4, lightMat(ACID, 2.0), new THREE.Vector3(30, -10, 18));
@@ -107,15 +110,90 @@ function buildEnvironment() {
   const rt = pm.fromScene(env, 0.0, 0.1, 200);
   return rt.texture;
 }
+// classic chrome-type sky: bright gradient above, razor-sharp dark horizon, grey ground, one acid band
+function buildSkyEnvironment() {
+  const env = new THREE.Scene();
+  const mat = new THREE.ShaderMaterial({
+    side: THREE.BackSide, depthWrite: false,
+    vertexShader: 'varying vec3 vD; void main(){ vD = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+    fragmentShader: `varying vec3 vD;
+      void main(){
+        float d = vD.y; vec3 c;
+        if (d > 0.22) c = mix(vec3(1.25), vec3(3.2), smoothstep(0.22, 0.9, d));
+        else if (d > 0.025) c = mix(vec3(0.05), vec3(1.25), smoothstep(0.025, 0.24, d));
+        else if (d > -0.035) c = vec3(0.004);
+        else c = mix(vec3(0.62), vec3(0.05), smoothstep(-0.035, -0.6, d));
+        float lime = smoothstep(0.05, 0.0, abs(d + 0.11));
+        c = mix(c, vec3(0.78, 1.0, 0.12) * 2.2, lime);
+        // two dark vertical studio flags to break the sky
+        float az = atan(vD.x, vD.z);
+        c *= 1.0 - 0.85 * smoothstep(0.06, 0.0, abs(az - 0.9)) * step(0.0, d);
+        c *= 1.0 - 0.85 * smoothstep(0.05, 0.0, abs(az + 1.3)) * step(0.0, d);
+        gl_FragColor = vec4(c, 1.0);
+      }`,
+  });
+  env.add(new THREE.Mesh(new THREE.SphereGeometry(50, 96, 48), mat));
+  const pm = new THREE.PMREMGenerator(renderer);
+  return pm.fromScene(env, 0.0, 0.1, 200).texture;
+}
 const scene = new THREE.Scene();
 scene.environment = buildEnvironment();
+const SKY = buildSkyEnvironment();
 
 const key = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(-1.2, 2.0, 1.6); scene.add(key);
 const rim = new THREE.DirectionalLight(0xffffff, 1.2); rim.position.set(1.5, 0.4, -0.8); scene.add(rim);
 
-const chrome = (o = {}) => new THREE.MeshPhysicalMaterial(Object.assign({
-  color: 0xffffff, metalness: 1.0, roughness: 0.06, envMapIntensity: 1.0,
-}, o));
+// ---- liquid chrome: perturb the shading normal with animated 3D simplex noise (world space) ----
+const LIQUID = { uTime: { value: 0 } };
+const SIMPLEX = `
+vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
+vec4 mod289(vec4 x){return x-floor(x*(1.0/289.0))*289.0;}
+vec4 permute(vec4 x){return mod289(((x*34.0)+1.0)*x);}
+vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}
+float snoise(vec3 v){
+  const vec2 C=vec2(1.0/6.0,1.0/3.0); const vec4 D=vec4(0.0,0.5,1.0,2.0);
+  vec3 i=floor(v+dot(v,C.yyy)); vec3 x0=v-i+dot(i,C.xxx);
+  vec3 g=step(x0.yzx,x0.xyz); vec3 l=1.0-g; vec3 i1=min(g.xyz,l.zxy); vec3 i2=max(g.xyz,l.zxy);
+  vec3 x1=x0-i1+C.xxx; vec3 x2=x0-i2+C.yyy; vec3 x3=x0-D.yyy;
+  i=mod289(i);
+  vec4 p=permute(permute(permute(i.z+vec4(0.0,i1.z,i2.z,1.0))+i.y+vec4(0.0,i1.y,i2.y,1.0))+i.x+vec4(0.0,i1.x,i2.x,1.0));
+  float n_=0.142857142857; vec3 ns=n_*D.wyz-D.xzx;
+  vec4 j=p-49.0*floor(p*ns.z*ns.z); vec4 x_=floor(j*ns.z); vec4 y_=floor(j-7.0*x_);
+  vec4 x=x_*ns.x+ns.yyyy; vec4 y=y_*ns.x+ns.yyyy; vec4 h=1.0-abs(x)-abs(y);
+  vec4 b0=vec4(x.xy,y.xy); vec4 b1=vec4(x.zw,y.zw);
+  vec4 s0=floor(b0)*2.0+1.0; vec4 s1=floor(b1)*2.0+1.0; vec4 sh=-step(h,vec4(0.0));
+  vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy; vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
+  vec3 p0=vec3(a0.xy,h.x); vec3 p1=vec3(a0.zw,h.y); vec3 p2=vec3(a1.xy,h.z); vec3 p3=vec3(a1.zw,h.w);
+  vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));
+  p0*=norm.x; p1*=norm.y; p2*=norm.z; p3*=norm.w;
+  vec4 m=max(0.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0); m=m*m;
+  return 42.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
+}`;
+function liquid(mat, amp = 0.3, freq = 1 / 140, speed = 0.25) {
+  mat.onBeforeCompile = (sh) => {
+    sh.uniforms.uTime = LIQUID.uTime;
+    sh.uniforms.uAmp = { value: amp }; sh.uniforms.uFreq = { value: freq }; sh.uniforms.uSpeed = { value: speed };
+    mat.userData.shader = sh;
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vLqW;')
+      .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvLqW = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vLqW;\nuniform float uTime, uAmp, uFreq, uSpeed;\n' + SIMPLEX)
+      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+        {
+          vec3 q = vLqW * uFreq + vec3(0.0, 0.0, uTime * uSpeed);
+          float e = 0.35, n0 = snoise(q);
+          vec3 gw = vec3(snoise(q + vec3(e, 0.0, 0.0)) - n0, snoise(q + vec3(0.0, e, 0.0)) - n0, snoise(q + vec3(0.0, 0.0, e)) - n0) / e;
+          q *= 2.7; n0 = snoise(q);
+          gw += 0.35 * vec3(snoise(q + vec3(e, 0.0, 0.0)) - n0, snoise(q + vec3(0.0, e, 0.0)) - n0, 0.0) / e;
+          normal = normalize(normal - uAmp * mat3(viewMatrix) * gw);
+        }`);
+  };
+  mat.customProgramCacheKey = () => 'liquid' + amp + freq;
+  return mat;
+}
+const chrome = (o = {}, lq = null) => {
+  const m = new THREE.MeshPhysicalMaterial(Object.assign({ color: 0xffffff, metalness: 1.0, roughness: 0.06, envMapIntensity: 1.0 }, o));
+  return lq ? liquid(m, ...lq) : m;
+};
 
 // =====================================================================
 // 2. geometry helpers
@@ -194,7 +272,7 @@ function distToSeg(p, a, b) {
 }
 const slashRand = mulberry32(303);
 const jag = Array.from({ length: 64 }, () => slashRand());
-const halfW = t => { const k = Math.floor(t * 63); const n = jag[k] * 0.5 + jag[Math.min(63, k + 1)] * 0.5; return (17 * Math.pow(Math.sin(Math.PI * t), 0.75)) * (0.75 + 0.5 * n); };
+const halfW = t => { const k = Math.floor(t * 63); const n = jag[k] * 0.5 + jag[Math.min(63, k + 1)] * 0.5; return (10 * Math.pow(Math.sin(Math.PI * t), 0.6)) * (0.7 + 0.6 * n); };
 
 function buildSpeaker(slash = 1) {
   const g = new THREE.Group();
@@ -237,19 +315,19 @@ function buildSpeaker(slash = 1) {
   }
   ctx.putImageData(img, 0, 0);
   const alpha = new THREE.CanvasTexture(c); alpha.colorSpace = THREE.NoColorSpace; alpha.anisotropy = 4;
-  const cone = new THREE.Mesh(geo, chrome({ color: 0xe9ebef, roughness: 0.11, alphaMap: alpha, alphaTest: 0.5, side: THREE.DoubleSide }));
+  const cone = new THREE.Mesh(geo, chrome({ color: 0xe9ebef, roughness: 0.1, alphaMap: alpha, alphaTest: 0.5, side: THREE.DoubleSide }, [0.035, 1 / 220, 0.2]));
   g.add(cone);
   // inner darkness + the acid light leaking out of the wound
   const back = new THREE.Mesh(new THREE.CircleGeometry(300, 96), new THREE.MeshBasicMaterial({ color: 0x000000 }));
   back.position.z = -175; g.add(back);
   const gc = document.createElement('canvas'); gc.width = gc.height = 256; const gx = gc.getContext('2d');
   const grd = gx.createRadialGradient(128, 128, 0, 128, 128, 128);
-  grd.addColorStop(0, 'rgba(225,255,140,1)'); grd.addColorStop(0.25, 'rgba(200,255,30,0.85)'); grd.addColorStop(1, 'rgba(200,255,30,0)');
+  grd.addColorStop(0, 'rgba(240,255,170,1)'); grd.addColorStop(0.12, 'rgba(206,255,40,0.95)'); grd.addColorStop(0.45, 'rgba(200,255,30,0.25)'); grd.addColorStop(1, 'rgba(200,255,30,0)');
   gx.fillStyle = grd; gx.fillRect(0, 0, 256, 256);
-  const glow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(gc), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+  const glow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(gc), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
   const mid = SLASH.a.clone().add(SLASH.b).multiplyScalar(0.5), ang = Math.atan2(SLASH.b.y - SLASH.a.y, SLASH.b.x - SLASH.a.x);
-  glow.position.set(mid.x, mid.y, -150); glow.rotation.z = ang; glow.scale.set(560, 120, 1); g.add(glow);
-  glow.material.color.setScalar(1.6 * slash);
+  glow.position.set(mid.x, mid.y, -150); glow.rotation.z = ang; glow.scale.set(640, 46, 1); g.add(glow);
+  glow.material.color.setRGB(0.8 * slash, 1.0 * slash, 0.35 * slash);
   // bolts on the gasket
   const boltGeo = new THREE.SphereGeometry(7, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2); boltGeo.rotateX(Math.PI / 2);
   for (let k = 0; k < 8; k++) { const a = (k + 0.5) / 8 * Math.PI * 2; const b = new THREE.Mesh(boltGeo, chrome({ roughness: 0.04 })); b.position.set(319 * Math.cos(a), 319 * Math.sin(a), 10); g.add(b); }
@@ -258,10 +336,10 @@ function buildSpeaker(slash = 1) {
 
 function buildThorns() {
   const g = new THREE.Group();
-  const mat = chrome({ roughness: 0.035 });
+  const mat = chrome({ roughness: 0.03 }, [0.1, 1 / 160, 0.3]);
   // [angle deg, length, base radius, bend, barb]
   const defs = [
-    [52, 330, 22, 0.62, true], [77, 230, 15, 0.5, false], [-47, 270, 18, 0.55, true], [24, 150, 10, 0.45, false], [-74, 150, 11, 0.5, false],
+    [50, 300, 34, 0.85, true], [76, 210, 24, 0.75, true], [25, 150, 18, 0.7, false], [-40, 180, 24, 0.8, true], [-66, 110, 15, 0.7, false],
   ];
   for (const side of [1, -1]) for (const [deg, L, r0, bend, barb] of defs) {
     const a = THREE.MathUtils.degToRad(side > 0 ? deg : 180 - deg);
@@ -273,7 +351,7 @@ function buildThorns() {
     const p2 = base.clone().addScaledVector(dir, L * 0.72).addScaledVector(nrm, L * 0.22 * bend).setZ(4);
     const p3 = base.clone().addScaledVector(dir, L).addScaledVector(nrm, L * 0.52 * bend).setZ(10);
     const curve = new THREE.CubicBezierCurve3(p0, p1, p2, p3);
-    g.add(new THREE.Mesh(taperTube(curve, { r0, pow: 1.05, flat: 0.58 }), mat));
+    g.add(new THREE.Mesh(taperTube(curve, { r0, pow: 1.25, flat: 0.62 }), mat));
     if (barb) {
       const q0 = curve.getPointAt(0.34), t0 = curve.getTangentAt(0.34);
       const out = new THREE.Vector3(-t0.y, t0.x, 0).multiplyScalar(-side * Math.sign(deg));
@@ -303,14 +381,14 @@ function buildWave() {
 // 4. chrome type 「失真」 (Noto Serif SC 900, extruded + bevelled)
 // =====================================================================
 async function buildTitle() {
-  const base = './node_modules/@fontsource/noto-serif-sc/files/';
-  const fA = await opentype.load(base + 'noto-serif-sc-115-900-normal.woff');   // 失
-  const fB = await opentype.load(base + 'noto-serif-sc-117-900-normal.woff');   // 真
-  const size = 300, gap = 18;
+  // fontsource WOFF subsets, unpacked to OTF by tools/woff2otf.js (opentype.js's inflate rejects one of them)
+  const fA = await opentype.load('./fonts/noto-serif-sc-115-900.otf');   // 失
+  const fB = await opentype.load('./fonts/noto-serif-sc-117-900.otf');   // 真
+  const size = 286, gap = 18;
   const gA = glyphShapes(fA, '失', size), gB = glyphShapes(fB, '真', size);
-  const opts = { depth: 46, bevelEnabled: true, bevelThickness: 9, bevelSize: 4.5, bevelSegments: 6, curveSegments: 14 };
+  const opts = { depth: 44, bevelEnabled: true, bevelThickness: 12, bevelSize: 6.5, bevelSegments: 8, curveSegments: 16 };
   const g = new THREE.Group();
-  const mat = chrome({ roughness: 0.045 });
+  const mat = chrome({ roughness: 0.035, envMap: SKY }, [0.2, 1 / 210, 0.25]);
   const mA = new THREE.Mesh(new THREE.ExtrudeGeometry(gA.shapes, opts), mat);
   const mB = new THREE.Mesh(new THREE.ExtrudeGeometry(gB.shapes, opts), mat);
   mB.position.x = gA.advance + gap;
@@ -343,7 +421,7 @@ function drawUnder() {
   const TOP = 222, BOT = 404;
   el(clip, 'rect', { x: 0, y: TOP, width: W, height: BOT - TOP });
   const t = el(s, 'text', { x: 70, y: 430, 'font-family': "'Big Shoulders Display'", 'font-weight': 900, 'font-size': 318,
-    textLength: 940, lengthAdjust: 'spacingAndGlyphs', fill: '#e6e7e9', 'clip-path': 'url(#rails)', 'letter-spacing': '-2' }, 'DISTORTION');
+    textLength: 940, lengthAdjust: 'spacingAndGlyphs', fill: '#c3c4c7', 'clip-path': 'url(#rails)', 'letter-spacing': '-2' }, 'DISTORTION');
   // ghost of what was clipped off (hairline outline outside the rails)
   const clipOut = el(defs, 'clipPath', { id: 'outside' });
   el(clipOut, 'rect', { x: 0, y: 150, width: W, height: TOP - 150 });
@@ -381,10 +459,10 @@ function drawOver(rails) {
   mono(1010, rails.TOP - 8, '+ RAIL', { 'text-anchor': 'end', fill: '#c8ff1e', 'font-size': 11 });
   mono(1010, rails.BOT + 18, '− RAIL', { 'text-anchor': 'end', fill: '#c8ff1e', 'font-size': 11 });
   // waveform labels
-  mono(70, 760, 'IN', { fill: '#e6e7e9', 'font-weight': 700 });
-  mono(70, 778, 'SINE · 110 Hz', { 'font-size': 11 });
-  mono(1010, 760, 'OUT', { fill: '#e6e7e9', 'font-weight': 700, 'text-anchor': 'end' });
-  mono(1010, 778, 'CLIPPED · SQUARE', { 'font-size': 11, 'text-anchor': 'end' });
+  mono(70, 712, 'IN', { fill: '#e6e7e9', 'font-weight': 700 });
+  mono(70, 730, 'SINE · 110 Hz', { 'font-size': 11 });
+  mono(1010, 712, 'OUT', { fill: '#e6e7e9', 'font-weight': 700, 'text-anchor': 'end' });
+  mono(1010, 730, 'CLIPPED · SQUARE', { 'font-size': 11, 'text-anchor': 'end' });
   // slash callout with leader
   el(s, 'path', { d: 'M742 1040 L812 1110 H1010', stroke: '#e6e7e9', 'stroke-opacity': 0.7, fill: 'none', 'stroke-width': 1 });
   el(s, 'circle', { cx: 742, cy: 1040, r: 3.5, fill: '#c8ff1e' });
@@ -419,7 +497,7 @@ function drawGrain(seed = 7) {
 }
 
 // cheap, controllable bloom: threshold the GL frame at 1/4 res, blur, screen on top
-function bloom(strength = 0.85, thresh = 0.82) {
+function bloom(strength = 0.6, thresh = 0.86) {
   const q = 4, w = W / q, h = H / q;
   const tmp = document.createElement('canvas'); tmp.width = w; tmp.height = h;
   const t = tmp.getContext('2d'); t.drawImage(canvas, 0, 0, w, h);
@@ -435,6 +513,16 @@ function bloom(strength = 0.85, thresh = 0.82) {
   out.filter = 'blur(10px)'; out.drawImage(tmp, 0, 0, W, H);
   out.filter = 'blur(34px)'; out.drawImage(tmp, 0, 0, W, H);
   out.filter = 'none'; out.globalAlpha = 1;
+  // faint chromatic fringe on chrome edges (red pulled left, blue pushed right)
+  // (only the difference between a channel and its shifted copy -> edges only, no overall tint)
+  for (const [col, dx] of [['#ff0000', -2.5], ['#0000ff', 2.5]]) {
+    const ch = document.createElement('canvas'); ch.width = W; ch.height = H; const xc = ch.getContext('2d');
+    xc.fillStyle = '#000'; xc.fillRect(0, 0, W, H); xc.drawImage(canvas, 0, 0);
+    xc.globalCompositeOperation = 'multiply'; xc.fillStyle = col; xc.fillRect(0, 0, W, H);
+    const e = document.createElement('canvas'); e.width = W; e.height = H; const xe = e.getContext('2d');
+    xe.drawImage(ch, 0, 0); xe.globalCompositeOperation = 'difference'; xe.drawImage(ch, dx, 0);
+    out.globalAlpha = 0.45; out.drawImage(e, 0, 0); out.globalAlpha = 1;
+  }
 }
 
 // =====================================================================
@@ -452,7 +540,7 @@ scene.add(hero);
 
 const title = await buildTitle();
 title.position.copy(P(540, 1392)).setZ(40);
-title.rotation.set(-0.2, 0, 0);
+title.rotation.set(-0.11, 0.0, 0);
 scene.add(title);
 
 const rails = drawUnder();

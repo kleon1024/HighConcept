@@ -1,0 +1,14 @@
+# heavy or regenerable working files; the agents' sources, concepts and release videos are kept
+node_modules/
+package-lock.json
+*/frames/
+*/build/
+*/sounds/
+*/out/
+# reference images are for study only (copyright stays with their authors); keep only the boards
+*/refs/*.jpg
+*/refs/*.jpeg
+*/refs/*.png
+*/refs/*.webp
+*/refs/*.gif
+!*/refs/board.jpg

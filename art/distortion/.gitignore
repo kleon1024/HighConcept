@@ -1,0 +1,7 @@
+frames/
+sounds/
+node_modules/
+refs/*.jpg
+refs/*.png
+refs/*.webp
+build/
