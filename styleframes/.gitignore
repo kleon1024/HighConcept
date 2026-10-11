@@ -1,2 +1,9 @@
 node_modules/
 package-lock.json
+# reference images are for study only (copyright stays with their authors); keep only the contact sheets
+*/refs/*.jpg
+*/refs/*.jpeg
+*/refs/*.png
+*/refs/*.webp
+*/refs/*.gif
+!*/refs/board.jpg

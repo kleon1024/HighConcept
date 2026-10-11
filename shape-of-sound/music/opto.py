@@ -8,6 +8,7 @@ swells only), kalimba, a numpy pad, a numpy sub, a filtered numpy pluck for the 
 import json, os
 import numpy as np
 import soundfile as sf
+from scipy.signal import butter, sosfilt
 from engine import SF2, Drums, Score, Synth
 from mixutil import jumps, master
 from sfx import Sfx
@@ -72,7 +73,7 @@ GROOVES = {                    # 16 steps of 0.125 s per 2 s bar
     'light':  {KICK: 'x.......x.......', SNARE: '............x...', HAT: '..x...x...x...x.'},
     'heart':  {KICK: 'x.x.............'},
 }
-DRV = {KICK: 90, SNARE: 66, HAT: 64}
+DRV = {KICK: 90, SNARE: 66, HAT: 58}
 def bars(s0, s1, drums=None, bass='pulse', pad=PAD, pv=52, arp=None, av=48, kal=0, harp=0, v=0):
     """The groove from s0 to s1 on the 16th grid, following the harmony map. `v` shifts every velocity."""
     for i in range(int(round(s0 / 0.125)), int(round(s1 / 0.125))):
@@ -101,7 +102,7 @@ def light_on(a, b, k, v=0):
     j, t = 0, a
     while t < b - 0.06:
         note(PLK, t, 0.1, lad[[1, 2, 3, 4, 3, 2, 3, 4][j % 8]], 70 + v + (8 if j % 4 == 0 else 0))
-        note(DR, t, 0.05, HAT, (64 if j % 2 == 0 else 50) + v)
+        note(DR, t, 0.05, HAT, (60 if j % 2 == 0 else 46) + v)
         if j and j % 4 == 0: note(DR, t, 0.1, KICK, 80 + v)
         if j % 2 == 0: note(BASS, t, 0.2, 45, 80 + v)
         t += 0.125; j += 1
@@ -113,7 +114,7 @@ chord(PAD, 0.0, REVEAL, [45, 52, 57, 60], 46)
 note(BASS, 0.0, shots[0]['start'], A1, 74)
 note(PNO, c['q'], 1.2, A1, 70); note(PNO, c['q'], 1.2, 45, 58)          # a low piano A under "能遥控大脑吗？"
 for k, sh in enumerate(shots):
-    light_on(sh['on'], sh['end'], k, v=3 * k)
+    light_on(sh['on'], sh['end'], k, v=[0, 3, 7][k])
     if k >= 1: chord(STR, sh['on'], sh['end'] - sh['on'] + 0.2, [57, 60, 64] + ([69] if k == 2 else []), 70 + 6 * k)
     if k == 2: chord(PAD, sh['on'], 0.9, [57, 60, 64, 69], 64); note(DR, sh['on'] + 0.5, 0.1, SNARE, 70)
 # "是一束光": a warm Fmaj7 opening up, the piano's rising fifth (the light motif)
@@ -225,6 +226,7 @@ for k in range(8): note(HARP, FIN + 0.125 * k, 1.4, [57, 61, 64, 69, 71, 73, 76,
 note(PNO, NOBEL + nb['src'], 1.2, 81, 56)                                 # one last high A under the closing line
 
 x, stems = sc.render(PARTS, kick_part=DR)
+x = x + 0.6 * sosfilt(butter(1, [1200, 5000], 'band', fs=SR, output='sos'), x, axis=0)   # a gentle presence lift (≤ +4 dB, 1.2–5 kHz) for phone speakers
 fade = np.ones(N); i0, i1 = int((DUR - 1.0) * SR), N
 fade[i0:i1] = np.cos(np.linspace(0, np.pi / 2, i1 - i0)) ** 2; fade[:int(0.005 * SR)] = np.linspace(0, 1, int(0.005 * SR))
 x *= fade[:, None]
@@ -235,13 +237,13 @@ fx = Sfx(DUR, SR)
 for sec, name, db in [('title', 'whoosh_air', -24), ('problem', 'whoosh_air', -26), ('neuron', 'swoosh_vacuum', -26),
                       ('pond', 'swell_slow', -27), ('transplant', 'whoosh_air', -27), ('sight', 'whoosh_air', -30), ('nobel', 'whoosh_air', -28)]:
     fx.play(st(sec), name, db, align='peak')
-fx.play(SWI, 'sweep_air', -31, align='peak', pan=-0.6); fx.play(SWI + 0.04, 'sweep_air', -32, align='peak', pan=0.6)   # blue from the left, amber from the right
+fx.play(SWI, 'sweep_air', -30, align='peak', pan=-0.6); fx.play(SWI + 0.04, 'sweep_air', -31, align='peak', pan=0.6)   # blue from the left, amber from the right
 # 1 cold open
 fx.play(c['ask'], 'deep_hit', -29, rate=1.53)                             # a low heartbeat under the question (tuned to A)
 fx.play(c['q'] + 0.45, 'heartbeat', -28); fx.play(c['q'] + 1.0, 'heartbeat', -31)
 for k, sh in enumerate(shots):
     fx.play(sh['on'], 'switch', -21 - 0.5 * k); fx.play(sh['on'], 'bass_hit', -25, rate=1.59)   # click + low body
-    fx.play(sh['end'], 'switch', -24 - 0.5 * k, rate=0.92)                # off: the same switch, a touch lower
+    fx.play(sh['end'], 'switch', -22 - 0.5 * k, rate=0.92)                # off: the same switch, a touch lower
 for k in range(2): fx.play(c['nots'] + 0.4 + 0.3 * k, 'air_quick', -31 - 2 * k, align='peak', maxlen=0.7)   # two red strike-throughs
 fx.play(c['light'], 'deep_air', -27, align='peak')                        # "是一束光": a warm sweep
 fx.play(c['alga'], 'bubble', -27)
@@ -251,14 +253,14 @@ fx.play(TITLE, 'riser', -30, align='peak')                                # the 
 fx.play(TITLE, 'bass_hit', -24, rate=1.59); fx.play(TITLE + ti['toggle'], 'switch', -18)
 # 3 the problem
 fx.play(PROB + pr['electrode'] + 0.4, 'electric_pop', -26, rate=0.8); fx.play(PROB + pr['electrode'] + 0.4, 'bass_hit', -29, rate=1.59)
-fx.play(PROB + pr['drug'] + 0.3, 'deep_air', -29, rate=0.75, maxlen=1.3)              # the drug's slow slide
+fx.play(PROB + pr['drug'] + 0.3, 'deep_air', -27, rate=0.75, maxlen=1.3)              # the drug's slow slide
 # 4 neuron
-fx.play(NEU + ne['open'] + 0.1, 'vacuum', -27, align='peak'); fx.play(NEU + ne['open'] + 0.15, 'bubble', -28)
+fx.play(NEU + ne['open'] + 0.1, 'vacuum', -26, align='peak'); fx.play(NEU + ne['open'] + 0.15, 'bubble', -26)
 for k, s in enumerate((ne['spike'], ne['spike'] + 1.0)): fx.play(NEU + s, 'electric_pop', -23 - 2 * k)
 # 5 pond
 fx.play(POND + po['drop'], 'bubble_liquid', -28)
 fx.play(POND + po['zoom'] + 0.35, 'sweep_air', -30, align='peak')
-for k in range(2): fx.play(POND + po['sci'] + 0.4 + 0.25 * k, 'pop_soft', -25 - 2 * k)
+for k in range(2): fx.play(POND + po['sci'] + 0.4 + 0.25 * k, 'pop_soft', -25 - k)
 fx.play(POND + po['eyespot'] + 0.4, 'vacuum', -28, align='peak')          # into the eyespot
 fx.play(P_OPEN, 'bass_hit', -22, rate=1.59); fx.play(P_OPEN + 0.1, 'bubble_liquid', -26)   # the gate opens: low body + water
 # 6 transplant
@@ -271,7 +273,7 @@ fx.play(SIGHT + si['inject'] + 0.45, 'vacuum', -29, align='peak')         # the 
 fx.play(SIGHT + si['goggles'] + 0.15, 'lock_quick', -26)                  # the goggles click into place
 fx.play(SEE, 'swell_slow', -24, align='peak')                             # a warm air swell into "看见"
 # 9 the prize
-for k, s in enumerate(nb['people']): fx.play(NOBEL + s, 'pop_soft', -26 - k)
+for k, s in enumerate(nb['people']): fx.play(NOBEL + s, 'pop_soft', -24 - k)
 fx.play(FIN, 'bass_hit', -23, rate=1.59); fx.play(FIN, 'air_quick', -29, align='peak')   # the black bar wipes in
 bus = fx.mix(sc.ir, 0.15, lp=9000)
 if os.environ.get('STEM_DIR'):                  # for the level check: the music and the SFX bus before mastering
