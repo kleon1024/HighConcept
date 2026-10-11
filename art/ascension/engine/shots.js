@@ -94,21 +94,21 @@ function s1(L, U, lt) {
   A.rain(b, { t: lt + 3, n: 320, seed: 15, col: hx('#6fb8ff'), headCol: hx('#cfe8ff'), speed: 260, len: 50, alpha: 0.55 });
   // the drop
   let x = 540, y, R;
-  if (lt < 2.25) { const u = A.eo(lt / 2.25); y = A.lerp(2150, 900, u); R = A.lerp(60, 95, u); }
+  if (lt < 2.25) { const u = A.eo(lt / 2.25); y = A.lerp(1560, 900, u); R = A.lerp(70, 95, u); }
   else { const u = (lt - 2.25) / 0.75, e = A.ei(u); y = A.lerp(900, 590, A.eio(u)); R = 95 * Math.pow(1500 / 95, e); }
   const ringR = 385 * Math.pow(R / 1500, 0.6), kk = ringR / 385;
   const glow = A.clamp((lt - 1.5) / 1.5);
   U.uCoreInt = 0.5 + 0.35 * glow; coreAt(U, x, y); U.uCoreR = 34 * kk; U.uHaloR = 150 * kk; U.uCoreHalo = hx('#ffa040'); U.uRays = 0.3 * glow;
-  A.drop(m, { x, y, r: R, rim: hx('#bfefff'), edge: hx('#0a1040'), tail: R * 3, inner: (c, cx, cy, r) => {
+  A.drop(m, { x, y, r: R, rim: hx('#bfefff'), edge: hx('#0a1040'), tail: 0, inner: (c, cx, cy, r) => {
     const g = c.createLinearGradient(0, -r, 0, r); g.addColorStop(0, A.css(SKY1.mid)); g.addColorStop(0.55, A.css(SKY1.hor)); g.addColorStop(0.62, A.css(hx('#ff8a6a'))); g.addColorStop(1, A.css(hx('#2a1a70')));
     c.fillStyle = g; c.fillRect(-r, -r, 2 * r, 2 * r);
     A.strokes(c, { cx: 0, cy: 0, t: lt, n: 500, seed: 4, r0: ringR * 1.04, r1: ringR * 1.55, pal: STROKES, swirl: 0.3, width: 2.6 * Math.max(0.4, kk), alpha: 0.8, len: 0.75, lanes: 9 });
     A.ring(c, { x: 0, y: 0, r: ringR, pal: RING_JADE, spin: lt * 0.12, seed: 7 });
     A.stair(c, { xb: 0, yb: 1490 * kk, wb: 270 * kk, xv: 0, yv: 30 * kk, z0: 1, dz: 0.05, n: 200, pal: STAIR, haze: 0.06, hazeCol: hx('#ffd6b0'), ramp: kk > 0.5 });
   } });
-  A.rain(f, { t: lt, n: 380, seed: 5, col: hx('#9ff0ff'), headCol: hx('#ffffff'), speed: 720, len: 120, alpha: 0.95, bokeh: 9 });
-  A.htext(f, { x: 540, y: 360, size: 104, text: '雨，往天上落。', font: '"Zhi Mang Xing"', col: hx('#ffffff'), col2: hx('#bfe8ff'), shadow: hx('#03051e'),
-    reveal: A.clamp((lt - 0.3) / 0.7), alpha: 1 - A.sstep(2.2, 2.7, lt), track: 1.02 });
+  A.rain(f, { t: lt, n: 460, seed: 5, col: hx('#9ff0ff'), headCol: hx('#ffffff'), speed: 760, len: 140, alpha: 1.0, bokeh: 10 });
+  A.htext(f, { x: 540, y: 380, size: 118, text: '雨，往天上落。', font: '"Zhi Mang Xing"', col: hx('#ffffff'), col2: hx('#bfe8ff'), shadow: hx('#03051e'),
+    reveal: A.clamp((lt - 0.12) / 0.6), alpha: 1 - A.sstep(2.25, 2.75, lt), track: 1.02 });
   U.uBloom = 0.75;
 }
 
@@ -147,11 +147,11 @@ function s3(L, U, lt) {
   const off = lt * 1.45 + rush * 6;
   const st = { xb: 540, yb: 2700, wb: 1000, xv: 540, yv: cy + 40, z0: 1, dz: 0.11, n: 150, pal: STAIR, haze: 0.05, hazeCol: hx('#ffd6b0'), offset: off };
   // step under the feet lights on each beat
-  const footY = 1560; const uF = (footY - st.yb) / (st.yv - st.yb); const zF = st.z0 / (1 - uF); const iF = (zF - st.z0) / st.dz;
+  const footY = 1600; const uF = (footY - st.yb) / (st.yv - st.yb); const zF = st.z0 / (1 - uF); const iF = (zF - st.z0) / st.dz;
   const lit = []; for (let k = 0; k < 4; k++) { const tb = k * BEAT; if (lt >= tb) lit.push({ i: Math.round(iF + tb * 1.45), k: Math.exp(-(lt - tb) * 2.5) * 1.2 }); }
   st.litSteps = lit; A.stair(m, st);
   const ph = (lt % BEAT) / BEAT;
-  const fs = A.lerp(640, 70, rush), fy = A.lerp(footY - 14 * Math.sin(ph * Math.PI), cy + 60, A.eio(rush));
+  const fs = A.lerp(500, 70, rush), fy = A.lerp(footY - 12 * Math.sin(ph * Math.PI), cy + 60, A.eio(rush));
   A.figure(m, { x: 540, y: fy, s: fs, t: lt + 6, wind: [0.25, -1], light: [0, -1], pal: FIG, bagua: 0.75, pose: rush > 0.3 ? 'fly' : 'stand', ribbonLen: 1.8 });
   A.flakes(f, { t: lt + 6, n: 200, seed: 9, area: [0, 0, 1080, 1980], speed: 220 + rush * 900, size: 12, pal: STROKES, alpha: 0.9, glowFrac: 0.4, dust: 200 });
   A.rain(f, { t: lt + 6, n: 160, seed: 6, col: hx('#9ff0ff'), headCol: hx('#fff6dc'), speed: 400 + rush * 1600, len: 90 + rush * 300, alpha: 0.8, bokeh: 6 });
@@ -193,7 +193,7 @@ function s4(L, U, lt) {
     const hz = A.clamp((d - 1) / 4) * 0.85, pal = TUN[Math.min(4, k)];
     const tgt = d > 1.2 ? b : m;
     if (k === 4 && lt > 2.4) { // gold gate sheds its petals
-      A.ring(tgt, { x: cx + ox, y: cy + oy, r, pal: { ...pal, petalA: [0, 0, 0], petalB: [0, 0, 0] }, petals: 0, spin: lt * 0.3, alpha: 1, haze: hz, hazeCol: U.uSkyHor, seed: 7 + k, depth: 0.1 });
+      A.ring(tgt, { x: cx + ox, y: cy + oy, r, pal, noPetals: true, spin: lt * 0.3, alpha: 1, haze: hz, hazeCol: U.uSkyHor, seed: 7 + k, depth: 0.1 });
     } else A.ring(tgt, { x: cx + ox, y: cy + oy, r, pal, spin: lt * 0.3 * (k % 2 ? 1 : -1), alpha: A.sstep(5.5, 4, d), haze: hz, hazeCol: U.uSkyHor, seed: 7 + k, depth: 0.1 });
   }
   // the cultivator flying ahead
@@ -213,17 +213,17 @@ function s5(L, U, lt) {
   const zp = A.ei(A.clamp((lt - 2.25) / 0.75)); const z = 1 + 0.06 * u + 1.6 * zp;
   const fx = A.lerp(540, fp.x, zp), fy = A.lerp(960, fp.y - 60, zp);
   zoomL(L, z, fx, fy);
-  U.uSkyTop = hx('#14082e'); U.uSkyMid = hx('#a8307e'); U.uSkyHor = hx('#ffcf8a'); U.uSkyMidY = 0.66; U.uHorY = 0.385;
-  coreAt(U, 540, 610); U.uCoreR = 46; U.uHaloR = 210; U.uCoreInt = 1.0; U.uCoreHalo = hx('#ffb060'); U.uRays = 0.4; U.uRayRot = lt * 0.12; U.uStars = 0.8;
+  U.uSkyTop = hx('#10062a'); U.uSkyMid = hx('#8a2272'); U.uSkyHor = hx('#ffb27a'); U.uSkyMidY = 0.7; U.uHorY = 0.385;
+  coreAt(U, 540, 560); U.uCoreR = 40; U.uHaloR = 150; U.uCoreInt = 0.8; U.uCoreHalo = hx('#ff9a50'); U.uRays = 0.28; U.uRayRot = lt * 0.12; U.uStars = 0.8;
   const hazeC = hx('#ffc08a');
   [[110, 1170, 240, 400, 31, 0.35], [980, 1180, 260, 420, 47, 0.3], [300, 1185, 120, 160, 52, 0.55], [800, 1185, 130, 170, 61, 0.55]].forEach(([x, y, w, h, s, hz]) =>
     A.peak(b, { x, y, w, h, seed: s, pal: PEAK, haze: hz, hazeCol: hazeC, light: [x < 540 ? 1 : -1, -1], pavilion: w > 200, t: lt }));
-  A.haloRing(b, { x: 540, y: 610, r: 330, tilt: 0.24, rot: 0.1, col: GOLD, alpha: 0.6, n: 160, dots: 20, dotCol: hx('#7af0ff') });
-  A.haloRing(b, { x: 540, y: 610, r: 470, tilt: 0.2, rot: -0.12, col: GOLD, alpha: 0.45, n: 200, dots: 30, dotCol: hx('#ff6a3a') });
-  A.strokes(b, { cx: 540, cy: 610, t: lt + 12, n: 700, seed: 14, r0: 250, r1: 560, pal: STROKES, swirl: 0.25, width: 2.4, alpha: 0.7, len: 0.8, lanes: 7, tilt: 0.35 });
+  A.haloRing(b, { x: 540, y: 560, r: 330, tilt: 0.24, rot: 0.1, col: GOLD, alpha: 0.6, n: 160, dots: 20, dotCol: hx('#7af0ff') });
+  A.haloRing(b, { x: 540, y: 560, r: 470, tilt: 0.2, rot: -0.12, col: GOLD, alpha: 0.45, n: 200, dots: 30, dotCol: hx('#ff6a3a') });
+  A.strokes(b, { cx: 540, cy: 560, t: lt + 12, n: 700, seed: 14, r0: 250, r1: 560, pal: STROKES, swirl: 0.25, width: 2.4, alpha: 0.55, len: 0.8, lanes: 7, tilt: 0.35 });
   // light-falls rising from the palace
-  A.flow(b, { t: lt, n: 220, seed: 3, area: [250, 300, 830, 1250], dir: [0, -1], speed: 160, pal: [hx('#fff0c8'), hx('#9ff6ff'), hx('#ffd36b')], width: 1.4, len: 120, alpha: 0.55 });
-  A.palace(b, { x: 540, y: 1250, r: 430, tiers: 7, gap: 118, t: lt, pal: { wallTop: hx('#4a1e6a'), wall: hx('#1a0e3e'), window: hx('#ffb347'), window2: hx('#7af0ff'), roof: hx('#140a30'), roofTop: hx('#b04a7a'), gold: GOLD } });
+  A.flow(b, { t: lt, n: 160, seed: 3, area: [300, 250, 780, 1150], dir: [0, -1], speed: 160, pal: [hx('#fff0c8'), hx('#9ff6ff'), hx('#ffd36b')], width: 1.2, len: 120, alpha: 0.35 });
+  A.palace(b, { x: 540, y: 1300, r: 400, tiers: 9, gap: 112, t: lt, pal: { wallTop: hx('#4a1e6a'), wall: hx('#1a0e3e'), window: hx('#ffb347'), window2: hx('#7af0ff'), roof: hx('#140a30'), roofTop: hx('#b04a7a'), gold: GOLD } });
   U.clouds[0] = rowCloud({ hor: U.uHorY, near: 0.05, scale: 1.2, cov: 0.5, rows: 8, haze: 0.75, rimK: 5,
     lit: hx('#ff9ab8'), alt: hx('#ffc38a'), sh: hx('#4a1e7a'), hazeCol: hx('#ffc890'), rim: hx('#fff0d0'), drift: [lt * 0.05, 0] });
   // lotus blossoms on the cloud sea
@@ -246,17 +246,20 @@ const BAGUA_PAL = { line: hx('#ffd98a'), glow: hx('#ffb040'), glow2: hx('#ff3f6a
 function s6(L, U, lt) {
   const [b, m, f] = L;
   const grow = A.ei(A.clamp((lt - 2.1) / 0.9));
-  U.uSkyTop = hx('#0a0830'); U.uSkyMid = hx('#3a2a90'); U.uSkyHor = hx('#ff7a6a'); U.uSkyMidY = 0.55; U.uHorY = 0.12;
-  coreAt(U, 900, 230); U.uCoreR = 40; U.uHaloR = 220; U.uCoreInt = 0.95; U.uCoreHalo = hx('#ffa040'); U.uRays = 0.4; U.uRayRot = lt * 0.2; U.uStars = 0.5;
-  U.clouds[0] = rowCloud({ hor: 0.3, near: 0.0, scale: 1.0, cov: 0.5, rows: 6, haze: 0.8, rimK: 5, lit: hx('#ff7a8a'), alt: hx('#c04aa0'), sh: hx('#22186e'), hazeCol: hx('#ff9a80'), rim: hx('#ffe0a0'), drift: [lt * 0.05, 0] });
-  A.strokes(b, { cx: 900, cy: 230, t: lt + 15, n: 600, seed: 24, r0: 160, r1: 620, pal: STROKES, swirl: 0.3, width: 3, alpha: 0.6, len: 0.8, lanes: 7 });
-  const s = A.lerp(2400, 2600, lt / 3), fx = 540 - 40 * Math.sin(lt * 0.5), fy = 300 + s;
-  const fa = 1 - A.sstep(0.35, 0.95, grow);
-  A.figure(m, { x: fx, y: fy, s, t: lt + 15, wind: [0.5, -0.75], light: [0.6, -0.8], pal: FIG, bagua: 0.6 + 0.4 * A.sstep(0.3, 1.5, lt), alpha: fa, ribbonLen: 1.3 });
-  // bagua overlay grows into the sky array
-  const bx = fx + 0, by = fy - 0.7 * s, br = 0.04 * s;
-  const glowA = A.sstep(0.6, 1.8, lt);
-  A.bagua(f, { x: A.lerp(bx, 540, grow), y: A.lerp(by, 1050, grow), r: A.lerp(br, 900, grow), tilt: 1, rot: lt * 0.5, pal: BAGUA_PAL, alpha: glowA * (0.55 + 0.45 * grow), seed: 5 });
+  U.uSkyTop = hx('#0a0830'); U.uSkyMid = hx('#3a2a90'); U.uSkyHor = hx('#ff7a6a'); U.uSkyMidY = 0.75; U.uHorY = 0.6;
+  coreAt(U, 960, 150); U.uCoreR = 46; U.uHaloR = 240; U.uCoreInt = 1.0; U.uCoreHalo = hx('#ffa040'); U.uRays = 0.45; U.uRayRot = lt * 0.2; U.uStars = 0.3;
+  A.strokes(b, { cx: 960, cy: 150, t: lt + 15, n: 500, seed: 24, r0: 120, r1: 520, pal: STROKES, swirl: 0.3, width: 3, alpha: 0.7, len: 0.8, lanes: 7 });
+  // slow push on the embroidered back
+  const z = 1 + 0.05 * lt / 3; zoomL(L, z, 540, 1000);
+  const bx = 540, by = 1000, br = 150;
+  const fa = 1 - A.sstep(0.35, 0.9, grow);
+  A.silk(m, { t: lt + 15, cx: bx, cy: by, r: br, alpha: fa, pal: { silk: hx('#1a1648'), valley: hx('#0a0a28'), ridge: hx('#3a3090'), sheen: hx('#ff9a7a'), rim: hx('#ffe0a0'), gold: hx('#ffd98a') } });
+  A.hair(m, { t: lt + 15, seed: 3, n: 170, x0: -60, x1: 300, y0: -40, dx: 180, dy: 2100, base: hx('#08071e'), hi: [hx('#2fe6ff'), hx('#ff3fa4'), hx('#ffd36b')], alpha: fa });
+  A.ribbons(m, { x: 900, y: 1250, s: 900, t: lt + 15, wind: [-0.9, -0.6], pal: FIG, alpha: 0.85 * fa, ribbonLen: 1.4, rot: 0.2 });
+  resetL(L);
+  // the embroidered bagua lights, turns, then becomes the sky array
+  const glowA = 0.65 + 0.35 * A.sstep(0.5, 1.6, lt);
+  A.bagua(f, { x: bx, y: A.lerp(by, 1050, grow), r: A.lerp(br * z, 900, grow), tilt: 1, rot: lt * 0.5, pal: BAGUA_PAL, alpha: glowA, seed: 5 });
   A.flakes(f, { t: lt + 15, n: 70, seed: 29, area: [0, 0, 1080, 1980], speed: 70, size: 11, pal: STROKES, alpha: 0.75, glowFrac: 0.5, dust: 120 });
   counter(f, '六重天', fade(lt, 0.4, 0.8, 1.9, 2.3));
   U.uBloom = 0.7 + grow * 0.4; U.bloomThr = 0.85;
@@ -288,7 +291,7 @@ function s8(L, U, lt) {
   const grow = A.ei(A.clamp((lt - 2.25) / 0.75));
   U.uSkyTop = hx('#0a0a3a'); U.uSkyMid = hx('#1a1a6a'); U.uSkyHor = hx('#2a1a7a'); U.uSkyMidY = 0.5; U.uHorY = 0.0; U.uStars = 0;
   coreAt(U, 540, 900); U.uCoreR = A.lerp(40, 70, lt / 2.25) + 380 * grow; U.uHaloR = 220 + 900 * grow; U.uCoreInt = 1.0 + grow; U.uCoreHalo = hx('#ffb050'); U.uRays = 0.6; U.uRayRot = lt * 0.3; U.uRayN = 16;
-  A.well(b, { x: 540, y: 900, r: 1700, k: 0.76, tiers: 16, phase: -lt * 0.42 - grow * 1.2, rot: lt * 0.08, t: lt, pal: { wallLit: hx('#3a5ad0'), wall: hx('#141a6a'), wallDark: hx('#070826'), win: hx('#ffb347'), win2: hx('#7af0ff'), gold: GOLD, beam: hx('#ff5a3a'), haze: hx('#ffd8a0') } });
+  A.well(b, { x: 540, y: 900, r: 1700, k: 0.76, tiers: 16, phase: -lt * 0.42 - grow * 1.2, rot: lt * 0.08, t: lt, pal: { wallLit: hx('#c86a3a'), wallMid: hx('#3a2a7a'), wall: hx('#141a6a'), wallDark: hx('#05061e'), win: hx('#ffb347'), win2: hx('#7af0ff'), gold: GOLD, beam: hx('#ff5a3a'), haze: hx('#ffd8a0') } });
   A.strokes(m, { cx: 540, cy: 900, t: lt + 21, n: 700, seed: 44, r0: 120, r1: 520, pal: [hx('#ffd36b'), hx('#fff3d6'), hx('#7af0ff'), hx('#ff7a2a')], swirl: 0.5, width: 2.2, alpha: 0.7, len: 0.7, lanes: 6 });
   A.figure(m, { x: 540, y: A.lerp(1380, 1010, A.eio(lt / 3)), s: A.lerp(170, 70, A.eio(lt / 3)), t: lt + 21, wind: [0.1, 1], light: [0, -1], pal: FIG, pose: 'fly', ribbonLen: 2.0, alpha: 1 - grow });
   A.motes(f, { t: lt, n: 70, seed: 81, speed: 160, size: 3, pal: [hx('#ffd36b'), hx('#fff3d6'), hx('#7af0ff')], alpha: 0.85 });
@@ -303,7 +306,7 @@ function s9(L, U, lt) {
   if (lt < 1.0) {
     U.uSkyTop = hx('#0a0a3a'); U.uSkyMid = hx('#1a1a6a'); U.uSkyHor = hx('#2a1a7a'); U.uHorY = 0;
     coreAt(U, 540, 900); U.uCoreR = 450 + 2400 * into; U.uHaloR = 1100 + 2000 * into; U.uCoreInt = 2 + 2 * into; U.uCoreHalo = hx('#ffb050'); U.uRays = 0.8; U.uRayRot = lt; U.uRayN = 16;
-    A.well(b, { x: 540, y: 900, r: 1700, k: 0.76, tiers: 16, phase: -1.4 - lt * 3, rot: 0.2, t: lt, alpha: 1 - into, pal: { wallLit: hx('#3a5ad0'), wall: hx('#141a6a'), wallDark: hx('#070826'), win: hx('#ffb347'), win2: hx('#7af0ff'), gold: GOLD, beam: hx('#ff5a3a'), haze: hx('#ffd8a0') } });
+    A.well(b, { x: 540, y: 900, r: 1700, k: 0.76, tiers: 16, phase: -1.4 - lt * 3, rot: 0.2, t: lt, alpha: 1 - into, pal: { wallLit: hx('#c86a3a'), wallMid: hx('#3a2a7a'), wall: hx('#141a6a'), wallDark: hx('#05061e'), win: hx('#ffb347'), win2: hx('#7af0ff'), gold: GOLD, beam: hx('#ff5a3a'), haze: hx('#ffd8a0') } });
     petalBurst(f, lt * 1.1, 540, 900, 200, 0.3);
     U.uFlash = 0.9 * white;
   } else {
@@ -314,7 +317,7 @@ function s9(L, U, lt) {
     counter(f, '九重天', 0);
     A.counter(f, { x: 86, y: 250, text: '九重天', col: hx('#b07a2a'), alpha: fade(lt, 1.3, 1.7, 2.5, 2.9), size: 30 });
   }
-  U.uVig = 0.15 + 0.4 * (1 - white); U.uVigCol = hx('#f0d0a0'); U.uHalf = 0.0; U.uGrain = 0.03; U.uBloom = 0.9;
+  U.uVig = 0.15 + 0.4 * (1 - white); U.uVigCol = hx('#f0d0a0'); U.uHalf = 0.0; U.uGrain = 0.03; U.uBloom = 0.9 * (1 - white) + 0.05; U.uSat = 1.1;
 }
 
 // ───────── S10 27–30 飞升
@@ -324,11 +327,11 @@ function s10(L, U, lt) {
   A.haloRing(b, { x: 540, y: 900, r: 420, col: hx('#e0b060'), alpha: 0.5, n: 160, lw: 1.0, rot: (lt + 3) * 0.05 });
   A.haloRing(b, { x: 540, y: 900, r: 470, tilt: 0.22, rot: -0.18, col: hx('#e0b060'), alpha: 0.35 * A.sstep(0, 1.2, lt), n: 160, dots: 24, dotCol: hx('#e8262b') });
   A.motes(f, { t: lt + 6, n: 46, seed: 91, speed: 70, size: 3.2, pal: [hx('#e0a040'), hx('#ff6a3a'), hx('#3ab0d0')], alpha: 0.8, add: false });
-  A.vtext(f, { x: 540, y: 690, size: 340, chars: '飞升', font: '"Zhi Mang Xing"', col: hx('#1a0e30'), col2: hx('#4a1a4a'), alpha: 1, gap: 345, reveal: A.clamp(lt / 1.2) });
-  A.vtext(f, { x: 830, y: 650, size: 40, chars: '人，向光里走。', font: '"Noto Serif SC"', col: hx('#7a3a22'), alpha: A.sstep(1.1, 1.6, lt), gap: 52, reveal: A.clamp((lt - 1.1) / 0.7) });
-  A.seal(f, { x: 830, y: 1080, s: 64, col: hx('#e8262b'), text: '九重', font: '"Ma Shan Zheng"', alpha: A.sstep(1.6, 1.9, lt) });
+  A.vtext(f, { x: 520, y: 640, size: 400, chars: '飞升', font: '"Zhi Mang Xing"', col: hx('#120a24'), col2: hx('#3a1240'), alpha: 1, gap: 400, reveal: A.eo(A.clamp(lt / 1.3)) });
+  A.vtext(f, { x: 840, y: 560, size: 42, chars: '人，向光里走。', font: '"Noto Serif SC"', col: hx('#5a2a18'), alpha: A.sstep(1.1, 1.6, lt), gap: 52, reveal: A.clamp((lt - 1.1) / 0.7) });
+  A.seal(f, { x: 840, y: 1000, s: 64, col: hx('#e8262b'), text: '九重', font: '"Ma Shan Zheng"', alpha: A.sstep(1.6, 1.9, lt) });
   f.save(); f.font = '500 24px "Noto Serif SC"'; f.letterSpacing = '14px'; f.textAlign = 'center'; f.fillStyle = A.css(hx('#a07030'), A.sstep(1.8, 2.3, lt)); f.fillText('ASCENSION', 547, 1330); f.restore();
-  U.uVig = 0.15; U.uVigCol = hx('#f0d0a0'); U.uHalf = 0.0; U.uGrain = 0.03; U.uBloom = 0.5;
+  U.uVig = 0.15; U.uVigCol = hx('#f0d0a0'); U.uHalf = 0.0; U.uGrain = 0.03; U.uBloom = 0.05; U.uSat = 1.1; U.uExpo = 1.9;
 }
 
 // ───────── timeline
