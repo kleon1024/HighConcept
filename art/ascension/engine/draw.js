@@ -792,7 +792,7 @@ A.silk = (ctx, o) => {
   // folds: long diagonal bands, valley → ridge (rim-lit) → valley
   for (let i = 0; i < 9; i++) { const off = -700 + i * 260 + Math.sin(t * 0.6 + i) * 18; const w = 120 + (i % 3) * 50;
     const gx0 = off, gx1 = off + w; const g = ctx.createLinearGradient(gx0, 0, gx1, -w * 0.3);
-    g.addColorStop(0, A.css(P.valley, 0)); g.addColorStop(0.45, A.css(P.ridge, 0.75)); g.addColorStop(0.55, A.css(P.sheen, 0.55)); g.addColorStop(0.62, A.css(P.ridge, 0.6)); g.addColorStop(1, A.css(P.valley, 0));
+    g.addColorStop(0, A.css(P.valley, 0.5)); g.addColorStop(0.42, A.css(P.ridge, 0.85)); g.addColorStop(0.53, A.css(P.sheen, 0.7)); g.addColorStop(0.6, A.css(P.ridge, 0.7)); g.addColorStop(1, A.css(P.valley, 0.5));
     ctx.save(); ctx.translate(540, 960); ctx.rotate(-0.55); ctx.translate(-540, -960); ctx.fillStyle = g; ctx.fillRect(gx0, -400, w, 2800); ctx.restore(); }
   // brocade: tiled cloud scrolls (gold hairlines)
   ctx.strokeStyle = A.css(P.gold, 0.28); ctx.lineWidth = 1;

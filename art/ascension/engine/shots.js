@@ -252,18 +252,18 @@ function s6(L, U, lt) {
   A.strokes(b, { cx: 960, cy: 150, t: lt + 15, n: 500, seed: 24, r0: 120, r1: 520, pal: STROKES, swirl: 0.3, width: 3, alpha: 0.7, len: 0.8, lanes: 7 });
   // slow push on the embroidered back
   const z = 1 + 0.05 * lt / 3; zoomL(L, z, 540, 1000);
-  const bx = 540, by = 1000, br = 150;
+  const bx = 560, by = 1000, br = 205;
   const fa = 1 - A.sstep(0.35, 0.9, grow);
-  A.silk(m, { t: lt + 15, cx: bx, cy: by, r: br, alpha: fa, pal: { silk: hx('#1a1648'), valley: hx('#0a0a28'), ridge: hx('#3a3090'), sheen: hx('#ff9a7a'), rim: hx('#ffe0a0'), gold: hx('#ffd98a') } });
-  A.hair(m, { t: lt + 15, seed: 3, n: 170, x0: -60, x1: 300, y0: -40, dx: 180, dy: 2100, base: hx('#08071e'), hi: [hx('#2fe6ff'), hx('#ff3fa4'), hx('#ffd36b')], alpha: fa });
+  A.silk(m, { t: lt + 15, cx: bx, cy: by, r: br, alpha: fa, pal: { silk: hx('#1a1648'), valley: hx('#070722'), ridge: hx('#4a3aa8'), sheen: hx('#ffb08a'), rim: hx('#ffe0a0'), gold: hx('#ffd98a') } });
+  A.hair(m, { t: lt + 15, seed: 3, n: 150, x0: -80, x1: 230, y0: -40, dx: 180, dy: 2100, base: hx('#08071e'), hi: [hx('#2fe6ff'), hx('#ff3fa4'), hx('#ffd36b')], alpha: fa });
   A.ribbons(m, { x: 900, y: 1250, s: 900, t: lt + 15, wind: [-0.9, -0.6], pal: FIG, alpha: 0.85 * fa, ribbonLen: 1.4, rot: 0.2 });
   resetL(L);
   // the embroidered bagua lights, turns, then becomes the sky array
   const glowA = 0.65 + 0.35 * A.sstep(0.5, 1.6, lt);
-  A.bagua(f, { x: bx, y: A.lerp(by, 1050, grow), r: A.lerp(br * z, 900, grow), tilt: 1, rot: lt * 0.5, pal: BAGUA_PAL, alpha: glowA, seed: 5 });
+  A.bagua(f, { x: A.lerp(bx, 540, grow), y: A.lerp(by, 1050, grow), r: A.lerp(br * z, 900, grow), tilt: 1, rot: lt * 0.5, pal: BAGUA_PAL, alpha: glowA * (1 - 0.35 * grow), seed: 5 });
   A.flakes(f, { t: lt + 15, n: 70, seed: 29, area: [0, 0, 1080, 1980], speed: 70, size: 11, pal: STROKES, alpha: 0.75, glowFrac: 0.5, dust: 120 });
   counter(f, '六重天', fade(lt, 0.4, 0.8, 1.9, 2.3));
-  U.uBloom = 0.7 + grow * 0.4; U.bloomThr = 0.85;
+  U.uBloom = 0.7 + grow * 0.1; U.bloomThr = 0.85;
 }
 
 // ───────── S7 18–21 七重天 · 劫
