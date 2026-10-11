@@ -195,6 +195,6 @@ class Score:
             for n, x in stems.items(): sf.write(os.path.join(os.environ['STEM_DIR'], n + '.wav'), x.astype(np.float32), self.sr)
         dry = sum(stems.values())
         send = sum(stems[n] * parts[n].verb for n in stems)
-        ir = self._ir()
+        ir = self.ir = self._ir()
         wet = np.stack([fftconvolve(send[:, ch], ir[:, ch])[:self.N] for ch in range(2)], axis=1)
         return dry + verb_return * wet, stems

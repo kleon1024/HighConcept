@@ -3,7 +3,8 @@ import json, os
 import numpy as np
 import soundfile as sf
 from engine import SF2, Drums, Score, Synth
-from mixutil import bloom, jumps, master, swell
+from mixutil import jumps, master
+from sfx import Sfx
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 J = json.load(open(os.path.join(ROOT, 'src', 'icecube', 'icecube.json')))
@@ -77,7 +78,6 @@ g, g0 = Q['ghost'], S['ghost']['start']
 bars(g0, S['ghost']['end'], drums='half', arp=False, mar=True)
 note(DR, g0, 1.2, CRASH, 100); note(VIB, g0 + g['nu'], 1.0, E + 19, 100)
 for k, c in enumerate(g['chips']): note(MAR, g0 + c, 0.3, E + 24 + [0, 3, 7][k], 115)
-for s in (g['light'][1], g['proton'][1]): note(DR, g0 + s, 0.2, LTOM, 120); note(TIMP, g0 + s, 0.5, E - 24, 100)
 a, b = g['neutrino']
 for k in range(12): note(VIB, g0 + a + (b - a) * k / 12, 0.2, E + 7 + PENTA[k % 5] + 12 * (k // 5), 85)
 
@@ -85,7 +85,6 @@ for k in range(12): note(VIB, g0 + a + (b - a) * k / 12, 0.2, E + 7 + PENTA[k % 
 m, m0 = Q['messenger'], S['messenger']['start']
 bars(m0, S['messenger']['end'], drums='full', arp=True)
 note(DR, m0, 1.5, CRASH, 105); chord(BRASS, m0, 0.35, [E - 12, E - 5, E], 100)
-note(DR, m0 + m['light'][1], 0.2, LTOM, 118)
 for k in range(6): note(ARP, m0 + m['ray'][0] + 0.25 + k * 0.22, 0.2, E + 19 - k * 2 + (3 if k % 2 else 0), 80)
 note(DR, m0 + m['nu'][1], 1.5, CRASH, 115); chord(BRASS, m0 + m['nu'][1], 0.9, [E - 12, E, E + 7], 110)
 for k in range(5): note(CEL, m0 + m['nu'][1] + 0.25 + k * 0.15, 0.4, E + 12 + PENTA[k] + 12, 85)
@@ -100,12 +99,12 @@ chord(BRASS, d0 + dq['hit'], 1.0, [E - 12, E - 8, E - 5, E], 112); note(BASS, d0
 note(CEL, d0 + dq['pin'] + 0.15, 0.8, E + 31, 110); note(BELL, d0 + dq['pin'] + 0.15, 1.2, E + 19, 85)
 bars(d0 + dq['hit'] + 0.5, S['idea']['end'], drums='half', arp=False)
 
-# ── 5 detector: driving; a woodblock + pluck per string; big chord when the cube appears; then lights off
+# ── 5 detector: driving; a pluck per string; big chord when the cube appears; then lights off
 c0, c = S['detector']['start'], Q['detector']
 bars(c0, c0 + c['dark'], drums='full', arp=True, pad=STR)
 note(DR, c0, 1.5, CRASH, 108)
 for k in range(9):
-    s = c0 + c['drop0'] + k * c['dropStep']; note(DR, s, 0.05, WOOD, 115); note(PIZZ, s, 0.3, E + 12 + PENTA[k % 5] + 12 * (k // 5), 105)
+    s = c0 + c['drop0'] + k * c['dropStep']; note(PIZZ, s, 0.3, E + 12 + PENTA[k % 5] + 12 * (k // 5), 105)
 note(DR, c0 + c['iso'], 1.8, CRASH, 118); chord(BRASS, c0 + c['iso'], 1.6, [E - 12, E - 5, E, E + 3, E + 7], 105)
 chord(STR, c0 + c['iso'], 3.6, [E - 12, E - 5, E + 3, E + 7, E + 12], 85)
 # dark: pad + heartbeat
@@ -137,18 +136,41 @@ chord(PAD, z0 + Q['nobel']['close'], 2.6, [E - 12, E, E + 4, E + 11], 75); note(
 
 x, stems = sc.render(PARTS, kick_part=DR)
 
-def add(s, sig, gain):
-    i0 = int(s * SR); seg = sig[:max(0, N - i0)]; x[i0:i0 + len(seg)] += (seg * gain)[:, None]
-pk = np.abs(x).max()
-# soft air swells that peak on each cut, instead of white-noise whooshes
-for s in J['sections'][1:]: add(s['start'] - 0.55, swell(SR, rng, 0.7), 0.05 * pk)
-add(c0 + c['arrow'] - 0.1, swell(SR, rng, 0.9, 300, 2600), 0.05 * pk)              # the reconstruction arrow
-add(S['ghost']['start'] + g['neutrino'][0], swell(SR, rng, 1.4, 400, 3000), 0.03 * pk)   # neutrino sliding through the Earth
-add(c0 + c['hit'], bloom(SR), 0.12 * pk)                                            # the collision: a low bloom
 # lights off: ease the band down over a bar rather than cutting it
 i0 = int((c0 + c['dark']) * SR); i1 = int((c0 + c['hit']) * SR); ramp = np.ones(N)
 ramp[i0:i1] = 0.7 + 0.3 * np.exp(-np.arange(i1 - i0) / (0.5 * SR))
 x *= ramp[:, None]
+
+# ── sound effects (Mixkit one-shots) on the picture's cues
+fx = Sfx(DUR, SR)
+for s, (name, db) in zip(J['sections'][1:], [('whoosh_air', -25), ('sweep_air', -25), ('swoosh_wind', -28), ('whoosh_fast', -25), ('sweep_magic', -25), ('light_sweep', -25)]):
+    fx.play(s['start'], name, db, align='peak')                                    # a whoosh peaking on every cut
+fx.play(h['count'][1], 'riser', -27, align='peak')                                 # the count rushing up …
+for k in range(8): fx.play(h['count'][0] + (h['count'][1] - h['count'][0]) * (1 - (1 - k / 8) ** 1.7), 'click_ui', -25, rate=1 + 0.07 * k)
+fx.play(h['count'][1], 'impact_zoom', -20)                                         # … lands on "100 万亿"
+fx.play(h['spark'], 'sparkle', -22); fx.play(h['spark'], 'crystal', -28)          # the one that hits you
+fx.play(g0 + g['nu'], 'pop_whoosh', -24)
+for k, s in enumerate(g['chips']): fx.play(g0 + s, 'pop_dry', -26, rate=1 + 0.12 * k)
+for s, r in ((g['light'][1], 0.85), (g['proton'][1], 0.72)): fx.play(g0 + s, 'impact_zoom', -27, rate=r)   # stopped at the surface
+fx.play(g0 + (g['neutrino'][0] + g['neutrino'][1]) / 2, 'whoosh_ghost', -22, align='peak')               # straight through
+fx.play(m0 + 0.2, 'glow', -27)
+fx.play(m0 + m['light'][1], 'impact_zoom', -28, rate=0.9)
+fx.play(m0 + (m['ray'][0] + m['ray'][1]) / 2, 'sweep_scifi', -28, align='peak')
+fx.play(m0 + m['nu'][1], 'crystal', -23); fx.play(m0 + m['nu'][1], 'impact_zoom', -25)
+fx.play(m0 + m['nu'][1] + 0.3, 'wand', -27)
+fx.play(d0 + dq['hit'], 'impact_zoom', -21)
+fx.play(d0 + dq['pin'] + 0.15, 'pop_whoosh', -25)
+for k in range(9): fx.play(c0 + c['drop0'] + k * c['dropStep'], 'click_select', -21, rate=1 + 0.035 * k)   # each string drops
+fx.play(c0 + c['iso'] + 0.6, 'light_transition', -25, align='peak')               # the cube appears
+fx.play(c0 + c['dark'], 'switch', -22); fx.play(c0 + c['dark'] + 0.05, 'power_up', -28, reverse=True, maxlen=2.5)   # lights off
+fx.play(c0 + c['hit'] - 0.1, 'whoosh_ghost', -30, align='peak')
+fx.play(c0 + c['hit'], 'impact_space', -19); fx.play(c0 + c['hit'], 'glass_hit', -28)   # the collision
+fx.play(c0 + c['hit'] + 0.1, 'glitter', -28)                                       # sensors lighting up
+fx.play(c0 + c['arrow'] + 0.7, 'sweep_magic', -24, align='peak')                   # reconstruction arrow
+fx.play(c0 + c['source'], 'wand', -22)
+for s in Q['discover']['nodes']: fx.play(x0 + s, 'pop_msg', -24)
+fx.play(z0, 'choir_shine', -24); fx.play(z0 + Q['nobel']['close'], 'sparkle', -26)
+x = x + fx.mix(sc.ir, 0.15)
 x, L, P = master(x, SR)
 print(f'integrated {L:.1f} LUFS, peak {P:.1f} dBFS')
 med, mx, jj = jumps(x, SR)
