@@ -8,9 +8,12 @@
   settles after.
 - **Rhythm**: alternate fast and slow — bursts of quick cuts, then a held, breathing shot. Land big moments on downbeats.
 - **Depth**: parallax layers, scale contrast (tiny figure vs colossal structure), slow camera push on held shots.
+- **Cinematic camera for scale and action**: show size with camera moves (slow tilt-up reveal, pull-back, fly-by with
+  near/far parallax), and give the character real actions (step, fall, catch, fly, strike). Static centred posters with
+  zoom-tunnel cuts feel like a slideshow, not animation.
 - **Readability**: hold text ≥ 1.2 s after it finishes animating; safe margins (≥ 70 px sides, keep the bottom ~300 px
   of vertical video clear of key text); check every frame for overlapping text and cropped elements.
 - **Craft over crudeness**: if a thing can't be drawn well, abstract it or use a real photo — never a crude model.
 - **Style is a system**: palette, line weight, corner radius, motion curves and type are defined once and reused.
 
-Feedback log: 「建模太粗糙」「黑金界面看不出来都是啥」「应该有快有慢」「真画不好的地方用抽象手法」「全新风格…超强风格…绚丽+繁杂眼花缭乱」.
+Feedback log: 「建模太粗糙」「黑金界面看不出来都是啥」「应该有快有慢」「真画不好的地方用抽象手法」「全新风格…超强风格…绚丽+繁杂眼花缭乱」「动画不合适」.
