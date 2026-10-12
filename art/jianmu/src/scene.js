@@ -4,6 +4,8 @@ import { mulberry32, lerp, clamp } from './util.js';
 import { ENV, skyMesh, paintMat } from './materials.js';
 import { CloudField, cloudSea, scatter, STORM } from './clouds.js';
 import { buildJianmu, buildIsland, buildPeaks, Chain, catenary, giantSwordG, TRUNK, PAL, CHAIN_MAT, merge, pagodaG, hallG, HALL_MAT, roofG, boxG } from './world.js';
+const solidC = (g, c) => { const n = g.attributes.position.count; const a = new Float32Array(n * 3); for (let i = 0; i < n; i++) { a[i * 3] = c.r; a[i * 3 + 1] = c.g; a[i * 3 + 2] = c.b; } g.setAttribute('color', new THREE.BufferAttribute(a, 3)); return g; };
+const col = (h) => new THREE.Color(h);
 const roofG2 = (w, d, h, lift, y, x = 0) => { const g = roofG(w, d, h, lift, PAL.roofGlaze, y); if (x) g.translate(x, 0, 0); return g; };
 import { Cranes } from './cranes.js';
 import { FX } from './fx.js';
@@ -84,29 +86,38 @@ export function buildWorld(renderer, atlas) {
     // mid-level wisps and bands around the trunk
     ...scatter(102, 110, (r) => { const a = r() * 6.28, d = 450 + Math.pow(r(), 0.8) * 4000; const w = 260 + r() * 900; const band = r() < 0.3; const cum = false; return { p: V(Math.cos(a) * d, 250 + r() * 3400, Math.sin(a) * d), w: band ? w * 2.0 : w, h: band ? w * 0.35 : w * 0.5, cell: band ? 8 + Math.floor(r() * 4) : (cum ? Math.floor(r() * 8) : 12 + Math.floor(r() * 4)), op: band ? 0.35 + 0.2 * r() : 0.5 + 0.35 * r(), flip: r() < 0.5 }; }),
   ];
-  // 天门 / heaven palaces for the finale: a colossal three-bay gate with towers (阙) and receding halls on a far cloud bank,
-  // backlit by the low sun so they read as layered silhouettes
+  // 南天门 for the finale: round vermilion pillars with gold bands, a two-tier roof with ridge horns, a gold-lettered plaque,
+  // a broad jade stair down the cloud bank, flanking towers and receding halls — backlit by the low sun
   const gates = new THREE.Group(); gates.visible = false; scene.add(gates);
-  const GATE_MAT = paintMat({ brushScale: 0.004, brush: 0.1, rim: 1.2, wrap: 0.2, tint: 0x9a8e86, side: THREE.DoubleSide });
+  const GATE_MAT = paintMat({ brushScale: 0.004, brush: 0.08, rim: 1.6, wrap: 0.25, side: THREE.DoubleSide });
+  const GATE = { x: 1300, y: 6300, z: -9500 };
   {
-    const GX = 1300, GY = 6900, GZ = -9500; const s = 1.0;
-    const dark = PAL.roof;
-    const gateParts = [
-      ...[-1, 1].map(k => boxG(220, 1500, 220, PAL.verm, k * 620, 750, 0)), ...[-1, 1].map(k => boxG(150, 1100, 150, PAL.verm, k * 260, 550, 0)),
-      boxG(1700, 130, 300, PAL.verm, 0, 1150, 0), boxG(1900, 70, 380, PAL.gold, 0, 1080, 0),
-      roofG(2300, 600, 520, 240, dark, 1250), roofG(1500, 480, 380, 170, dark, 1700), roofG(800, 360, 260, 120, dark, 2050),
-      boxG(1100, 300, 260, PAL.verm, 0, 1550, 0), boxG(600, 260, 200, PAL.verm, 0, 1900, 0),
-    ];
-    const gm = new THREE.Mesh(merge(gateParts), GATE_MAT); gm.position.set(GX, GY, GZ); gates.add(gm);
-    // flanking towers (阙) and a stair of halls receding up the cloud bank
-    const r = mulberry32(404);
-    for (const k of [-1, 1]) { const tw = new THREE.Mesh(pagodaG(1, 6, 1.0), GATE_MAT); tw.scale.setScalar(420); tw.position.set(GX + k * 2100, GY - 150, GZ + 400); gates.add(tw); }
-    for (let i = 0; i < 12; i++) {
-      const side = i % 2 ? 1 : -1; const d = 1 + Math.floor(i / 2);
-      const m = new THREE.Mesh(hallG(1, 0.6, 1, { double: true, glaze: true }), GATE_MAT);
-      const sz = 520 + 300 * r(); m.scale.setScalar(sz); m.position.set(GX + side * (1400 + d * 1300 + 500 * r()), GY - 300 + d * 260 + 200 * r(), GZ - 1200 - d * 1400 * r()); m.rotation.y = (r() - 0.5) * 0.5; gates.add(m);
+    const cyl = (r, h, c, x, y, z, seg = 24) => { const g = new THREE.CylinderGeometry(r, r, h, seg); g.translate(x, y + h / 2, z); return solidC(g, c); };
+    const parts = [];
+    for (const s of [-1, 1]) {
+      parts.push(cyl(120, 1500, PAL.verm, s * 560, 0, 0));
+      for (const yy of [60, 1300, 1420]) parts.push(cyl(132, 40, PAL.gold, s * 560, yy, 0));
+      parts.push(boxG(320, 120, 320, PAL.stone, s * 560, 60, 0));
     }
-    for (let i = 0; i < 4; i++) { const m = new THREE.Mesh(hallG(1, 0.7, 1, { double: true, glaze: true }), GATE_MAT); m.scale.setScalar(900 - i * 120); m.position.set(GX + (i % 2 ? 600 : -500), GY + 900 + i * 700, GZ - 3000 - i * 2200); gates.add(m); }
+    parts.push(boxG(1600, 150, 260, PAL.verm, 0, 1360, 0), boxG(1700, 50, 300, PAL.gold, 0, 1280, 0), boxG(1500, 60, 280, PAL.gold, 0, 1460, 0));
+    parts.push(boxG(1500, 220, 240, PAL.roof, 0, 1600, 0));                          // bracket band (斗拱 mass)
+    parts.push(roofG(2500, 780, 600, 300, PAL.roofGlaze, 1700), boxG(900, 300, 300, PAL.verm, 0, 2150, 0), roofG(1500, 560, 440, 220, PAL.roofGlaze, 2280));
+    for (const s of [-1, 1]) { const h = new THREE.ConeGeometry(45, 220, 6); h.rotateZ(s * 0.5); h.translate(s * 720, 2780, 0); parts.push(solidC(h, PAL.gold)); }
+    // stair: broad white-jade steps descending toward the camera
+    for (let i = 0; i < 26; i++) parts.push(boxG(1300 + i * 30, 40, 70, col(0xe8eee6), 0, -i * 40, 140 + i * 70));
+    const gm = new THREE.Mesh(merge(parts), GATE_MAT); gm.position.set(GATE.x, GATE.y, GATE.z); gates.add(gm);
+    // plaque 「南天门」
+    const pc = document.createElement('canvas'); pc.width = 256; pc.height = 640; const px = pc.getContext('2d');
+    px.fillStyle = '#16303a'; px.fillRect(0, 0, 256, 640); px.strokeStyle = '#d9b46a'; px.lineWidth = 18; px.strokeRect(9, 9, 238, 622);
+    px.fillStyle = '#e8c27a'; px.font = '150px "Ma Shan Zheng"'; px.textAlign = 'center'; px.textBaseline = 'middle'; ['南', '天', '门'].forEach((ch, i) => px.fillText(ch, 128, 125 + i * 195));
+    const ptex = new THREE.CanvasTexture(pc); ptex.colorSpace = THREE.NoColorSpace;
+    const plaque = new THREE.Mesh(new THREE.PlaneGeometry(170, 420), new THREE.MeshBasicMaterial({ map: ptex, toneMapped: false, fog: false }));
+    plaque.position.set(GATE.x, GATE.y + 1520 + 60, GATE.z + 170); gates.add(plaque); gates.userData.plaque = { tex: ptex, canvas: pc };
+    for (const s of [-1, 1]) { const tw = new THREE.Mesh(pagodaG(1, 6, 1.0), GATE_MAT); tw.scale.setScalar(380); tw.position.set(GATE.x + s * 2000, GATE.y - 300, GATE.z + 600); gates.add(tw); }
+    const r = mulberry32(404);
+    for (let i = 0; i < 10; i++) { const side = i % 2 ? 1 : -1; const d = 1 + Math.floor(i / 2); const m = new THREE.Mesh(hallG(1, 0.6, 1, { double: true, glaze: true }), GATE_MAT);
+      m.scale.setScalar(480 + 260 * r()); m.position.set(GATE.x + side * (2600 + d * 1200 + 400 * r()), GATE.y - 500 + d * 280, GATE.z - 1500 - d * 900 * r()); m.rotation.y = (r() - 0.5) * 0.5; gates.add(m); }
+    for (let i = 0; i < 3; i++) { const m = new THREE.Mesh(hallG(1, 0.7, 1, { double: true, glaze: true }), GATE_MAT); m.scale.setScalar(1000 - i * 150); m.position.set(GATE.x + (i % 2 ? 500 : -400), GATE.y + 1600 + i * 900, GATE.z - 4000 - i * 2500); gates.add(m); }
   }
   // clouds wrapping the island bases
   const islandClouds = [];

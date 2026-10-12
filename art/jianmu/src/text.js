@@ -27,7 +27,7 @@ export class Captions {
         if (al <= 0.001) { if (it.vertical) y0 += size + sp; else x0 += widths[i] + sp; return; }
         const dy = (1 - easeOut(k)) * 10;
         ctx.save(); ctx.globalAlpha = al;
-        ctx.shadowColor = it.glow || 'rgba(250,252,248,0.55)'; ctx.shadowBlur = (it.glowBlur ?? 10) + (1 - k) * 12;
+        ctx.shadowColor = it.glow || 'rgba(252,252,246,0.9)'; ctx.shadowBlur = (it.glowBlur ?? 18) + (1 - k) * 12;
         ctx.fillStyle = it.color || '#1d3439';
         if (it.vertical) { ctx.textAlign = 'center'; ctx.fillText(ch, it.x, y0 + dy); y0 += size + sp; }
         else { ctx.textAlign = 'left'; ctx.fillText(ch, x0, y0 + dy); x0 += widths[i] + sp; }

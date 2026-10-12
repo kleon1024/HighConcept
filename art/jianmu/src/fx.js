@@ -7,7 +7,7 @@ import { ENV, paintMat } from './materials.js';
 
 // ── generic additive line segments, camera-facing ribbons with soft gaussian cross-profile
 export class Lines {
-  constructor(max, fog = true) {
+  constructor(max, fog = true, alphaMode = false) {
     const g = new THREE.InstancedBufferGeometry(); const b = new THREE.PlaneGeometry(1, 1);
     g.index = b.index; g.attributes.position = b.attributes.position; g.attributes.uv = b.attributes.uv;
     const mk = (n) => { const a = new THREE.InstancedBufferAttribute(new Float32Array(max * n), n); a.setUsage(THREE.DynamicDrawUsage); return a; };
@@ -36,9 +36,10 @@ export class Lines {
           float core = exp(-y * y * 18.0), glow = exp(-y * y * 2.5) * 0.35;
           vec3 c = vC * (core * 1.4 + glow) * vI;
           if (uFogK > 0.5) { float fk; vec3 dummy = atmo(vec3(0.0), vWP, fk); c *= (1.0 - fk * 0.92); }
-          gl_FragColor = vec4(c, 1.0);
+          ${alphaMode ? 'float al = clamp((exp(-y * y * 3.0)) * vI, 0.0, 1.0); gl_FragColor = vec4(vC * al, al);' : 'gl_FragColor = vec4(c, 1.0);'}
         }`,
-      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+      transparent: true, depthWrite: false, side: THREE.DoubleSide,
+      blending: alphaMode ? THREE.CustomBlending : THREE.AdditiveBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
     });
     this.mesh = new THREE.InstancedMesh(g, this.mat, max); this.mesh.frustumCulled = false; this.mesh.count = 0; this.max = max; this.n = 0;
   }
@@ -116,6 +117,7 @@ export class FX {
     this.points = new Points(3000); scene.add(this.points.mesh);
     this.petals = new Points(300, THREE.CustomBlending); scene.add(this.petals.mesh);
     this.hLines = new Lines(400, false); heroScene.add(this.hLines.mesh);
+    this.wisps = new Lines(400, true, true); scene.add(this.wisps.mesh);
     this.hPoints = new Points(400, THREE.AdditiveBlending, false); heroScene.add(this.hPoints.mesh);
     this.hPetals = new Points(200, THREE.CustomBlending, false); heroScene.add(this.hPetals.mesh);
     this.jm = jm;
@@ -145,9 +147,9 @@ export class FX {
     if (sect) for (const ang of [0.4, 2.8, 4.1]) { const R = sect.userData.R * 0.93; const m = new THREE.Mesh(fallGeom(26, 1600, 1), FALL_MAT); m.position.set(Math.cos(ang) * R, 30, Math.sin(ang) * R); m.rotation.y = -ang + Math.PI / 2; sect.add(m); }
   }
   update(t, st, cam) {
-    this.lines.begin(); this.points.begin(); this.petals.begin(); this.hLines.begin(); this.hPoints.begin(); this.hPetals.begin();
+    this.lines.begin(); this.points.begin(); this.petals.begin(); this.wisps.begin(); this.hLines.begin(); this.hPoints.begin(); this.hPetals.begin();
     if (st.fx) st.fx(this, t);
-    this.lines.end(); this.points.end(); this.petals.end(); this.hLines.end(); this.hPoints.end(); this.hPetals.end();
+    this.lines.end(); this.points.end(); this.petals.end(); this.wisps.end(); this.hLines.end(); this.hPoints.end(); this.hPetals.end();
     if (st.debris) { st.debris(this.debris, t); } else this.debris.count = 0;
   }
 }

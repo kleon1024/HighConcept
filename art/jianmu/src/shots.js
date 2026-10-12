@@ -15,18 +15,18 @@ const caps = new Captions();
 
 // ───────────────────────── light presets (all colours sRGB-ish display values)
 const P = {
-  dawn: { sun: [-0.36, 0.42, -0.83], sunCol: 0xffcf8c, sunK: 1.55, skyAmb: 0x3d6874, groundAmb: 0x4a5049, rim: 0xffcf80, fog: 0xd2dcd3, fogSun: 0xf2dfba, fogDen: 0.00008, fogH: 200, fogFall: 500, fogStart: 700,
-    zen: 0x86aeba, hor: 0xe9e4d2, voidc: 0xbccac8, glow: 0xffd08a, lit: 0xfff4e4, shade: 0xa4b5c0, crim: 0xffd48a, seaVoid: 0x93a6b2 },
+  dawn: { sun: [-0.62, 0.42, -0.66], sunCol: 0xffc883, sunK: 1.6, skyAmb: 0x3d6874, groundAmb: 0x4a5049, rim: 0xffcf80, fog: 0xd2dcd3, fogSun: 0xf2dfba, fogDen: 0.00008, fogH: 200, fogFall: 500, fogStart: 700,
+    zen: 0x8db1b8, hor: 0xefe5cc, voidc: 0xbccac8, glow: 0xffcf86, lit: 0xfff6ea, shade: 0xb3c1cb, crim: 0xffd48a, seaVoid: 0x9fb0bc },
   cold: { sun: [-0.2, 0.42, -0.88], sunCol: 0xc9d3d2, sunK: 0.75, skyAmb: 0x93abb0, groundAmb: 0x5f6f70, rim: 0xd8e0de, fog: 0xc9d5d4, fogSun: 0xdfe5e2, fogDen: 0.00022, fogH: 250, fogFall: 600,
     zen: 0x8fa7ad, hor: 0xd6dedb, voidc: 0xb3c2c2, glow: 0xe4e8e2, lit: 0xe7ecea, shade: 0x9aabae, crim: 0xe0e6e2, seaVoid: 0x9fb2b4 },
   sect: { sun: [0.55, 0.38, -0.74], sunCol: 0xe6ddc8, sunK: 0.95, skyAmb: 0x7a929a, groundAmb: 0x55605e, rim: 0xf1e2c0, fog: 0xccd8d6, fogSun: 0xe9e6da, fogDen: 0.00019, fogH: 300, fogFall: 700,
     zen: 0x93acb2, hor: 0xdde3dd, voidc: 0xb5c4c3, glow: 0xf0e8d4, lit: 0xeef1ec, shade: 0x9fb1b3, crim: 0xf2e8d2, seaVoid: 0xa7b9ba },
-  flight: { sun: [-0.35, 0.55, -0.76], sunCol: 0xffdcaa, sunK: 1.3, skyAmb: 0x6c8b95, groundAmb: 0x5e6460, rim: 0xffe0a0, fog: 0xd8e6e2, fogSun: 0xfff0cc, fogDen: 0.00017, fogH: 300, fogFall: 700,
-    zen: 0x98bec4, hor: 0xeef2e6, voidc: 0xc6d6d3, glow: 0xffefc4, lit: 0xfcf8ee, shade: 0xaec3c4, crim: 0xfff0c8, seaVoid: 0xb0c6c7 },
+  flight: { sun: [-0.45, 0.5, -0.74], sunCol: 0xffd096, sunK: 1.5, skyAmb: 0x3f6a76, groundAmb: 0x4c524c, rim: 0xffd48a, fog: 0xc9d6d3, fogSun: 0xf3dfba, fogDen: 0.00009, fogH: 300, fogFall: 700, fogStart: 500,
+    zen: 0x5f93a6, hor: 0xe4e3d2, voidc: 0xb3c4c4, glow: 0xffd08a, lit: 0xfdf4e4, shade: 0x9fb2bf, crim: 0xffd48a, seaVoid: 0x93a6b2 },
   storm: { sun: [-0.2, 0.6, -0.77], sunCol: 0x5d7a84, sunK: 0.5, skyAmb: 0x2f4c56, groundAmb: 0x1d2f36, rim: 0x9fc0c8, fog: 0x1f3c47, fogSun: 0x2e4f5a, fogDen: 0.00035, fogH: 300, fogFall: 900,
     zen: 0x0f2630, hor: 0x2a4a55, voidc: 0x1c3640, glow: 0x3f5f68, lit: 0x587a83, shade: 0x1a323b, crim: 0x86a6ae, seaVoid: 0x16303a },
-  gold: { sun: [0.21, 0.235, -0.95], sunCol: 0xffc878, sunK: 1.3, skyAmb: 0x5f7380, groundAmb: 0x6e5c4e, rim: 0xffcf70, fog: 0xd6bb94, fogSun: 0xffd08a, fogDen: 0.00004, fogH: 4250, fogFall: 260, high: 0,
-    zen: 0x5d88a3, hor: 0xe8c592, voidc: 0xc9ab84, glow: 0xffc46a, lit: 0xf8e2b8, shade: 0xb79f92, crim: 0xffd27e, seaVoid: 0xb29a88 },
+  gold: { sun: [0.19, 0.3, -0.935], sunCol: 0xffc878, sunK: 1.3, skyAmb: 0x5f7380, groundAmb: 0x6e5c4e, rim: 0xffcf70, fog: 0xd6bb94, fogSun: 0xffd08a, fogDen: 0.00004, fogH: 4250, fogFall: 260, high: 0,
+    zen: 0x5d88a3, hor: 0xeccb98, voidc: 0xcdb5a0, glow: 0xffc46a, lit: 0xfff0da, shade: 0xc4a9a4, crim: 0xffd27e, seaVoid: 0xbaa3a0 },
 };
 const tmpA = new THREE.Color(), tmpB = new THREE.Color();
 function setEnv(a, b = a, k = 0) {
@@ -78,7 +78,7 @@ function shot(t0, t1, fn) { SHOTS.push({ t0, t1, fn }); }
 // S1 · 0–3 · hook: tilt up the colossal trunk out of the cloud sea (高远)
 const S1cam = V(-3500, 520, 3800);
 shot(0, 3, (t, w, cam, st) => {
-  setEnv(P.dawn); grade({ exp: 0.97, bloom: 0.35, contrast: 1.15, rayThresh: 0.9 }); st.rays = 0.4;
+  setEnv(P.dawn); grade({ exp: 0.98, bloom: 0.38, contrast: 1.16, rayThresh: 0.95, sat: 1.1, gain: [1.03, 1.0, 0.96] }); st.rays = 0.35;
   const k = easeInOutSine(seg(t, 0, 3.6));
   const pos = S1cam.clone().add(V(80 * k, 260 * k, -120 * k));
   const L = leftOf(pos, V(0, 0, 0));
@@ -89,7 +89,7 @@ shot(0, 3, (t, w, cam, st) => {
     { c: V(-3240, 650, 3460), v: V(16, 2.5, -6), n: 7, spread: 22, size: 2.6, seed: 3, t0: 0 },
     { c: V(-2950, 900, 3150), v: V(12, 2, -8), n: 6, spread: 34, size: 2.6, seed: 5, t0: 0 },
   ];
-  if (!_c1) _c1 = w.baseClouds.concat(wispsAround(11, 14, V(-900, 0, 1300), 900, 350, 1500, 160, 420, 0.4, 0.0), ringClouds(12, 12, V(0, 40, 0), 420, 760, 600, 1100, 0.9), trunkBands());
+  if (!_c1) _c1 = w.baseClouds.concat(wispsAround(11, 14, V(-900, 0, 1300), 900, 350, 1500, 160, 420, 0.4, 0.0), ringClouds(12, 12, V(0, 40, 0), 420, 760, 600, 1100, 0.9));
   st.clouds = _c1;
   st.caps = [
     { text: '传说，', t0: 0.25, t1: 2.75, x: 300, y: 300, size: 66, align: 'left' },
@@ -368,31 +368,37 @@ shot(13.5, 15.42, (t, w, cam, st) => {
   };
 });
 
-// S6a · 15.42–18 · chase: behind and below her, spiralling up around the trunk just outside the branch-rung tips
-const CH_R = 1120, CH_A0 = 2.35, CH_A1 = 1.65, CH_Y0 = 1020, CH_Y1 = 1700;
+// S6a · 15.42–18 · chase: beside and behind her, spiralling up around the trunk just outside the branch-rung tips
+const CH_R = 1120, CH_A0 = 1.55, CH_A1 = 2.3, CH_Y0 = 1020, CH_Y1 = 1700;
 function chasePos(t) { const k = clamp((t - 15.0) / 3.0); const kk = 0.35 * k + 0.65 * easeOut(k); const a = lerp(CH_A0, CH_A1, kk); const r = CH_R + 30 * Math.sin(kk * 7); return V(Math.cos(a) * r, lerp(CH_Y0, CH_Y1, kk) + 18 * Math.sin(kk * 9), Math.sin(a) * r); }
-let _c6 = null;
+let _c6 = null, _near6 = null;
 shot(15.42, 18, (t, w, cam, st) => {
-  setEnv(P.flight); grade({ exp: 1.02, bloom: 0.45, sat: 1.08, chroma: 0.0022 });
+  setEnv(P.flight); grade({ exp: 1.0, bloom: 0.4, sat: 1.1, chroma: 0.0024, contrast: 1.14, rayThresh: 0.95 }); st.rays = 0.12;
   fallenWorld(w);
   const hp = chasePos(t), ahead = chasePos(t + 0.06); const f = ahead.clone().sub(hp).normalize();
-  const radial = V(hp.x, 0, hp.z).normalize();
-  const pos = hp.clone().addScaledVector(f, -10).add(V(0, -2.2, 0)).addScaledVector(radial, 3.0);
-  const roll = 0.16 + 0.05 * Math.sin((t - 15.4) * 2.1);
-  const inward = radial.clone().negate();
-  aim(cam, pos, hp.clone().addScaledVector(f, 60).add(V(0, 9, 0)).addScaledVector(inward, 33), 60, roll, 0.5);
-  if (!_c6) { const r = R(61); _c6 = w.baseClouds.slice(); for (let i = 0; i <= 60; i++) { const p = chasePos(15.0 + i / 60 * 3.2); for (let j = 0; j < 2; j++) { const a = r() * 6.283; const d = 50 + 160 * r(); const wd = 50 + 120 * r(); _c6.push({ p: p.clone().add(V(Math.cos(a) * d, (r() - 0.5) * 70, Math.sin(a) * d)), w: wd * 1.8, h: wd * 0.5, cell: 12 + Math.floor(r() * 4), op: 0.35 + 0.3 * r(), flip: r() < 0.5 }); } } }
+  const fh = V(f.x, 0, f.z).normalize(); const left = V(fh.z, 0, -fh.x); const right = left.clone().negate();
+  const bank = 0.14 + 0.06 * Math.sin((t - 15.4) * 2.3);
+  const pos = hp.clone().addScaledVector(f, -3.6).addScaledVector(left, 5.6).add(V(0, -2.4, 0));
+  aim(cam, pos, hp.clone().add(V(0, 1.7, 0)).addScaledVector(right, 1.2).addScaledVector(f, -0.6), 50, bank, 0.3);
+  if (!_c6) { const r = R(61); _c6 = w.baseClouds.slice(); for (let i = 0; i <= 70; i++) { const p = chasePos(15.0 + i / 70 * 3.2); for (let j = 0; j < 2; j++) { const a = r() * 6.283; const d = 40 + 160 * r(); const wd = 60 + 140 * r(); _c6.push({ p: p.clone().add(V(Math.cos(a) * d, (r() - 0.5) * 90, Math.sin(a) * d)), w: wd * 1.8, h: wd * 0.5, cell: 12 + Math.floor(r() * 4), op: 0.35 + 0.35 * r(), flip: r() < 0.5 }); } } }
   st.clouds = _c6;
-  st.heroPose = { pos: hp, pose: { wind: [-0.25 + 0.15 * Math.sin(t * 1.3), 1], gust: 1, armL: 0.3, armR: 0.95, onSword: true, sheathed: false, feet: true, swordGlow: 1.3 }, rimDir: [-0.9, -0.5], light: C(0xfff3e4), roll: roll * 0.4 };
+  st.heroPose = { pos: hp, pose: { fly: true, mirror: true, gust: 1, swordGlow: 1.4, lean: 0.3 + 0.05 * Math.sin(t * 2) }, rimDir: [0.8, -0.6], rim: 'rgba(255,226,170,0.95)', rimPx: 4, light: C(0xfff6ea), roll: 0 };
   st.fx = (fx, tt) => {
-    heroTrail(fx, (x) => chasePos(Math.max(15.0, x)).add(V(0, -0.15, 0)), tt, 40, 0.008, 0.16);
-    godLightsDead(fx);
-    // speed streaks of air near the camera
-    const r = R(66); for (let i = 0; i < 10; i++) { const ph = (tt * 2.2 + r()) % 1; const off = V((r() - 0.5) * 30, (r() - 0.5) * 40, (r() - 0.5) * 30); const p = chasePos(tt + 0.25 - ph * 0.5).add(off); const q = p.clone().addScaledVector(f, -12 - 10 * r()); fx.lines.add(q, p, 0.03, 0.06, C(0xffffff), 0.0, 0.18 * Math.sin(ph * Math.PI)); }
-    if (tt > 16.4) swordSwarm(fx, tt, { seed: 7, n: 50, t0: 16.4, spread: 1.6, c: V(0, 0, 0), rMin: 700, rMax: 2600, yMin: 500, yMax: 1300, vMin: 260, vMax: 420, target: V(0, 6000, 0), w: 3 });
+    heroTrail(fx, (x) => chasePos(Math.max(15.0, x)).add(V(0, -0.2, 0)), tt, 40, 0.008, 0.22);
+    // soft speed wisps and motes rushing past close to the lens
+    const r = R(66);
+    for (let i = 0; i < 14; i++) { const s0 = r(); const ph = (tt * 1.6 + s0) % 1; const base = chasePos(tt + 0.35 - ph * 0.7); const ang = r() * 6.283; const rad = 9 + 16 * r(); const off = left.clone().multiplyScalar(Math.cos(ang) * rad).add(V(0, Math.sin(ang) * rad * 0.7, 0)); const p = base.add(off); const q = p.clone().addScaledVector(f, -(14 + 18 * r()));
+      fx.wisps.add(q, p, 0.5 + 1.2 * r(), 0.2 + 0.4 * r(), C(0xffffff), 0.0, 0.16 * Math.sin(ph * Math.PI)); }
+    for (let i = 0; i < 70; i++) { const ph = (tt * 2.4 + r()) % 1; const p = chasePos(tt + 0.3 - ph * 0.6).add(V((r() - 0.5) * 40, (r() - 0.5) * 30, (r() - 0.5) * 40)); const q = p.clone().addScaledVector(f, -4); const jc = [C(0xfff0b0), C(0xb8fff0), C(0xffb0a0), C(0x9fe8ff)][i % 4];
+      fx.lines.add(q, p, 0.05, 0.12, jc, 0.0, 1.6 * Math.sin(ph * Math.PI)); }
+    for (let i = 0; i < 30; i++) { const ph = (tt * 1.2 + r()) % 1; const p = chasePos(tt + 0.25 - ph * 0.5).add(V((r() - 0.5) * 30, (r() - 0.5) * 20 + Math.sin(tt * 3 + i) * 2, (r() - 0.5) * 30)); fx.petals.add(p, 0.22 + 0.15 * r(), C(0xf6b8b0), 0.95); }
+    if (tt > 16.4) swordSwarm(fx, tt, { seed: 7, n: 60, t0: 16.4, spread: 1.6, c: V(0, 0, 0), rMin: 1200, rMax: 3000, yMin: 500, yMax: 1300, vMin: 260, vMax: 420, target: V(0, 6000, 0), w: 3, bright: 2.2 });
   };
+  // close passers: lanterns and chains whipping by near the lens
+  st.near = (wld, tt) => nearPassers(wld, tt);
 });
 function godLightsDead() {}
+function nearPassers(w, t) {}
 
 // S6b · 18–21 · 一剑起，万剑随: wide, she passes the broken stump; sword-lights rise from every island
 const WB = new THREE.CatmullRomCurve3([V(1150, 1880, 300), V(1000, 2250, 80), V(860, 2700, -160), V(760, 3200, -340), V(700, 3700, -460)]);
@@ -447,35 +453,56 @@ shot(21, 24, (t, w, cam, st) => {
   st.caps = [{ text: '天，不许。', t0: 21.3, t1: 23.15, x: 540, y: 330, size: 70, color: '#f3efe2', glow: 'rgba(10,25,30,0.8)' }];
 });
 
+// comets: sword-lights rising in arcs from below the cloud sea toward the gate, bright heads and curved glowing tails
+function comets(fx, t, cam) {
+  const r = R(212); const N = 150;
+  const camF = V(0.1, 0, -1).normalize();
+  for (let i = 0; i < N; i++) {
+    const t0 = 23.4 + r() * 6.2; const life = 2.6 + 2.0 * r();
+    const near = i < 40;
+    const dist = near ? 250 + 900 * r() : 1200 + 6500 * r();
+    const lat = (r() - 0.5) * dist * 0.9;
+    const start = V(-1700 + lat + camF.x * dist, 4250, 900 + camF.z * dist);
+    const target = FIN.gate.clone().add(V((r() - 0.5) * 1600, 600 + r() * 2200, 0));
+    const v0 = V(-160 - 200 * r(), 380 + 240 * r(), 150 * (r() - 0.3));
+    const pos = (tt) => { const d = Math.max(0, tt - t0); const k = Math.min(1, d / life); const p = start.clone().addScaledVector(v0, d); const pull = target.clone().sub(p); return p.addScaledVector(pull, k * k * 0.85); };
+    const d = t - t0; if (d < 0) continue;
+    const head = pos(t); if (head.y < 4380) continue;
+    const pts = []; for (let j = 0; j < 18; j++) pts.push(pos(t - j * 0.06));
+    const gold = r() < 0.55; const jewel = r() < 0.12;
+    const c = jewel ? [C(0x9ff2d8), C(0xffb0a0), C(0xbfe6ff)][i % 3] : (gold ? GOLD : CYAN);
+    const w = near ? 2.2 + 2 * r() : 6 + 8 * r(); const fade = Math.min(1, d / 0.25);
+    fx.lines.poly(pts, s => w * (1 - s * 0.85), c, s => 2.2 * Math.pow(1 - s, 1.6) * fade);
+    fx.points.add(head, w * 6, gold ? WHITEGOLD : SWORD, 1.5 * fade);
+  }
+}
+
 // S8 · 24–30 · 破云 (平远): above the clouds in gold; the heaven gate backlit on a far cloud bank; a river of sword-lights
 let _c9 = null;
-const FIN = { cam0: V(-900, 4460, 900), cam1: V(-1100, 4900, 2200), gate: V(1300, 6900, -9500) };
-function finalPos(t) { const k = easeOut(seg(t, 23.9, 30.0)); return V(lerp(-980, -650, k), lerp(4450, 5900, k), lerp(380, -3600, k)); }
+const FIN = { cam0: V(-1500, 4470, 900), cam1: V(-1750, 4950, 2300), gate: V(1300, 7200, -9500) };
+function finalPos(t) { const k = easeIn(seg(t, 23.8, 30.5)); const s = V(-1380, 4440, 640), e = V(1100, 6900, -8000); const p = s.lerp(e, k); p.y += Math.sin(k * Math.PI) * 600 + 160 * smooth(seg(t, 23.8, 24.6)); return p; }
 shot(24, 30.1, (t, w, cam, st) => {
   setEnv(P.gold);
   fallenWorld(w); w.storm.visible = false;
   const U = w.sea.userData.U; U.uSeaY.value = 4400; U.uSeaCover.value = 0.7; w.sea.visible = true;
   const ent = t < 24.7 ? Math.exp(-(t - 24.0) / 0.22) : 0;
-  grade({ exp: 0.97, bloom: 0.6, sat: 1.08, flash: ent * 0.9, flashCol: [1, 0.93, 0.75], thresh: 0.9, vig: 0.3 });
+  grade({ exp: 0.95, bloom: 0.45, sat: 1.1, flash: ent * 0.9, flashCol: [1, 0.93, 0.75], thresh: 0.93, vig: 0.3, contrast: 1.14, rayThresh: 0.97 }); st.rays = 0.3;
   const k = easeInOutSine(seg(t, 24.0, 30.0)), kr = easeOut(seg(t, 24.0, 26.0));
   const pos = FIN.cam0.clone().lerp(FIN.cam1, k); pos.y = lerp(4300, FIN.cam0.y, kr) + (FIN.cam1.y - FIN.cam0.y) * k;
-  const tgt = pos.clone().add(V(0.1, lerp(0.05, 0.2, kr), -1).normalize().multiplyScalar(1000));
+  const tgt = pos.clone().add(V(0.13, lerp(0.05, 0.2, kr), -1).normalize().multiplyScalar(1000));
   aim(cam, pos, tgt, 54);
   if (!_c9) { const r = R(91); _c9 = []; for (let i = 0; i < 60; i++) { const a = r() * 6.283, d = 1500 + 15000 * Math.pow(r(), 0.6); const wd = 900 + 2200 * r(); _c9.push({ p: V(Math.cos(a) * d, 4380 + wd * 0.1, -6000 + Math.sin(a) * d * 0.8), w: wd, h: wd * 0.45, cell: Math.floor(r() * 8), op: 0.95, flip: r() < 0.5 }); }
-    // the cloud bank the palace stands on
-    for (let i = 0; i < 14; i++) { const wd = 4500 + 4500 * r(); const yy = 4500 + Math.pow(r(), 0.7) * 2400; _c9.push({ p: FIN.gate.clone().add(V((r() - 0.5) * 16000 * (1 - (yy - 4500) / 4000), yy - FIN.gate.y + wd * 0.1, 800 + (r() - 0.5) * 4000)), w: wd, h: wd * 0.5, cell: Math.floor(r() * 8), op: 0.95, flip: r() < 0.5 }); }
-    for (let i = 0; i < 10; i++) { const wd = 6000 + 6000 * r(); _c9.push({ p: FIN.gate.clone().add(V((r() - 0.5) * 12000, -2300 + i * 220, 1500 + (r() - 0.5) * 3000)), w: wd, h: wd * 0.22, cell: 8 + (i % 4), op: 0.7, flip: r() < 0.5 }); } }
+    // the cloud bank the stair rises out of (kept below the gate base)
+    for (let i = 0; i < 16; i++) { const wd = 2500 + 3500 * r(); _c9.push({ p: V(FIN.gate.x + (r() - 0.5) * 14000, 4700 + r() * 900, FIN.gate.z + 1800 + (r() - 0.5) * 3000), w: wd, h: wd * 0.42, cell: Math.floor(r() * 8), op: 0.95, flip: r() < 0.5 }); }
+    for (let i = 0; i < 8; i++) { const wd = 7000 + 6000 * r(); _c9.push({ p: V(FIN.gate.x + (r() - 0.5) * 10000, 5000 + i * 120, FIN.gate.z + 2500 + (r() - 0.5) * 2000), w: wd, h: wd * 0.18, cell: 8 + (i % 4), op: 0.6, flip: r() < 0.5 }); } }
   st.clouds = _c9;
   st.gates = true;
   const hp = finalPos(t);
-  st.heroPose = { pos: hp, scale: 2.5, pose: { wind: [0.1, 1], gust: 0.9, armL: 0.3, armR: 0.9, onSword: true, sheathed: false, feet: true, swordGlow: 1.5 }, rimDir: [0.4, -0.9], rim: 'rgba(255,225,160,0.95)', light: C(0xfff0d8), op: 1 };
+  st.heroPose = { pos: hp, scale: 2.2, pose: { fly: true, gust: 1, swordGlow: 1.8, lean: 0.25 }, rimDir: [0.5, -0.85], rim: 'rgba(255,225,160,0.95)', rimPx: 5, light: C(0xfff0d8), op: 1 };
   st.fx = (fx, tt) => {
     heroTrail(fx, finalPos, tt, 34, 0.025, 7);
     fx.points.add(hp, 26, WHITEGOLD, 1.1);
-    const up = FIN.gate.clone().add(V(-900, 9000, 1500));
-    swordSwarm(fx, tt, { seed: 12, n: 260, t0: 23.2, spread: 6.8, c: V(-700, 0, -2200), rMin: 120, rMax: 2400, yMin: 4380, yMax: 4420, vMin: 380, vMax: 760, target: up, w: 6, bright: 2.4, minUp: 0.6, headK: 3.0 });
-    swordSwarm(fx, tt, { seed: 14, n: 200, t0: 23.0, spread: 7.0, c: FIN.gate.clone().add(V(-1500, 0, 3500)), rMin: 300, rMax: 4200, yMin: 4400, yMax: 5400, vMin: 500, vMax: 900, target: up, w: 12, bright: 2.2, minUp: 0.6, headK: 2.6 });
-    swordSwarm(fx, tt, { seed: 13, n: 70, t0: 23.6, spread: 6.4, c: V(-900, 0, 300), rMin: 40, rMax: 700, yMin: 4300, yMax: 4400, vMin: 200, vMax: 360, target: up, w: 2.0, bright: 2.2, minUp: 0.75, headK: 3.0 });
+    comets(fx, tt, cam);
   };
   st.caps = [{ text: '梯断了，人就学会了飞。', t0: 24.9, t1: 27.55, x: 540, y: 330, size: 62, color: '#2a2d26', glow: 'rgba(255,246,220,0.8)' }];
   if (t >= 27.6) st.title = { t0: 27.75, x: 540, y: 470, size: 220, text: '御剑', color: '#232822', glow: 'rgba(255,240,205,0.9)' };

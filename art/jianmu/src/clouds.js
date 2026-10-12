@@ -201,7 +201,7 @@ void main(){
   int oct = dist < 3000.0 ? 6 : (dist < 9000.0 ? 4 : 3);
   float e = 0.035;
   float h = seaH(p, oct), hx = seaH(p + vec2(e, 0.0), oct), hz = seaH(p + vec2(0.0, e), oct);
-  vec3 N = normalize(vec3(-(hx - h) / e * 1.1, 1.0, -(hz - h) / e * 1.1));
+  vec3 N = normalize(vec3(-(hx - h) / e * 0.75, 1.0, -(hz - h) / e * 0.75));
   float cover = smoothstep(1.0 - uSeaCover - 0.05, 1.0 - uSeaCover + 0.1, h * 0.8);
   float ndl = dot(N, uSunDir);
   float light = clamp(0.25 + 0.8 * ndl, 0.0, 1.0) * (0.6 + 0.4 * smoothstep(0.45, 1.0, h));

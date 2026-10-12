@@ -125,7 +125,7 @@ void main(){ float fk; vec3 c = uColor * vCol * uK; vec3 a = atmo(c, vWP, fk); g
 // ── sky dome: gradient + sun glow + faint high streaks; follows the camera
 export const SKY = {
   uZenith: { value: C(0xb9d3d4) }, uHorizon: { value: C(0xeef2e8) }, uVoid: { value: C(0xc9d8d6) },
-  uSunGlow: { value: C(0xfff0cc) }, uSunK: { value: 1.0 }, uStreak: { value: 0.25 }, uHorizY: { value: 0.0 },
+  uSunGlow: { value: C(0xfff0cc) }, uSunK: { value: 1.0 }, uStreak: { value: 0.06 }, uHorizY: { value: 0.0 },
 };
 export function skyMesh() {
   const m = new THREE.Mesh(new THREE.SphereGeometry(60000, 48, 24), new THREE.ShaderMaterial({
@@ -139,7 +139,7 @@ void main(){
   vec3 c = mix(uHorizon, uZenith, smoothstep(0.0, 0.75, y));
   c = mix(c, uVoid, smoothstep(0.0, -0.25, y));
   float s = max(dot(d, uSunDir), 0.0);
-  c += uSunGlow * (pow(s, 6.0) * 0.35 + pow(s, 60.0) * 0.6 + pow(s, 900.0) * 1.5) * uSunK;
+  c += uSunGlow * (pow(s, 6.0) * 0.3 + pow(s, 60.0) * 0.45 + pow(s, 900.0) * 1.2) * uSunK;
   // high cirrus streaks
   vec2 q = d.xz / max(d.y + 0.15, 0.08);
   float st = fbm2(q * vec2(0.6, 3.0) + vec2(uTime * 0.01, 0.0), 4);

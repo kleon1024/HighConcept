@@ -168,7 +168,7 @@ function columnG(seed, r, h, floating, bottom) {
     let f = 1 + 0.18 * (ridged(th * 4 + sx, y / (r * 2.2), 1.3) - 0.5) + 0.22 * (fbm3(Math.cos(th) * 1.3 + sx, y / (r * 1.8), Math.sin(th) * 1.3, 3) - 0.5);
     f += 0.05 * Math.sin(y / (r * 0.4) + noise3(th, y / r, sx) * 3);
     const topK = clamp((y - (h - r * 0.6)) / (r * 0.6));                       // round the top
-    f *= Math.sqrt(Math.max(0.02, 1 - topK * topK * 0.9));
+    f *= Math.sqrt(Math.max(0.02, 1 - topK * topK * 0.9)) * (1 - 0.25 * clamp(y / h));
     let ny = y;
     if (floating) { const bk = clamp((bottom * 0.45 - y) / (-bottom * 0.55)); const spur = Math.pow(Math.max(0, Math.cos(2 * th + sx)) , 2); f *= lerp(1, 0.08 + 0.9 * spur * (1 - bk * 0.7), smooth(bk)); }
     if (yy > 0.999) ny = h + r * 0.15 * (noise3(x * 2 + sx, 1, z * 2) - 0.3);
@@ -239,9 +239,12 @@ export const PEAK_MAT = paintMat({ brushScale: 0.012, stretch: [1, 3, 1], brush:
 // off mid-way, a vermilion-roofed hall at the tip, jade canopies glowing at both ends, lanterns underneath
 function canopyG(c, sz, rng) {
   const parts = [];
-  for (let i = 0; i < 6; i++) { const g = new THREE.IcosahedronGeometry(1, 2); const s = sz * (0.55 + 0.45 * rng()); g.scale(s, s * 0.42, s * 0.85); g.rotateY(rng() * 6.28);
-    g.translate(c.x + (rng() - 0.5) * sz * 1.1, c.y + (rng() - 0.2) * sz * 0.45, c.z + (rng() - 0.5) * sz * 1.1);
-    parts.push(setColors(g, (v, n, o) => { o.copy(col(0x2f8a6c)).lerp(col(0x9fe6c2), clamp(n.y * 0.8 + 0.1 + (noise3(v.x / 9, v.y / 9, v.z / 9) - 0.5) * 0.6)); })); }
+  for (let i = 0; i < 14; i++) { const g = new THREE.IcosahedronGeometry(1, 3); const s = sz * (0.28 + 0.3 * rng());
+    const pp = g.attributes.position; for (let j = 0; j < pp.count; j++) { const x = pp.getX(j), y = pp.getY(j), z = pp.getZ(j); const k = 0.75 + 0.5 * noise3(x * 2 + i, y * 2, z * 2); pp.setXYZ(j, x * k, y * k, z * k); }
+    g.computeVertexNormals(); g.scale(s, s * 0.5, s); g.rotateY(rng() * 6.28);
+    const a = rng() * 6.283, d = sz * 0.75 * Math.sqrt(rng());
+    g.translate(c.x + Math.cos(a) * d, c.y + (rng() - 0.3) * sz * 0.4 - d * 0.25, c.z + Math.sin(a) * d);
+    parts.push(setColors(g, (v, n, o) => { o.copy(col(0x1f6b55)).lerp(col(0x7fd3aa), clamp(n.y * 0.7 + 0.15 + (noise3(v.x / 6, v.y / 6, v.z / 6) - 0.5) * 0.8)); })); }
   return merge(parts);
 }
 function branchTemplate(L, seed) {
@@ -357,14 +360,20 @@ export function peakGeom(seed, r, h) {
 }
 export function buildPeaks(seed, n, rMin, rMax, center = new THREE.Vector3(), opts = {}) {
   const rng = mulberry32(seed); const grp = new THREE.Group();
-  const tpl = []; for (let i = 0; i < 5; i++) tpl.push(karstG(seed * 7 + i, 1, 1.0, false).geo);
-  // unit templates: radius 1, height 1 (+ base below); scale per instance (w, h, w)
+  // real-size templates (radius, height) with pines merged on every column top; instances only scale uniformly ±25%
+  const NT = 6; const tpl = [];
+  for (let i = 0; i < NT; i++) {
+    const R = lerp(opts.wMin ?? 120, (opts.wMin ?? 120) + (opts.wVar ?? 200), i / (NT - 1)) * 0.5, H = lerp(opts.hMin ?? 400, (opts.hMin ?? 400) + (opts.hVar ?? 1200), ((i * 3) % NT) / (NT - 1));
+    const k = karstG(seed * 7 + i, R, H, false);
+    const parts = [k.geo]; const pr = mulberry32(seed + i * 11);
+    for (const tp of k.tops) { const np = Math.round(3 + tp.r / 12); for (let j = 0; j < np; j++) { const a = pr() * 6.28, rr = tp.r * 0.7 * Math.sqrt(pr()); const s = (tp.r * 0.22 + 8) * (0.6 + 0.8 * pr()); const g = pineG(1, seed + j).clone(); g.scale(s, s, s); g.rotateY(pr() * 6.28); g.translate(tp.x + Math.cos(a) * rr, tp.y - s * 0.15, tp.z + Math.sin(a) * rr); parts.push(g); } }
+    tpl.push(merge(parts));
+  }
   const lists = tpl.map(() => []);
   for (let i = 0; i < n; i++) {
     const a = (opts.a0 ?? 0) + rng() * (opts.arc ?? Math.PI * 2), d = lerp(rMin, rMax, Math.sqrt(rng()));
-    const wd = (opts.wMin ?? 70) + rng() * (opts.wVar ?? 220), h = (opts.hMin ?? 250) + rng() * rng() * (opts.hVar ?? 1500);
-    const x = center.x + Math.cos(a) * d, z = center.z + Math.sin(a) * d;
-    lists[i % tpl.length].push(new THREE.Matrix4().compose(new THREE.Vector3(x, (opts.y ?? -60), z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rng() * 6.28), new THREE.Vector3(wd, h, wd)));
+    const x = center.x + Math.cos(a) * d, z = center.z + Math.sin(a) * d; const s = 0.75 + 0.5 * rng();
+    lists[i % tpl.length].push(new THREE.Matrix4().compose(new THREE.Vector3(x, (opts.y ?? -60), z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rng() * 6.28), new THREE.Vector3(s, s * (0.8 + 0.4 * rng()), s)));
   }
   tpl.forEach((g, i) => { if (!lists[i].length) return; const im = new THREE.InstancedMesh(g, PEAK_MAT, lists[i].length); lists[i].forEach((m, j) => im.setMatrixAt(j, m)); im.frustumCulled = false; grp.add(im); });
   return grp;

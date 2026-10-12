@@ -239,6 +239,116 @@ export function drawFigure(ctx, p) {
   ctx.restore();
 }
 
+// cel shading: shadow tone everywhere, lit tone where the shape overlaps itself shifted toward the light (hard terminator)
+function cel(ctx, path, lit, shadow, off, mid) {
+  ctx.fillStyle = shadow; ctx.fill(path);
+  ctx.save(); ctx.clip(path); ctx.translate(off[0], off[1]);
+  ctx.fillStyle = lit; ctx.fill(path);
+  if (mid) { ctx.translate(off[0] * 0.6, off[1] * 0.6); ctx.fillStyle = mid; ctx.globalAlpha = 0.5; ctx.fill(path); }
+  ctx.restore();
+}
+
+// ── the flight pose (御剑): 3/4 rear view, leaning into the flight toward the upper right, front foot forward on the blade,
+//    robe pressed forward and streaming back, two long 披帛 and the hair in S-curves, right hand raised in 剑指
+export function drawFlyer(ctx, p) {
+  const t = p.t, g = p.gust ?? 1, lean = p.lean ?? 0.3, gl = p.swordGlow ?? 1.2;
+  const L = [-0.75, -0.65];                               // light from the upper left (screen)
+  ctx.clearRect(0, 0, CW, CW);
+  ctx.save(); if (p.mirror) { ctx.translate(CW, 0); ctx.scale(-1, 1); } ctx.translate(FEET[0], FEET[1]); ctx.rotate(p.roll || 0);
+  // the wind in body space streams back-down-left
+  const wd = [-0.85, 0.55];
+  // ── sword under the feet (drawn first: the blade is beneath her), tip toward the upper right
+  {
+    ctx.save(); ctx.rotate(-0.12);
+    const A = [-210, 30], B = [250, -40];
+    ctx.globalCompositeOperation = 'lighter';
+    for (const [w2, al] of [[60, 0.08], [34, 0.16], [16, 0.35], [7, 0.7]]) { ctx.strokeStyle = `rgba(150,240,255,${al * gl})`; ctx.lineWidth = w2; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(A[0], A[1]); ctx.lineTo(B[0], B[1]); ctx.stroke(); }
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = '#f2feff'; ctx.beginPath(); ctx.moveTo(A[0] + 20, A[1] - 6); ctx.lineTo(B[0], B[1]); ctx.lineTo(A[0] + 24, A[1] + 8); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(120,200,220,0.9)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(A[0] + 22, A[1] + 1); ctx.lineTo(B[0] - 6, B[1] + 1); ctx.stroke();
+    ctx.fillStyle = PAL.gold; ctx.save(); ctx.translate(A[0] + 16, A[1] + 1); ctx.rotate(-0.15); ctx.fillRect(-4, -14, 8, 28); ctx.restore();
+    ctx.strokeStyle = '#3a2a24'; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(A[0] + 12, A[1] + 2); ctx.lineTo(A[0] - 30, A[1] + 9); ctx.stroke();
+    ctx.fillStyle = PAL.gold; ctx.beginPath(); ctx.arc(A[0] - 34, A[1] + 10, 6, 0, 6.28); ctx.fill();
+    ribbon(ctx, { x: A[0] - 36, y: A[1] + 12, ang: Math.PI * 0.85, len: 110, w: 7, t, ph: 0.4, wind: wd, follow: 0.4, amp: 0.55, freq: 1.4, cFront: PAL.verm, cBack: PAL.vermSh, taper: 0.5 });
+    ctx.restore();
+  }
+  ctx.rotate(lean);
+  const yS = -440, yW = -322, yN = -462, yH = -505;
+  // ── far 披帛 and sash tails (behind the body), streaming back in S-curves
+  ribbon(ctx, { x: -60, y: yS + 150, ang: Math.PI * 0.8, len: 640, w: 30, t, ph: 0.3, wind: wd, follow: 0.35, amp: 0.55 * g + 0.15, freq: 0.6, waves: 1.3, cFront: PAL.verm, cBack: PAL.vermSh, taper: 0.3 });
+  ribbon(ctx, { x: -14, y: yW + 16, ang: Math.PI * 0.75, len: 330, w: 15, t, ph: 1.7, wind: wd, follow: 0.4, amp: 0.5 * g + 0.12, freq: 0.8, waves: 1.3, cFront: PAL.vermHi, cBack: PAL.vermSh, taper: 0.45, tw: 1.4 });
+  ribbon(ctx, { x: 4, y: yW + 16, ang: Math.PI * 0.7, len: 280, w: 12, t, ph: 2.6, wind: wd, follow: 0.4, amp: 0.5 * g + 0.12, freq: 0.9, waves: 1.4, cFront: PAL.peach, cBack: PAL.vermSh, taper: 0.45, tw: 1.2 });
+  // ── long hair streaming back (behind the shoulders): several dark locks
+  for (let i = 0; i < 4; i++) ribbon(ctx, { x: -14 + i * 8, y: yH + 10, ang: Math.PI * (0.6 + i * 0.04), len: 330 + 50 * i, w: 46 - i * 6, t, ph: i * 0.9, wind: wd, follow: 0.55, amp: 0.3 * g + 0.08, freq: 0.6, waves: 0.9, cFront: PAL.hair, cBack: PAL.hair, taper: 0.22, tw: 0.0, sheen: 'rgba(95,120,135,0.6)' });
+  // ── skirt: pressed against the front leg (right), billowing back (left), hem streaming
+  const fl = Math.sin(t * 4.2) * 8 * g;
+  const skirt = new Path2D();
+  skirt.moveTo(-36, yW); skirt.bezierCurveTo(-70, yW + 90, -150 + fl, -150, -205 + fl, -40 + fl * 0.5);
+  skirt.bezierCurveTo(-170, -10, -120, 4 + fl * 0.4, -70, 2);
+  for (let i = 1; i <= 8; i++) { const k = i / 8; skirt.lineTo(lerp(-70, 52, k), 4 + Math.sin(k * 9 + t * 5) * 5 * g - k * 6); }
+  skirt.bezierCurveTo(60, -90, 48, yW + 80, 36, yW); skirt.closePath();
+  ctx.save(); ctx.translate(-6, 10); ctx.fillStyle = PAL.inner; ctx.fill(skirt); ctx.restore();
+  ctx.save(); ctx.translate(-8, 14); ctx.strokeStyle = PAL.hem; ctx.lineWidth = 2.5; ctx.stroke(skirt); ctx.restore();
+  cel(ctx, skirt, PAL.robe, PAL.robeSh, [16, 8], PAL.robeMid);
+  ctx.save(); ctx.clip(skirt); ctx.strokeStyle = 'rgba(70,100,108,0.28)'; ctx.lineWidth = 1.5;
+  for (let i = 0; i < 8; i++) { const k = i / 7; ctx.beginPath(); ctx.moveTo(lerp(-30, 30, k), yW + 20); ctx.bezierCurveTo(lerp(-60, 40, k), -200, lerp(-150, 30, k) + fl * (1 - k), -90, lerp(-190, 40, k) + fl * (1 - k), lerp(-30, 0, k)); ctx.stroke(); }
+  ctx.restore();
+  // gauze overskirt streaming further back
+  { const gz = new Path2D(); gz.moveTo(-30, yW + 10); gz.bezierCurveTo(-90, yW + 80, -200 + fl, -170, -280 + fl * 1.5, -60 + fl); gz.bezierCurveTo(-200, -40, -140, -10, -60, -6); gz.bezierCurveTo(-20, -60, 0, yW + 70, 20, yW + 10); gz.closePath();
+    ctx.fillStyle = 'rgba(250,253,251,0.35)'; ctx.fill(gz); ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 1.2; ctx.stroke(gz); }
+  // feet: front foot forward on the blade (right), back foot behind (left)
+  ctx.fillStyle = PAL.shoe; ctx.beginPath(); ctx.ellipse(62, 0, 18, 8, -0.2, 0, 6.28); ctx.ellipse(-58, 12, 16, 8, -0.1, 0, 6.28); ctx.fill();
+  // ── torso (3/4 back) with cel shading
+  const torso = new Path2D();
+  torso.moveTo(-36, yW + 6); torso.bezierCurveTo(-48, yW - 50, -66, yS + 30, -58, yS + 4);
+  torso.quadraticCurveTo(-30, yS - 14, -10, yN + 8); torso.lineTo(16, yN + 8);
+  torso.quadraticCurveTo(36, yS - 12, 60, yS + 8); torso.bezierCurveTo(64, yS + 30, 46, yW - 50, 36, yW + 6); torso.closePath();
+  cel(ctx, torso, PAL.robe, PAL.robeSh, [14, 10], PAL.robeMid);
+  ctx.strokeStyle = 'rgba(90,120,125,0.35)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(4, yN + 14); ctx.lineTo(0, yW); ctx.stroke();
+  // ── left arm swept back-down, sleeve streaming; right arm forward-up with sword fingers
+  const sleeve = (sx, sy, hx, hy, hang, side) => {
+    const pth = new Path2D(); const fx = Math.sin(t * 3.1 + side) * 10 * g;
+    pth.moveTo(sx, sy - 8); pth.quadraticCurveTo((sx + hx) / 2 + side * 6, (sy + hy) / 2 - 14, hx, hy - 6);
+    pth.quadraticCurveTo(hx - 30 + fx, hy + hang * 0.5, hx - 60 + fx, hy + hang + fx * 0.5);
+    pth.quadraticCurveTo(hx - 130 + fx * 2, hy + hang * 1.2, hx - 170 + fx * 2, hy + hang * 0.9);
+    pth.quadraticCurveTo((sx + hx) / 2 - 60, (sy + hy) / 2 + hang * 0.9, sx - 22, sy + 60); pth.closePath();
+    cel(ctx, pth, PAL.robe, PAL.robeSh, [12, 12], PAL.robeMid);
+    ctx.strokeStyle = PAL.inner; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(hx - 60 + fx, hy + hang + fx * 0.5); ctx.quadraticCurveTo(hx - 130 + fx * 2, hy + hang * 1.2, hx - 170 + fx * 2, hy + hang * 0.9); ctx.stroke();
+  };
+  sleeve(-54, yS + 8, -150, yS + 150, 70, -1);                    // back arm
+  // front arm: raised forward with 剑指
+  { const sx = 56, sy = yS + 6, ex = 120, ey = yS - 40, hx = 168, hy = yS - 110;
+    const pth = new Path2D(); const fx = Math.sin(t * 3.4) * 8 * g;
+    pth.moveTo(sx - 4, sy - 10); pth.quadraticCurveTo(ex, ey - 16, hx - 6, hy + 4);
+    pth.lineTo(hx + 8, hy + 22); pth.quadraticCurveTo(hx - 10 + fx, hy + 90, hx - 70 + fx * 1.5, hy + 140);
+    pth.quadraticCurveTo(ex - 40, sy + 40, sx - 26, sy + 56); pth.closePath();
+    cel(ctx, pth, PAL.robe, PAL.robeSh, [12, 12], PAL.robeMid);
+    ctx.fillStyle = PAL.skin; ctx.save(); ctx.translate(hx + 2, hy - 2); ctx.rotate(-0.6); ctx.fillRect(-4, -18, 6, 20); ctx.fillRect(3, -16, 5, 18); ctx.beginPath(); ctx.ellipse(1, 2, 7, 8, 0, 0, 6.28); ctx.fill(); ctx.restore();
+  }
+  // ── sash and the empty scabbard on the back
+  ctx.fillStyle = PAL.verm; ctx.beginPath(); ctx.moveTo(-37, yW - 10); ctx.quadraticCurveTo(0, yW - 16, 37, yW - 10); ctx.lineTo(39, yW + 16); ctx.quadraticCurveTo(0, yW + 10, -39, yW + 16); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = PAL.gold; ctx.fillRect(-4, yW - 13, 8, 26); ctx.fillStyle = PAL.jade; ctx.beginPath(); ctx.arc(0, yW + 22, 6, 0, 6.28); ctx.fill();
+  ctx.strokeStyle = PAL.sheath; ctx.lineWidth = 12; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(58, yS - 20); ctx.lineTo(-56, yW + 60); ctx.stroke();
+  ctx.strokeStyle = PAL.gold; ctx.lineWidth = 12; ctx.beginPath(); ctx.moveTo(50, yS - 12); ctx.lineTo(44, yS - 6); ctx.stroke();
+  // 披帛 drape across the back
+  { const P = new Path2D(); P.moveTo(-90, yS + 90); P.quadraticCurveTo(10, yS + 190, 110, yS + 30); P.lineTo(112, yS + 44); P.quadraticCurveTo(10, yS + 165, -88, yS + 104); P.closePath(); ctx.fillStyle = 'rgba(208,69,44,0.95)'; ctx.fill(P); }
+  // ── head (3/4 back): hair mass, a sliver of cheek and ear on the right, bun with hairpin, hair ribbons
+  ctx.fillStyle = PAL.skin; ctx.beginPath(); ctx.ellipse(24, yH + 14, 14, 26, 0.25, 0, 6.28); ctx.fill();
+  ctx.fillStyle = '#e6c3ae'; ctx.beginPath(); ctx.ellipse(31, yH + 8, 4.5, 8, 0.2, 0, 6.28); ctx.fill();
+  ctx.fillStyle = PAL.skin; ctx.fillRect(-10, yN - 8, 22, 22);
+  ctx.fillStyle = PAL.hair; ctx.beginPath(); ctx.ellipse(-2, yH, 34, 38, 0.15, 0, 6.28); ctx.fill();
+  ctx.fillStyle = PAL.hairHi; ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.ellipse(-14, yH - 16, 13, 20, -0.4, 0, 6.28); ctx.fill(); ctx.globalAlpha = 1;
+  const by = yH - 44;
+  ctx.fillStyle = PAL.hair; ctx.beginPath(); ctx.ellipse(-4, by, 22, 18, 0, 0, 6.28); ctx.fill(); ctx.beginPath(); ctx.ellipse(-18, by - 8, 13, 11, -0.5, 0, 6.28); ctx.fill();
+  ctx.strokeStyle = PAL.gold; ctx.lineWidth = 3.5; ctx.beginPath(); ctx.moveTo(-40, by + 6); ctx.lineTo(28, by - 14); ctx.stroke();
+  ctx.fillStyle = PAL.jade; ctx.beginPath(); ctx.arc(30, by - 15, 5, 0, 6.28); ctx.fill(); ctx.fillStyle = PAL.verm; ctx.beginPath(); ctx.arc(-40, by + 7, 3.5, 0, 6.28); ctx.fill();
+  ribbon(ctx, { x: -10, y: by + 10, ang: Math.PI * 0.75, len: 360, w: 9, t, ph: 2.2, wind: wd, follow: 0.4, amp: 0.55 * g + 0.15, freq: 0.9, waves: 1.5, cFront: PAL.verm, cBack: PAL.vermSh, taper: 0.4, tw: 1.6 });
+  ribbon(ctx, { x: -4, y: by + 12, ang: Math.PI * 0.7, len: 300, w: 7, t, ph: 3.4, wind: wd, follow: 0.4, amp: 0.55 * g + 0.15, freq: 1.0, waves: 1.6, cFront: PAL.vermHi, cBack: PAL.vermSh, taper: 0.4, tw: 1.3 });
+  // ── near 披帛 from the front arm, streaming back under the body (in front)
+  ribbon(ctx, { x: 140, y: yS - 40, ang: Math.PI * 0.62, len: 700, w: 30, t, ph: 4.1, wind: wd, follow: 0.45, amp: 0.5 * g + 0.15, freq: 0.5, waves: 1.1, cFront: PAL.verm, cBack: PAL.vermSh, taper: 0.3 });
+  ctx.restore();
+}
+
 // rim pass: light edge on the sun side + a soft shadow wash on the other side
 export function rimPass(ctx, scratch, dir = [-1, -0.4], rim = 'rgba(255,236,200,0.7)', px = 3) {
   const s = scratch.getContext('2d');
@@ -280,7 +390,7 @@ export class Hero {
   update(t, st, cam) {
     const h = st.heroPose;
     if (!h) { this.worldSprite.visible = false; return; }
-    drawFigure(this.ctx, { t, ...h.pose });
+    if (h.pose.fly) drawFlyer(this.ctx, { t, ...h.pose }); else drawFigure(this.ctx, { t, ...h.pose });
     rimPass(this.ctx, this.scratch, h.rimDir || [-1, -0.3], h.rim || 'rgba(255,232,195,0.75)', h.rimPx || 3);
     this.tex.needsUpdate = true;
     const s = this.worldSprite; s.visible = true; s.position.copy(h.pos); s.scale.setScalar(h.scale || 1);
