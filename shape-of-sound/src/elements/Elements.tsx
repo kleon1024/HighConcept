@@ -12,7 +12,8 @@ import { eIn, range } from "./core";
 import { TableWorld } from "./World";
 import { Captions, HoodTag, RollTicker, YearCounter } from "./UI";
 import { Background, ChapterHeader, Geometry, GiantType } from "./Look";
-import { ColdOpen, MapWidgets, Mendeleev, Newlands, Title } from "./Scenes";
+import { MapWidgets, Mendeleev, Newlands, Title } from "./Scenes";
+import { Hook } from "./Hook";
 import { Cosmos, EndCard, HoodDemos } from "./Demos";
 
 export const Elements: React.FC = () => {
@@ -25,7 +26,7 @@ export const Elements: React.FC = () => {
       <Cosmos t={t} />
       <GiantType t={t} />
       <TableWorld t={t} />
-      <ColdOpen t={t} />
+      <Hook t={t} />
       <Title t={t} />
       <Newlands t={t} />
       <Mendeleev t={t} />

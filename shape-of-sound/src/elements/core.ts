@@ -32,7 +32,7 @@ export const BGC: Record<string, string> = {
   black: "#0E0E12", mint: "#00D9A3", night: "#0D1130",
 };
 const BG_SEG: [number, string][] = [
-  [0, BGC.paper], [13.6, BGC.ink], [18.0, BGC.yellow], [31.4, BGC.pink], [36.8, BGC.old], [50.4, BGC.yellow],
+  [0, BGC.pink], [4.4, BGC.ink], [10.0, BGC.yellow], [13.6, BGC.ink], [18.0, BGC.yellow], [31.4, BGC.pink], [36.8, BGC.old], [50.4, BGC.yellow],
   [56.0, BGC.blue], [74.0, BGC.violet], [80.4, BGC.blue], [82.4, BGC.black], [104.0, BGC.mint],
   ...(J.hood as { t: number; fam?: string; id: string }[]).map((d) => [d.t, d.id === "nm" ? "#2FC27E" : d.id === "h" ? "#6FD6F2" : (FAM_C as Record<string, string>)[d.fam as string]] as [number, string]),
   [158.0, BGC.night], [179.4, BGC.paper],

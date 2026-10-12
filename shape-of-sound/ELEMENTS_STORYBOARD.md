@@ -23,7 +23,7 @@ an oblique view and true isometric, flying district to district.
 ## Beats
 | t (s) | Beat | Picture | Sound |
 |---|---|---|---|
-| 0–14 | **Hook** | 1875, Paris. Lecoq de Boisbaudran finds gallium; the gauge reads 4.7. A letter from St Petersburg: 「你测的密度不对，应该是 5.9。」 He remeasures: **5.9**. 「他是对的。」「他是怎么知道的？」 | A-minor pizzicato ostinato and a clock; snare roll and riser; the slam lands on the C-major "answer" chord |
+| 0–14 | **Hook** | Hot pink: a superflat hand holds a chrome cube of gallium; it melts in the palm and drips through the fingers (「这块金属，会在你手心里融化。」, sticker: 熔点只有 29.8°C). Cut to black: a dashed "?" tile; 「1871 年，还没人见过它，有人已经写出了它的样子：」 — Mendeleev's predictions type out (原子量 ≈ 68 · 密度 ≈ 6 · 熔点很低). The tile flips to Ga: 「1875 年，它被找到了——」, the real values tick ✓ ✓ ✓ (69.7 · 5.9 · 29.8°C). Yellow: 「几乎全中！」「他从没见过它，」「他是怎么知道的？」, and the tile flies into the empty table | a playful A-minor groove with a sliding melt; a drone and a clock at the cut; the three ✓ play E and G, and the slam completes the motif on C; then the theme's first bar with its top note missing |
 | 14–18 | Title | the five title characters drop in as element tiles: 「一次看懂元素周期表 · 一张能预言未来的表」 | the leitmotif on marimba with the band |
 | 18–31 | Lens 1 | tiles drop in by discovery year; ancient 9 → 1669 phosphorus (from urine) → 63 by 1869 | every tile that lands plays a marimba note |
 | 31–37 | Newlands | a keyboard: Li Be B C N O F Na = do … do; Li and Na match; 「你怎么不按字母排？」 | the octave; the room laughs; a soft sad trombone |
@@ -61,7 +61,7 @@ written to `out/elements_sfx_only.wav` for posting with a platform track.
 ## Facts and sources
 | On screen | Source / note |
 |---|---|
-| Lecoq de Boisbaudran discovered gallium in 1875 (Paris) by its spectrum; first density 4.7 g/cm³; Mendeleev had predicted 5.9 and wrote suggesting a remeasurement, which gave 5.9 | Wikipedia "Gallium" (History); Mendeleev's eka-aluminium (1871) — the letter text on screen is a paraphrase, marked 「大意」 |
+| Gallium melts at 29.76 °C (so it melts in a hand); Mendeleev predicted eka-aluminium in 1871 (atomic weight 68, density 6.0, low melting point); Lecoq de Boisbaudran found gallium in 1875 (69.72, 5.91 g/cm³, 29.76 °C) | Wikipedia "Gallium", "Mendeleev's predicted elements" (comparison table) |
 | Gallium < Gallia (France); scandium < Scandia (Nilson, 1879); germanium < Germania (Winkler, 1886) | Wikipedia "Mendeleev's predicted elements"; element articles |
 | About 63 elements were known by 1869; Mendeleev ordered them by atomic weight and properties and left gaps; predictions: eka-aluminium (density ≈ 5.9), eka-boron (atomic weight ≈ 44), eka-silicon (≈ 72) | Wikipedia "Mendeleev's predicted elements"; the card story is popular lore, marked 「据说」 |
 | Newlands' law of octaves (1865) was mocked at the Chemical Society: why not order them alphabetically? | Wikipedia "John Newlands" |

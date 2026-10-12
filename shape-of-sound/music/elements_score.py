@@ -83,17 +83,32 @@ def compose(sc, J, TB):
         if timp: note(TIMP, s, 0.8, root if root < 48 else root - 12, v)
         if brass: chord(HRN, s, 1.2, vo[:3], v - 24)
 
-    # ═══ cold open (0–14): A-minor ostinato and a clock; the slam lands on C; a question with a hole in it
-    for k in range(int(9.9 / 0.25)):
-        s = k * 0.25
-        if s < 8.0: note(PIZ, s, 0.2, [45, 52, 57, 52][k % 4], 56 + int(12 * s / 8))
-        else: note(PIZ, s, 0.12, [45, 52, 57, 60][k % 4], 72 + int(16 * (s - 8) / 2))
-    note(CB, 0.0, 6.0, 33, 62); note(CB, 6.0, 4.0, 33, 66)
-    chord(PNO, CU['density_show'], 1.6, [57, 60, 64, 71], 60)          # 4.7: an A-minor add-9, unresolved
-    chord(TRM, 5.6, 4.4, [45, 52, 57], 58); chord(STR, 8.0, 2.0, [57, 60, 64, 69], 66)
-    for k in range(16): note(DR, 8.0 + k * 0.125, 0.1, 38, 30 + k * 3)
-    note(TIMP, 9.0, 1.0, 45, 60)
-    hit(CU['slam'], 'C', 112); chord(CHO, CU['slam'], 2.2, [60, 64, 67], 66)
+    # ═══ cold open (0–14): a playful A-minor groove as the metal melts; near silence and a clock at the cut to black;
+    #     the three ticks play the theme's first notes (E, G …) and the slam completes the motif on C
+    HK = J['hook']
+    chord(PNO, 0.0, 0.5, [57, 64, 69, 71], 92); note(CB, 0.0, 1.0, 33, 90); note(DR, 0.0, 0.2, 36, 100); chord(STR, 0.0, 1.0, [45, 57, 64], 70)
+    riff = [57, 60, 64, 62, 60, 64, 67, 64]
+    for k in range(int(HK['cut'] / 0.25)):
+        s0 = k * 0.25
+        note(PLK, s0, 0.2, riff[k % 8] - 12, 60 + (8 if k % 4 == 0 else 0))
+        if k % 2 == 0: note(BASS, s0, 0.22, [33, 33, 36, 31][(k // 8) % 4], 74)
+        if k % 4 == 0: note(DR, s0, 0.2, 36, 84)
+        if k % 4 == 2: note(DR, s0, 0.15, 38, 60)
+        note(DR, s0 + 0.125, 0.08, 42, 34)
+    for i, p in enumerate([76, 74, 72, 71, 69, 67, 65, 64, 62, 60]):            # the melt: a sliding descent
+        note(MAR, HK['melt0'] + i * 0.25, 0.3, p, 70 - i * 2)
+    chord(PNO, HK['temp'], 0.4, [64, 69, 72, 76], 84); chord(HRN, HK['temp'], 0.4, [57, 64, 69], 70)
+    note(CB, HK['cut'], 3.2, 33, 56); chord(BED, HK['cut'], 3.2, [45, 57, 64], 44, h=0)          # the cut to black: a drone
+    for i, p in enumerate([69, 72, 76]): note(MAR, HK['props'][i], 0.6, p, 66)                   # each prediction is written
+    for k in range(5): note(PNO, HK['flip'] + k * 0.08, 0.5, [57, 60, 64, 69, 72][k], 70)       # the tile flips
+    for k in range(10): note(DR, HK['flip'] + k * 0.25, 0.1, 42, 40 + k * 2)
+    note(DR, HK['flip'], 0.2, 36, 84); note(DR, HK['flip'] + 1.0, 0.2, 36, 80); note(DR, HK['flip'] + 2.0, 0.2, 36, 84)
+    for k in range(8): note(DR, 9.0 + k * 0.125, 0.1, 38, 36 + k * 5)
+    chord(STR, HK['flip'], 2.4, [57, 60, 64, 69], 60, h=0); note(BASS, HK['flip'], 1.0, 45, 70); note(BASS, HK['flip'] + 1.2, 1.0, 43, 70)
+    for p, tc in zip([76, 79], HK['checks'][:2]): note(MAR, tc, 0.5, p, 96); note(PLK, tc, 0.3, p + 12, 60)
+    note(MAR, HK['checks'][2], 0.4, 81, 90)
+    hit(HK['slam'], 'C', 112); note(MAR, HK['slam'], 1.2, 84, 104); chord(CHO, HK['slam'], 2.2, [60, 64, 67], 66)
+    chord(PAD, HK['q1'], 1.0, CH['Am'][1], 44, h=0)
     theme(PNO, 12.0, (0, 4), 66, skip=(2,))                              # 他是怎么知道的？ — E, G, … (the C is missing)
     chord(PAD, 12.0, 2.0, CH['C'][1], 40, h=0)
     # ═══ title (14–18) and into history: the first phrase, whole and warm

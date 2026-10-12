@@ -85,15 +85,27 @@ def put(t, x, db, name, why, align='onset', pan=0.0, maxlen=None, rate=1.0):
     LOG.append((round(t, 3), name, db, why))
 L = {k: trim(lib(k)) for k in (1063, 1530, 2369, 2001, 2002, 1101, 1489, 2605, 1120, 424, 754, 1694, 2989, 2365, 498, 2299, 774, 163, 790, 168, 2856, 1317)}
 
-# cold open
-for k in range(int(9.9 / 0.5)): put(k * 0.5, L[1063][:int(0.12 * SR)], -36 + (k * 0.2), 'clock tick (1063)', 'the lab clock' if k == 0 else '')
-put(1.0, L[1120], -32, 'pop_soft (1120)', 'the metal sample appears')
-put(CU['density_show'], L[2856], -31, 'gear lock (2856)', 'the density meter clicks to 4.7')
-put(CU['letter_in'], L[1530], -26, 'paper slide (1530)', 'the letter slides in')
-put(6.2, L[2369], -31, 'pencil scribble (2369)', 'the letter writes itself', maxlen=0.8); put(7.0, L[2369], -31, 'pencil scribble (2369)', '…应该是 5.9', maxlen=0.8)
-put(8.6, L[790], -31, 'riser (790)', 'remeasure: rising into the slam', maxlen=1.4)
-put(CU['slam'], L[498], -22, 'deep_hit (498)', 'SLAM: 5.9'); put(CU['slam'], s_thump(110, 55, 0.3), -24, 'low thump (synth)', 'the needle lands')
-put(CU['to_grid'][0], s_swell(1.0), -30, 'air swell (synth)', 'the letter becomes the grid')
+# cold open (new hook)
+HK = J['hook']
+def s_melt(dur=2.6):                            # a soft, sagging glide (the metal letting go)
+    n = int(dur * SR); t = np.arange(n) / SR; f = 520 * np.exp(-t / 1.6) + 90
+    x = np.sin(2 * np.pi * np.cumsum(f * (1 + 0.02 * np.sin(2 * np.pi * 5 * t))) / SR)
+    return st(lp(x * np.minimum(1, t / 0.2) * np.minimum(1, (dur - t) / 0.4), 2500))
+put(0.0, L[1120], -27, 'pop_soft (1120)', 'the gallium cube pops into the hand'); put(0.0, s_thump(110, 60, 0.2), -27, 'low thump (synth)', 'hook hit')
+put(0.15, L[2605], -32, 'air_quick (2605)', 'the hand rises', align='peak')
+put(HK['melt0'], s_melt(), -30, 'melting glide (synth)', 'the cube starts to melt')
+for i in range(3): put(HK['melt1'] + 0.3 + i * 0.25 + 0.3, s_drop(), -31, 'drop pluck (synth)', 'a drop falls off the palm' if i == 0 else '')
+put(HK['temp'], L[2001], -27, 'card placement (2001)', '29.8°C sticker')
+put(HK['cut'], L[2605], -28, 'air_quick (2605)', 'cut to black', align='peak')
+for k in range(int((HK['flip'] - HK['cut']) / 0.5)): put(HK['cut'] + 0.5 + k * 0.5, L[1063][:int(0.12 * SR)], -35, 'clock tick (1063)', 'waiting' if k == 0 else '')
+put(HK['cut'] + 0.3, L[1120], -31, 'pop_soft (1120)', 'the "?" tile appears')
+for i, tp in enumerate(HK['props']): put(tp, L[2369], -32, 'pencil scribble (2369)', f'prediction {i + 1} written', maxlen=0.5)
+put(HK['flip'], L[2002], -27, 'card flick (2002)', 'the tile flips: gallium'); put(HK['flip'], L[1489], -30, 'whoosh_air (1489)', 'flip air', align='peak')
+for i, tc in enumerate(HK['checks']): put(tc, L[1120], -29, 'pop_soft (1120)', f'✓ {i + 1}')
+put(8.6, L[790], -32, 'riser (790)', 'into the slam', maxlen=1.4)
+put(HK['slam'], L[498], -22, 'deep_hit (498)', 'SLAM: 几乎全中'); put(HK['slam'], s_thump(110, 55, 0.3), -24, 'low thump (synth)', 'slam body')
+put(HK['fly'] + 0.8, L[1489], -29, 'whoosh_air (1489)', 'the tile flies into the empty table', align='peak')
+put(HK['fly'] + 0.9, s_tile(31, 1500), -29, 'tile knock (synth)', 'gallium lands in its square')
 put(CU['title'], L[2605], -28, 'air_quick (2605)', 'title tiles drop', align='peak')
 for i in range(5): put(14.1 + i * 0.09 + 0.18, s_tile(i, 900 + i * 80), -27, 'tile knock (synth)', 'title tile lands')
 # history: every tile drops with a knock; Mendeleev's cards; the room laughs at Newlands
