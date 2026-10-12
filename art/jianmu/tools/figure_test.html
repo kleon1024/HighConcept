@@ -1,0 +1,20 @@
+<!doctype html><html><head><meta charset="utf-8">
+<script type="importmap">{ "imports": { "three": "../node_modules/three/build/three.module.js", "three/addons/": "../node_modules/three/examples/jsm/" } }</script>
+<style>body{margin:0;background:#c9d8d6}</style></head><body>
+<canvas id="out" width="2048" height="1024"></canvas>
+<script type="module">
+import { drawFigure, rimPass, CW } from '../src/figure.js';
+const out = document.getElementById('out').getContext('2d');
+const g = out.createLinearGradient(0,0,0,1024); g.addColorStop(0,'#dfe9e6'); g.addColorStop(1,'#9fb7b8'); out.fillStyle = g; out.fillRect(0,0,2048,1024);
+const c = document.createElement('canvas'); c.width = c.height = CW; const s = document.createElement('canvas'); s.width = s.height = CW;
+const ctx = c.getContext('2d');
+const poses = [
+  { t: 0.3, wind: [1, 0.1], gust: 0.5, armL: 0.1, armR: 0.15, lookUp: 1 },
+  { t: 1.1, wind: [0.2, -1], gust: 1.0, armL: 0.7, armR: 0.8, sheathed: true },
+  { t: 2.0, wind: [0.15, 1], gust: 0.9, armL: 0.2, armR: 0.75, onSword: true, sheathed: false, feet: true },
+  { t: 2.5, wind: [-0.4, 1], gust: 1.0, armL: 0.35, armR: 0.95, onSword: true, sheathed: false, feet: true, roll: -0.15 },
+];
+poses.forEach((p, i) => { drawFigure(ctx, p); rimPass(ctx, s, [-1, -0.3]); out.drawImage(c, i * 512, 0, 512, 512); });
+poses.forEach((p, i) => { drawFigure(ctx, { ...p, t: p.t + 0.4 }); rimPass(ctx, s, [-1, -0.3]); out.drawImage(c, 0, 0, 1024, 1024, i * 512, 512, 512, 512); });
+window.__ready = true;
+</script></body></html>

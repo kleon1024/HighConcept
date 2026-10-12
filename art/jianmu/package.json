@@ -1,0 +1,14 @@
+{
+  "name": "jianmu",
+  "version": "1.0.0",
+  "private": true,
+  "description": "御剑 YUJIAN — 30 s vertical xianxia art film (three.js, deterministic renderAt)",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@fontsource/liu-jian-mao-cao": "^5.3.0",
+    "@fontsource/ma-shan-zheng": "^5.3.1",
+    "@fontsource/noto-serif-sc": "^5.3.1",
+    "@fontsource/zhi-mang-xing": "^5.3.0",
+    "three": "^0.170.0"
+  }
+}

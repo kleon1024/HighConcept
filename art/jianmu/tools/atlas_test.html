@@ -1,0 +1,17 @@
+<!doctype html><html><head><meta charset="utf-8">
+<script type="importmap">{ "imports": { "three": "../node_modules/three/build/three.module.js", "three/addons/": "../node_modules/three/examples/jsm/" } }</script>
+<style>body{margin:0}</style></head><body><canvas id="c" width="2048" height="1024"></canvas>
+<script type="module">
+import * as THREE from 'three';
+THREE.ColorManagement.enabled = false;
+import { bakeCloudAtlas } from '../src/clouds.js';
+const r = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), preserveDrawingBuffer: true });
+r.setSize(2048, 1024, false); r.outputColorSpace = THREE.LinearSRGBColorSpace;
+const t0 = performance.now();
+const tex = bakeCloudAtlas(r);
+console.log('bake ms', performance.now() - t0);
+const m = new THREE.ShaderMaterial({ uniforms: { t: { value: tex } }, vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy,0.,1.); }',
+  fragmentShader: 'uniform sampler2D t; varying vec2 vUv; void main(){ vec4 c = texture2D(t, vUv); vec3 col = mix(vec3(0.55,0.62,0.66), mix(vec3(0.7,0.76,0.78), vec3(1.0,0.98,0.94), c.g), c.r); gl_FragColor = vec4(col,1.); }' });
+const s = new THREE.Scene(); s.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), m)); r.render(s, new THREE.Camera());
+window.__ready = true;
+</script></body></html>
