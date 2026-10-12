@@ -546,7 +546,7 @@ shot(24, 30.1, (t, w, cam, st) => {
     fx.points.add(hp, 4, WHITEGOLD, 0.9 * clamp((hp.distanceTo(_camPos) - 60) / 120));
     comets(fx, tt, cam);
   };
-  st.caps = [{ text: '梯断了，人就学会了飞。', t0: 24.9, t1: 27.55, x: 540, y: 330, size: 62, color: '#2a2d26', glow: 'rgba(255,246,220,0.8)' }];
+  st.caps = [{ text: '梯断了，人就学会了飞。', t0: 24.9, t1: 27.55, x: 540, y: 225, size: 62, color: '#2a2d26', glow: 'rgba(255,246,220,0.8)' }];
   if (t >= 27.6) st.title = { t0: 27.75, x: 540, y: 470, size: 220, text: '御剑', color: '#232822', glow: 'rgba(255,240,205,0.9)' };
 });
 
