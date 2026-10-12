@@ -64,12 +64,16 @@ export function buildWorld(renderer, atlas) {
     const ip = new THREE.InstancedMesh(pineG(1, 9), PINE_MAT, pinesM.length); pinesM.forEach((m, i) => ip.setMatrixAt(i, m)); sect.add(ip);
     const ik = new THREE.InstancedMesh(peachTreeG(1, 3), CANOPY_MAT, peachM.length); peachM.forEach((m, i) => ik.setMatrixAt(i, m)); sect.add(ik);
   }
+  // hero set-dressing at the cliff edge (placed once the edge is known, see shots.js): a peach tree beside her, a framing pine
+  const edgeProps = { peach: new THREE.Mesh(peachTreeG(1, 7), CANOPY_MAT), pine: new THREE.Mesh(pineG(1, 21), PINE_MAT) };
+  edgeProps.peach.visible = edgeProps.pine.visible = false; scene.add(edgeProps.peach); scene.add(edgeProps.pine);
   // giant sword in the 'sw' island
   const swordM = new THREE.Mesh(giantSwordG(520), paintMat({ brushScale: 0.05, stretch: [1, 0.3, 1], brush: 0.25, rim: 0.8 }));
   swordM.position.copy(islands.sw.position).add(V(0, 330, 0)); swordM.rotation.set(0.12, 0.6, -0.18); scene.add(swordM);
   // pillar peaks: near ring (with tops in sun) and far rings fading into mist
-  scene.add(buildPeaks(5, 80, 3000, 8000, V(0, 0, 0), { wMin: 140, wVar: 220, hMin: 350, hVar: 1100 }));
-  scene.add(buildPeaks(6, 100, 8000, 18000, V(0, 0, 0), { wMin: 300, wVar: 500, hMin: 500, hVar: 1800 }));
+  scene.add(buildPeaks(5, 80, 3000, 8000, V(0, 0, 0), { wMin: 140, wVar: 220, hMin: 350, hVar: 1100, lod: 1 }));
+  scene.add(buildPeaks(15, 46, 1700, 3200, V(0, 0, 0), { wMin: 90, wVar: 140, hMin: 240, hVar: 700, lod: 1 }));
+  scene.add(buildPeaks(6, 100, 8000, 18000, V(0, 0, 0), { wMin: 300, wVar: 500, hMin: 500, hVar: 1800, lod: 2 }));
   // set-piece pillar peaks with pines (hook foreground, flight)
   const setPeaks = new THREE.Group(); scene.add(setPeaks);
   const sp = (x, z, w2, h2, seed) => { const g = buildPeaks(seed, 1, 0, 0.001, V(x, 0, z), { wMin: w2, wVar: 0.001, hMin: h2, hVar: 0.001, y: -300 }); setPeaks.add(g); };
@@ -82,14 +86,14 @@ export function buildWorld(renderer, atlas) {
     if (d.id.startsWith('l')) continue;
     const top = d.p.clone().add(V(0, 20, 0));
     const e = pick(d.p.y + 260);
-    const ch = new Chain(260, 7); const A = e.end.clone(), B = top.clone().add(V(0, 0, 0)).lerp(A, 0.04);
+    const ch = new Chain(140, 12); const A = e.end.clone(), B = top.clone().add(V(0, 0, 0)).lerp(A, 0.04);
     const len = A.distanceTo(B) * 1.12; ch.layout(catenary(A, B, len * 0.12), len); scene.add(ch.im);
     chains.push({ ch, A, B, upper: e.upper, len });
   }
   // a few chains that hang from the upper rungs into the void (the ones that snap)
   const snapChains = [];
   for (let k = 0; k < 5; k++) {
-    const e = ends.filter(x => x.upper)[2 + k * 3]; const ch = new Chain(320, 9); scene.add(ch.im);
+    const e = ends.filter(x => x.upper)[2 + k * 3]; const ch = new Chain(160, 13); scene.add(ch.im);
     snapChains.push({ ch, A: e.end.clone(), len: 700 + 200 * k, phase: k * 1.3 });
   }
   // clouds
@@ -103,7 +107,7 @@ export function buildWorld(renderer, atlas) {
   // 南天门 for the finale: round vermilion pillars with gold bands, a two-tier roof with ridge horns, a gold-lettered plaque,
   // a broad jade stair down the cloud bank, flanking towers and receding halls — backlit by the low sun
   const gates = new THREE.Group(); gates.visible = false; scene.add(gates);
-  const GATE_MAT = paintMat({ brushScale: 0.004, brush: 0.08, rim: 1.6, wrap: 0.25, side: THREE.DoubleSide });
+  const GATE_MAT = paintMat({ brushScale: 0.004, brush: 0.08, rim: 1.1, wrap: 0.15, tint: 0x6e625c, side: THREE.DoubleSide });
   const GATE = { x: 1300, y: 6300, z: -9500 };
   {
     const cyl = (r, h, c, x, y, z, seg = 24) => { const g = new THREE.CylinderGeometry(r, r, h, seg); g.translate(x, y + h / 2, z); return solidC(g, c); };
@@ -131,6 +135,7 @@ export function buildWorld(renderer, atlas) {
     const r = mulberry32(404);
     for (let i = 0; i < 10; i++) { const side = i % 2 ? 1 : -1; const d = 1 + Math.floor(i / 2); const m = new THREE.Mesh(hallG(1, 0.6, 1, { double: true, glaze: true }), GATE_MAT);
       m.scale.setScalar(480 + 260 * r()); m.position.set(GATE.x + side * (2600 + d * 1200 + 400 * r()), GATE.y - 500 + d * 280, GATE.z - 1500 - d * 900 * r()); m.rotation.y = (r() - 0.5) * 0.5; gates.add(m); }
+    gates.add(buildPeaks(25, 26, 5000, 16000, V(GATE.x, 0, GATE.z + 4000), { wMin: 300, wVar: 500, hMin: 400, hVar: 1400, y: 4250, a0: Math.PI * 0.15, arc: Math.PI * 0.7, lod: 2 }));
     for (let i = 0; i < 3; i++) { const m = new THREE.Mesh(hallG(1, 0.7, 1, { double: true, glaze: true }), GATE_MAT); m.scale.setScalar(1000 - i * 150); m.position.set(GATE.x + (i % 2 ? 500 : -400), GATE.y + 1600 + i * 900, GATE.z - 4000 - i * 2500); gates.add(m); }
   }
   // clouds wrapping the island bases
@@ -146,7 +151,7 @@ export function buildWorld(renderer, atlas) {
   const hero = new Hero(); heroScene.add(hero.group); scene.add(hero.worldSprite);
 
   const world = {
-    scene, heroScene, sky, sea, storm, jm, setPeaks, gates, islandClouds, islands, sect, swordM, chains, snapChains, clouds, cranes, fx, hero, baseClouds, extraClouds: [],
+    scene, heroScene, sky, sea, storm, jm, setPeaks, gates, islandClouds, edgeProps, islands, sect, swordM, chains, snapChains, clouds, cranes, fx, hero, baseClouds, extraClouds: [],
     update(t, cam, dir, st) {
       gates.visible = !!st.gates;
       // chains to the upper trunk vanish once it breaks; the hanging ones whip loose with it

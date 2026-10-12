@@ -38,7 +38,7 @@ export function trunkRadius(th, y) {
   const rg = ridged(u, y / 360, 1.7) * 0.65 + ridged(u * 2.1, y / 170, 5.3) * 0.35;
   r += 30 * rg * rg - 15 + 6 * (noise3(u * 3, y / 40, 9) - 0.5);
   r += 22 * (noise3(Math.cos(tw) * 2, y / 260, Math.sin(tw) * 2) - 0.5);   // burls
-  if (y < 0) r *= 1 + 0.5 * Math.pow(clamp(-y / 900), 1.6);
+  r *= 1 + 0.45 * Math.pow(clamp((700 - y) / 1600), 1.6);                         // root flare / buttresses
   return r;
 }
 function trunkGeom(ya, yb, jagTop, jagBot, seed) {
@@ -142,6 +142,7 @@ export function pagodaG(w, tiers, tierH) {
   parts.push(cylG(w * 0.04, w * 0.01, tierH * 1.2, PAL.gold, 0, y + tierH * 0.1, 0, 5));
   return merge(parts);
 }
+export function pineLowG() { const g = new THREE.IcosahedronGeometry(1, 0); g.scale(0.45, 0.3, 0.45); g.translate(0, 0.75, 0); return setColors(g, (v, n, o) => o.copy(PAL.pine).lerp(PAL.pineHi, clamp(n.y))); }
 // 黄山松: a short trunk with flat layered canopies
 export function pineG(h, seed) {
   const r = mulberry32(seed); const parts = [cylG(h * 0.045, h * 0.07, h * 0.75, col(0x4a3f35), 0, 0, 0, 5)];
@@ -158,8 +159,9 @@ export function pineG(h, seed) {
 
 // ─────────────────────────────── karst pillars (张家界): a cluster of irregular rock columns of different heights,
 // vertically cracked, with mossy ledges and domed tops; floating ones end in jagged hanging spurs
-function columnG(seed, r, h, floating, bottom, round = 0.6, segR = 48) {
-  const g = new THREE.CylinderGeometry(1, 1, 1, segR, Math.max(16, Math.round((h - bottom) / (r * 0.12))), false);
+function columnG(seed, r, h, floating, bottom, round = 0.6, segR = 48, coarse = 0, flatTop = false) {
+  const rows = coarse > 0 ? Math.max(8, Math.round(24 * (1 - coarse) + 4)) : Math.max(16, Math.min(56, Math.round((h - bottom) / Math.min(r * 0.12, 16))));
+  const g = new THREE.CylinderGeometry(1, 1, 1, segR, rows, false);
   const p = g.attributes.position; const sx = seed * 5.3;
   for (let i = 0; i < p.count; i++) {
     const x = p.getX(i), yy = p.getY(i) + 0.5, z = p.getZ(i); const th = Math.atan2(z, x); const onCap = Math.abs(Math.hypot(x, z) - 1) > 0.01 && (yy > 0.999 || yy < 0.001);
@@ -168,7 +170,8 @@ function columnG(seed, r, h, floating, bottom, round = 0.6, segR = 48) {
     let f = 1 + 0.18 * (ridged(th * 4 + sx, y / (r * 2.2), 1.3) - 0.5) + 0.22 * (fbm3(Math.cos(th) * 1.3 + sx, y / (r * 1.8), Math.sin(th) * 1.3, 3) - 0.5);
     f += 0.05 * Math.sin(y / (r * 0.4) + noise3(th, y / r, sx) * 3);
     const topK = clamp((y - (h - r * round)) / (r * round));                       // round the top
-    f *= Math.sqrt(Math.max(0.02, 1 - topK * topK * 0.9)) * (1 - 0.25 * clamp(y / h));
+    if (flatTop) f *= (yy > 0.999 ? 1.008 : 1);                                       // mesa: flat top, crisp cliff lip
+    else f *= Math.sqrt(Math.max(0.02, 1 - topK * topK * 0.9)) * (1 - 0.25 * clamp(y / h));
     let ny = y;
     if (floating) { const bk = clamp((bottom * 0.45 - y) / (-bottom * 0.55)); const spur = Math.pow(Math.max(0, Math.cos(2 * th + sx)) , 2); f *= lerp(1, 0.08 + 0.9 * spur * (1 - bk * 0.7), smooth(bk)); }
     if (yy > 0.999) ny = h + r * 0.15 * round * (noise3(x * 2 + sx, 1, z * 2) - 0.3);
@@ -177,14 +180,14 @@ function columnG(seed, r, h, floating, bottom, round = 0.6, segR = 48) {
   g.computeVertexNormals();
   return g;
 }
-export function karstG(seed, R, H, floating = false, depth = 0) {
+export function karstG(seed, R, H, floating = false, depth = 0, lod = 0) {
   const rng = mulberry32(seed); const parts = []; const tops = [];
   const n = 3 + Math.floor(rng() * 3);
   for (let i = 0; i < n; i++) {
     const a = rng() * 6.283, d = i === 0 ? 0 : R * (0.35 + 0.35 * rng());
     const r = R * (i === 0 ? 0.62 : 0.3 + 0.25 * rng()); const h = H * (i === 0 ? 1 : 0.55 + 0.4 * rng());
     const bottom = floating ? -depth * (i === 0 ? 1 : 0.5 + 0.4 * rng()) : -400;
-    const g = columnG(seed * 13 + i, r, h, floating, bottom); g.translate(Math.cos(a) * d, 0, Math.sin(a) * d);
+    const g = columnG(seed * 13 + i, r, h, floating, bottom, 0.6, [32, 16, 12][lod], [0.0, 0.55, 0.75][lod]); g.translate(Math.cos(a) * d, 0, Math.sin(a) * d);
     parts.push(g); { const tv = V3(Math.cos(a) * d, h, Math.sin(a) * d); tv.r = r; tops.push(tv); }
   }
   const geo = merge(parts.map(g => setColors(g, (v, nn, out) => {
@@ -198,7 +201,7 @@ export function karstG(seed, R, H, floating = false, depth = 0) {
 }
 const V3k = (x, y, z) => new THREE.Vector3(x, y, z);
 export function mesaG(seed, R, depth) {
-  const g = columnG(seed, R, 40, true, -depth, 0.06, 96);
+  const g = columnG(seed, R, 40, true, -depth, 0.06, 180, 0, true);
   setColors(g, (v, nn, out) => {
     if (nn.y > 0.6) { out.copy(PAL.grass).lerp(PAL.grassHi, clamp(noise3(v.x / 30, 1, v.z / 30) * 1.4 - 0.4)); return; }
     const crack = ridged(Math.atan2(v.z, v.x) * 13 + seed, v.y / 90, 4.3);
@@ -209,7 +212,8 @@ export function mesaG(seed, R, depth) {
 }
 export function peachTreeG(h, seed) {
   const rng = mulberry32(seed); const parts = [cylG(h * 0.05, h * 0.08, h * 0.6, col(0x4a3a30), 0, 0, 0, 6)];
-  for (let i = 0; i < 9; i++) { const g = new THREE.IcosahedronGeometry(1, 2); const s = h * (0.22 + 0.16 * rng()); g.scale(s, s * 0.75, s); const a = rng() * 6.28, d = h * 0.3 * rng(); g.translate(Math.cos(a) * d, h * (0.6 + 0.3 * rng()), Math.sin(a) * d);
+  for (let i = 0; i < 6; i++) { const g = new THREE.CylinderGeometry(h * 0.012, h * 0.03, h * 0.45, 4); g.rotateZ(0.6 + 0.3 * rng()); g.rotateY(rng() * 6.28); g.translate(0, h * 0.62, 0); parts.push(setColors(g, (v, n, o) => o.copy(col(0x4a3a30)))); }
+  for (let i = 0; i < 26; i++) { const g = new THREE.IcosahedronGeometry(1, 1); const s = h * (0.09 + 0.08 * rng()); g.scale(s, s * 0.8, s); const a = rng() * 6.28, d = h * 0.42 * Math.sqrt(rng()); g.translate(Math.cos(a) * d, h * (0.62 + 0.3 * rng()) - d * 0.2, Math.sin(a) * d);
     parts.push(setColors(g, (v, n, o) => o.copy(col(0xe98fa0)).lerp(col(0xffd6dc), clamp(n.y * 0.6 + 0.3 + (noise3(v.x / 2, v.y / 2, v.z / 2) - 0.5) * 0.6)))); }
   return merge(parts);
 }
@@ -255,7 +259,7 @@ export const PEAK_MAT = paintMat({ brushScale: 0.012, stretch: [1, 3, 1], brush:
 // off mid-way, a vermilion-roofed hall at the tip, jade canopies glowing at both ends, lanterns underneath
 function canopyG(c, sz, rng) {
   const parts = [];
-  for (let i = 0; i < 14; i++) { const g = new THREE.IcosahedronGeometry(1, 3); const s = sz * (0.28 + 0.3 * rng());
+  for (let i = 0; i < 14; i++) { const g = new THREE.IcosahedronGeometry(1, 2); const s = sz * (0.28 + 0.3 * rng());
     const pp = g.attributes.position; for (let j = 0; j < pp.count; j++) { const x = pp.getX(j), y = pp.getY(j), z = pp.getZ(j); const k = 0.75 + 0.5 * noise3(x * 2 + i, y * 2, z * 2); pp.setXYZ(j, x * k, y * k, z * k); }
     g.computeVertexNormals(); g.scale(s, s * 0.5, s); g.rotateY(rng() * 6.28);
     const a = rng() * 6.283, d = sz * 0.75 * Math.sqrt(rng());
@@ -380,23 +384,27 @@ export function buildPeaks(seed, n, rMin, rMax, center = new THREE.Vector3(), op
   const NT = 6; const tpl = [];
   for (let i = 0; i < NT; i++) {
     const R = lerp(opts.wMin ?? 120, (opts.wMin ?? 120) + (opts.wVar ?? 200), i / (NT - 1)) * 0.5, H = lerp(opts.hMin ?? 400, (opts.hMin ?? 400) + (opts.hVar ?? 1200), ((i * 3) % NT) / (NT - 1));
-    const k = karstG(seed * 7 + i, R, H, false);
-    const parts = [k.geo]; const pr = mulberry32(seed + i * 11);
-    for (const tp of k.tops) { const np = Math.round(3 + tp.r / 12); for (let j = 0; j < np; j++) { const a = pr() * 6.28, rr = tp.r * 0.7 * Math.sqrt(pr()); const s = (tp.r * 0.22 + 8) * (0.6 + 0.8 * pr()); const g = pineG(1, seed + j).clone(); g.scale(s, s, s); g.rotateY(pr() * 6.28); g.translate(tp.x + Math.cos(a) * rr, tp.y - s * 0.15, tp.z + Math.sin(a) * rr); parts.push(g); } }
+    const lod = opts.lod ?? 1;
+    const k = karstG(seed * 7 + i, R, H, false, 0, lod);
+    const parts = [k.geo]; const pr = mulberry32(seed + i * 11); const pineT = lod >= 1 ? pineLowG() : pineG(1, seed);
+    if (i % 2 === 0 && k.tops[0]) { const tp = k.tops[0]; const hgt = hallG(tp.r * 0.5, tp.r * 0.35, tp.r * 0.22, { double: true, roof: i % 4 === 0 ? col(0xb2402a) : PAL.roofGlaze }); hgt.translate(tp.x, tp.y - 2, tp.z); parts.push(hgt); }
+    for (const tp of k.tops) { const np = Math.round(3 + tp.r / 12); for (let j = 0; j < (lod >= 2 ? Math.ceil(np / 2) : np); j++) { const a = pr() * 6.28, rr = tp.r * 0.7 * Math.sqrt(pr()); const s = (tp.r * 0.22 + 8) * (0.6 + 0.8 * pr()) * (lod >= 2 ? 1.4 : 1); const g = pineT.clone(); g.scale(s, s, s); g.rotateY(pr() * 6.28); g.translate(tp.x + Math.cos(a) * rr, tp.y - s * 0.15, tp.z + Math.sin(a) * rr); parts.push(g); } }
     tpl.push(merge(parts));
   }
-  const lists = tpl.map(() => []);
+  // instances grouped by template and by 30° sector so the renderer can frustum-cull whole sectors
+  const NS = 12; const lists = tpl.map(() => [...Array(NS)].map(() => []));
   for (let i = 0; i < n; i++) {
     const a = (opts.a0 ?? 0) + rng() * (opts.arc ?? Math.PI * 2), d = lerp(rMin, rMax, Math.sqrt(rng()));
     const x = center.x + Math.cos(a) * d, z = center.z + Math.sin(a) * d; const s = 0.75 + 0.5 * rng();
-    lists[i % tpl.length].push(new THREE.Matrix4().compose(new THREE.Vector3(x, (opts.y ?? -60), z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rng() * 6.28), new THREE.Vector3(s, s * (0.8 + 0.4 * rng()), s)));
+    const sec = Math.floor(((Math.atan2(z - center.z, x - center.x) / (Math.PI * 2)) + 1) % 1 * NS);
+    lists[i % tpl.length][sec].push(new THREE.Matrix4().compose(new THREE.Vector3(x, (opts.y ?? -60), z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rng() * 6.28), new THREE.Vector3(s, s * (0.8 + 0.4 * rng()), s)));
   }
-  tpl.forEach((g, i) => { if (!lists[i].length) return; const im = new THREE.InstancedMesh(g, PEAK_MAT, lists[i].length); lists[i].forEach((m, j) => im.setMatrixAt(j, m)); im.frustumCulled = false; grp.add(im); });
+  tpl.forEach((g, i) => { g.computeBoundingSphere(); lists[i].forEach(L => { if (!L.length) return; const im = new THREE.InstancedMesh(g, PEAK_MAT, L.length); L.forEach((m, j) => im.setMatrixAt(j, m)); im.computeBoundingSphere(); im.frustumCulled = true; grp.add(im); }); });
   return grp;
 }
 
 // ─────────────────────────────── chains: instanced links along a curve
-export const LINK_G = solid(new THREE.TorusGeometry(1, 0.26, 6, 14), col(0x4c5552));
+export const LINK_G = solid(new THREE.TorusGeometry(1, 0.26, 4, 10), col(0x4c5552));
 LINK_G.scale(1, 1.45, 1);
 export const CHAIN_MAT = paintMat({ brushScale: 0.3, brush: 0.2, rim: 0.7, wrap: 0.3 });
 export class Chain {

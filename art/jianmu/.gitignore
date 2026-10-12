@@ -1,0 +1,8 @@
+frames/
+sounds/
+node_modules/
+keyframes/t*.jpg
+refs/*
+!refs/board.jpg
+!refs/SOURCES.md
+release/*.wav

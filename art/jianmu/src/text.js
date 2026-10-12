@@ -21,6 +21,17 @@ export class Captions {
       const total = it.vertical ? chars.length * (size + sp) - sp : widths.reduce((a, b) => a + b, 0) + sp * (chars.length - 1);
       let x0 = it.align === 'left' ? it.x : it.x - total / 2;
       let y0 = it.vertical ? it.y - total / 2 + size / 2 : it.y;
+      if (it.veil !== false) {   // soft backing glow so the line reads over busy areas
+        const k0 = easeOut(clamp((t - it.t0) / 0.5)) * (1 - smooth(out));
+        const dark = (it.color || '').startsWith('#f');
+        const cx = it.vertical ? it.x : x0 + total / 2, cy = it.vertical ? it.y : y0;
+        const rw = (it.vertical ? size * 1.6 : total * 0.62 + size * 0.9), rh = (it.vertical ? total * 0.62 + size : size * 1.25);
+        ctx.save(); ctx.translate(cx, cy); ctx.scale(rw, rh);
+        const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
+        const c0 = dark ? 'rgba(8,22,28,' : 'rgba(250,250,244,'; const a0 = (it.veilA ?? (dark ? 0.5 : 0.55)) * k0;
+        g.addColorStop(0, c0 + a0 + ')'); g.addColorStop(0.55, c0 + (a0 * 0.6) + ')'); g.addColorStop(1, c0 + '0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, 1, 0, 6.283); ctx.fill(); ctx.restore();
+      }
       chars.forEach((ch, i) => {
         const a0 = it.t0 + i * st; const k = clamp((t - a0) / fin);
         const al = easeOut(k) * (1 - smooth(out));

@@ -73,8 +73,18 @@ void main(){
     alb *= mix(1.0, 0.8 + 0.28 * strata + 0.1 * strata2, uRock);
     float crack = 1.0 - abs(2.0 * vnoise3(vWP * vec3(0.045, 0.007, 0.045)) - 1.0);
     alb *= mix(1.0, 1.0 - 0.45 * smoothstep(0.88, 1.0, crack), uRock);
+    float crack2 = 1.0 - abs(2.0 * vnoise3(vWP * vec3(0.16, 0.025, 0.16) + 9.0) - 1.0);
+    alb *= mix(1.0, 1.0 - 0.3 * smoothstep(0.86, 1.0, crack2) + 0.12 * (vnoise3(vWP * 0.5) - 0.5), uRock);
     float moss = smoothstep(0.5, 0.78, N.y + (vnoise3(vWP * 0.05) - 0.5) * 0.55);
-    alb = mix(alb, uMossCol * (0.75 + 0.5 * vnoise3(vWP * 0.12)), moss * uRock);
+    float g1 = vnoise3(vWP * 0.12), g2 = vnoise3(vWP * 0.7 + 3.0), g3 = vnoise3(vWP * 2.3 + 7.0);
+    vec3 grass = uMossCol * (0.5 + 0.55 * g1 + 0.35 * (g2 - 0.5) + 0.25 * (g3 - 0.5));
+    grass = mix(grass, vec3(0.62, 0.62, 0.40), smoothstep(0.5, 0.8, g1) * 0.45);           // dry, ochre patches
+    float g4 = vnoise3(vWP * vec3(7.0, 1.5, 7.0) + 13.0), g5 = vnoise3(vWP * vec3(19.0, 3.0, 19.0));
+    grass *= 0.8 + 0.28 * g4 + 0.18 * (g5 - 0.5);                                           // blade-scale texture up close
+    vec2 fc = vWP.xz * 4.0; vec2 fi = floor(fc);                                             // tiny flowers: round dots in 25 cm cells
+    float fl = step(0.985, hash13(vec3(fi, 1.0))) * smoothstep(0.2, 0.1, length(fract(fc) - 0.5));
+    grass = mix(grass, mix(vec3(0.95, 0.62, 0.70), vec3(0.98, 0.86, 0.62), hash13(vec3(fi, 5.0))), fl * 0.75);
+    alb = mix(alb, grass, moss * uRock);
   }
   vec3 col = alb * (amb + uSunCol * lit);
   // warm bounce in the shadow side from the cloud sea below
@@ -83,7 +93,7 @@ void main(){
   float fres = pow(1.0 - max(dot(N, V), 0.0), 2.2);
   float back = smoothstep(-0.4, 0.7, dot(-V, uSunDir));
   float sunSide = smoothstep(-0.2, 0.5, dot(N, uSunDir) + 0.3);
-  col += uRimCol * fres * (0.25 + 0.95 * back) * (0.4 + 0.6 * sunSide) * uRim * 1.4;
+  col += uRimCol * fres * (0.25 + 0.95 * back) * (0.4 + 0.6 * sunSide) * uRim * 1.4 * (1.0 - 0.85 * smoothstep(0.35, 0.85, N.y));
   // lightning
   vec3 L2 = uFlashPos - vWP; float dl = length(L2);
   col += alb * uFlashCol * (0.35 + 0.65 * max(dot(N, L2 / dl), 0.0)) * (900.0 / (dl + 900.0));
@@ -125,7 +135,7 @@ void main(){ float fk; vec3 c = uColor * vCol * uK; vec3 a = atmo(c, vWP, fk); g
 // ── sky dome: gradient + sun glow + faint high streaks; follows the camera
 export const SKY = {
   uZenith: { value: C(0xb9d3d4) }, uHorizon: { value: C(0xeef2e8) }, uVoid: { value: C(0xc9d8d6) },
-  uSunGlow: { value: C(0xfff0cc) }, uSunK: { value: 1.0 }, uStreak: { value: 0.06 }, uHorizY: { value: 0.0 },
+  uSunGlow: { value: C(0xfff0cc) }, uSunK: { value: 1.0 }, uStreak: { value: 0.0 }, uHorizY: { value: 0.0 },
 };
 export function skyMesh() {
   const m = new THREE.Mesh(new THREE.SphereGeometry(60000, 48, 24), new THREE.ShaderMaterial({
@@ -141,9 +151,11 @@ void main(){
   float s = max(dot(d, uSunDir), 0.0);
   c += uSunGlow * (pow(s, 6.0) * 0.3 + pow(s, 60.0) * 0.45 + pow(s, 900.0) * 1.2) * uSunK;
   // high cirrus streaks
-  vec2 q = d.xz / max(d.y + 0.15, 0.08);
-  float st = fbm2(q * vec2(0.6, 3.0) + vec2(uTime * 0.01, 0.0), 4);
-  c = mix(c, c * 0.93 + uSunGlow * 0.07, smoothstep(0.45, 0.8, st) * uStreak * smoothstep(0.02, 0.3, y));
+  if (uStreak > 0.02) {
+    vec2 q = d.xz / max(d.y + 0.15, 0.08);
+    float st = fbm2(q * vec2(0.6, 3.0) + vec2(uTime * 0.01, 0.0), 4);
+    c = mix(c, c * 0.93 + uSunGlow * 0.07, smoothstep(0.45, 0.8, st) * uStreak * smoothstep(0.02, 0.3, y));
+  }
   gl_FragColor = vec4(c, 1.0);
 }`,
   }));

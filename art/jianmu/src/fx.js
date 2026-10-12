@@ -123,10 +123,10 @@ export class FX {
     this.jm = jm;
     // debris: a few templates of rock / beam chunks
     const rng = mulberry32(99);
-    const rock = new THREE.IcosahedronGeometry(1, 2); const rp = rock.attributes.position;
-    for (let i = 0; i < rp.count; i++) { const x = rp.getX(i), y = rp.getY(i), z = rp.getZ(i); const k = 0.7 + 0.6 * fbm3(x * 1.5 + 3, y * 1.5, z * 1.5, 3); rp.setXYZ(i, x * k, y * k * 0.8, z * k); }
+    const rock = new THREE.IcosahedronGeometry(1, 1); const rp = rock.attributes.position;
+    for (let i = 0; i < rp.count; i++) { const x = rp.getX(i), y = rp.getY(i), z = rp.getZ(i); const k = 0.5 + 1.0 * fbm3(x * 1.3 + 3, y * 1.3, z * 1.3, 3); rp.setXYZ(i, x * k * 1.25, y * k * 0.7, z * k * 0.9); }
     rock.computeVertexNormals();
-    const cc = new Float32Array(rp.count * 3); for (let i = 0; i < rp.count; i++) { cc[i * 3] = 0.42; cc[i * 3 + 1] = 0.43; cc[i * 3 + 2] = 0.40; }
+    const cc = new Float32Array(rp.count * 3); for (let i = 0; i < rp.count; i++) { cc[i * 3] = 0.40; cc[i * 3 + 1] = 0.37; cc[i * 3 + 2] = 0.32; }
     rock.setAttribute('color', new THREE.BufferAttribute(cc, 3));
     this.debris = new THREE.InstancedMesh(rock, paintMat({ brushScale: 0.08, brush: 0.25, rim: 0.6 }), 400); this.debris.frustumCulled = false; this.debris.count = 0;
     this.debris.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(this.debris);

@@ -21,12 +21,12 @@ console.error('T world', (performance.now() - _t0).toFixed(0));
 const post = new Post(renderer);
 const camera = new THREE.PerspectiveCamera(50, W / H, 2, 90000);
 const heroCam = new THREE.PerspectiveCamera(50, W / H, 0.05, 400);
-window.__world = world; window.__camera = camera;
+window.__world = world; window.__camera = camera; window.__renderer = renderer;
 
 window.renderAt = (t) => {
   const st = applyShot(t, world, camera, heroCam, post);
   ENV.uCamPos.value.copy(camera.position); ENV.uTime.value = t;
-  if (window.DBG) { if (window.DBG.noFog) ENV.uFogDen.value = 0; if (window.DBG.noClouds) st.clouds = []; if (window.DBG.hide) for (const k of window.DBG.hide) world[k].visible = false; }
+  if (window.DBG) { if (window.DBG.noFog) ENV.uFogDen.value = 0; if (window.DBG.noClouds) st.clouds = []; if (window.DBG.onlySky) world.scene.children.forEach(c => { if (c !== world.sky) c.visible = false; }); if (window.DBG.hide) for (const k of window.DBG.hide) { if (k === 'jm_lower') world.jm.lower.visible = false; else if (k === 'jm_upper') world.jm.upper.visible = false; else world[k].visible = false; } }
   camera.updateMatrixWorld();
   const dir = new THREE.Vector3(); camera.getWorldDirection(dir);
   world.update(t, camera, dir, st);

@@ -45,9 +45,9 @@ export class Post {
     this.mCopy = new THREE.ShaderMaterial({ uniforms: { tSrc: { value: null } }, vertexShader: VS, fragmentShader: 'uniform sampler2D tSrc; varying vec2 vUv; void main(){ gl_FragColor = texture2D(tSrc, vUv); }' });
     this.textTex = null;
     this.mFinal = new THREE.ShaderMaterial({
-      uniforms: { ...GRADE, tScene: { value: this.rt.texture }, tB1: { value: this.b1.texture }, tB2: { value: this.b2.texture }, tRay: { value: this.r1.texture }, tText: { value: null }, uHasText: { value: 0 } },
+      uniforms: { ...GRADE, tScene: { value: this.rt.texture }, tB1: { value: this.b1.texture }, tB2: { value: this.b2.texture }, tRay: { value: this.r1.texture }, tPaper: { value: null }, tText: { value: null }, uHasText: { value: 0 } },
       vertexShader: VS,
-      fragmentShader: `uniform sampler2D tScene, tB1, tB2, tText, tRay; uniform float uHasText, uRays; uniform vec3 uRayCol;
+      fragmentShader: `uniform sampler2D tScene, tB1, tB2, tText, tRay, tPaper; uniform float uHasText, uRays; uniform vec3 uRayCol;
 uniform float uExposure, uBloom, uSat, uContrast, uChroma, uVignette, uGrain, uPaper, uFrame, uFade; uniform vec3 uLift, uGamma, uGain; uniform vec4 uFlash;
 varying vec2 vUv;
 ${GLSL_NOISE}
@@ -74,7 +74,7 @@ void main(){
   c *= mix(1.0 - uVignette, 1.0, v);
   // paper fibre + grain
   vec2 px = vUv * vec2(${W}.0, ${H}.0);
-  float paper = fbm2(px * 0.012, 4) * 0.7 + vnoise(px * vec2(0.9, 0.08)) * 0.3;
+  float paper = texture2D(tPaper, vUv * vec2(1.0, 1.0)).r;
   c *= 1.0 + (paper - 0.5) * uPaper;
   float g = hash12(px + fract(uFrame * 0.6180339) * 1000.0) - 0.5;
   c += g * uGrain * (0.6 + 0.4 * (1.0 - l));
@@ -83,6 +83,13 @@ void main(){
   gl_FragColor = vec4(clamp(c, 0.0, 1.0), 1.0);
 }` });
     this.sBright = fsq(this.mBright); this.sBlur = fsq(this.mBlur); this.sFinal = fsq(this.mFinal);
+    // bake the paper-fibre texture once (it used to be computed per pixel every frame)
+    this.paper = new THREE.WebGLRenderTarget(W / 2, H / 2, { type: THREE.UnsignedByteType, depthBuffer: false });
+    const mP = new THREE.ShaderMaterial({ vertexShader: VS, fragmentShader: `varying vec2 vUv;
+${GLSL_NOISE}
+void main(){ vec2 px = vUv * vec2(${W}.0, ${H}.0); float p = fbm2(px * 0.012, 4) * 0.7 + vnoise(px * vec2(0.9, 0.08)) * 0.3; gl_FragColor = vec4(p, p, p, 1.0); }` });
+    renderer.setRenderTarget(this.paper); renderer.render(fsq(mP), CAM); renderer.setRenderTarget(null);
+    this.mFinal.uniforms.tPaper.value = this.paper.texture;
   }
   setText(canvas) {
     if (!canvas) { this.mFinal.uniforms.uHasText.value = 0; return; }

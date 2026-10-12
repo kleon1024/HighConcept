@@ -134,7 +134,7 @@ export class CloudField {
     this.aTint = new THREE.InstancedBufferAttribute(new Float32Array(max * 3), 3); this.aTint.setUsage(THREE.DynamicDrawUsage);
     g.setAttribute('aSprite', this.aSprite); g.setAttribute('aTint', this.aTint);
     this.mat = new THREE.ShaderMaterial({
-      uniforms: { ...ENV, ...CLOUD, uAtlas: { value: atlas } }, vertexShader: VS_SPRITE, fragmentShader: FS_SPRITE,
+      uniforms: { ...ENV, ...CLOUD, uAtlas: { value: atlas } }, vertexShader: VS_SPRITE, fragmentShader: FS_SPRITE, side: THREE.DoubleSide,
       transparent: true, depthWrite: false, blending: THREE.CustomBlending,
       blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor, blendSrcAlpha: THREE.OneFactor, blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
     });
@@ -170,7 +170,7 @@ export class CloudField {
 const WHITE = new THREE.Color(1, 1, 1);
 
 // ── cloud sea: a huge horizontal fbm sheet (two layers in one shader: crests lit, troughs shaded, gaps to the void)
-export const STORM = { uLit: { value: C(0x4d6e77) }, uShade: { value: C(0x132a33) }, uCloudRim: { value: C(0x6f8f98) }, uCloudDark: { value: 1 }, uSeaY: { value: 4400 }, uSeaCover: { value: 0.75 }, uSeaScale: { value: 1 / 900 }, uSeaDrift: { value: new THREE.Vector2(3, 7) }, uVoidCol: { value: C(0x0c1f27) }, uAlpha: { value: 0 } };
+export const STORM = { uLit: { value: C(0x9fbcc4) }, uShade: { value: C(0x15303a) }, uCloudRim: { value: C(0x6f8f98) }, uCloudDark: { value: 1 }, uSeaY: { value: 4400 }, uSeaCover: { value: 0.75 }, uSeaScale: { value: 1 / 900 }, uSeaDrift: { value: new THREE.Vector2(3, 7) }, uVoidCol: { value: C(0x0c1f27) }, uAlpha: { value: 0 } };
 export const SEA = { uSeaY: { value: 0 }, uSeaCover: { value: 0.62 }, uSeaScale: { value: 1 / 700 }, uSeaDrift: { value: new THREE.Vector2(0, 0) }, uVoidCol: { value: C(0xa9c0c4) } };
 export function cloudSea(own) {
   const U = own || { ...CLOUD, ...SEA, uAlpha: { value: 0 } };
@@ -213,7 +213,7 @@ void main(){
   col += uCloudRim * pow(max(dot(V, uSunDir), 0.0), 6.0) * 0.25;
   vec3 L = uFlashPos - vWP; col += uFlashCol * 0.6 * (2000.0 / (length(L) + 2000.0));
   float below = step(vWP.y, uCamPos.y) * 2.0 - 1.0;          // seen from above (+1) or below (-1)
-  if (below < 0.0) { col = mix(uShade, uLit, 0.25 + 0.5 * h) * (0.8 + 0.2 * light); }
+  if (below < 0.0) { float hb = smoothstep(0.3, 1.0, h); col = mix(uShade * 0.6, uLit * 0.9, hb) * (0.75 + 0.35 * light); }
   if (uAlpha < 0.5) col = mix(uVoidCol, col, cover);
   float fk; col = atmo(col, vWP, fk);
   float a = uAlpha > 0.5 ? cover : 1.0;
