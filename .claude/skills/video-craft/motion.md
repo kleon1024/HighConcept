@@ -19,4 +19,8 @@
 - **Motion and sound are designed together**: every visible motion (card lands, paint sweeps in, whip-pan, freeze)
   gets its own designed sound and lands on the music grid; write a cue sheet (motion event → sound → beat).
 
-Feedback log: 「建模太粗糙」「黑金界面看不出来都是啥」「应该有快有慢」「真画不好的地方用抽象手法」「全新风格…超强风格…绚丽+繁杂眼花缭乱」「动画不合适」「动效设计，以及配合的声音，音乐设计要好好做」.
+- **Bold beats cautious**: a full-screen colour field per chapter (and per sub-topic), changed with a geometric sweep on
+  the beat; a big numbered chapter header; giant background type (years, counts, symbols) that reacts to the music;
+  hero diagrams at half-screen size, not small cards. A cream background with small stickers reads as "too conservative".
+
+Feedback log: 「建模太粗糙」「黑金界面看不出来都是啥」「应该有快有慢」「真画不好的地方用抽象手法」「全新风格…超强风格…绚丽+繁杂眼花缭乱」「动画不合适」「动效设计，以及配合的声音，音乐设计要好好做」「motion design还是太保守了，没有音乐的形状那样视觉更丰富」.

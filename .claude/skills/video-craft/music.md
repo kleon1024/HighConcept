@@ -16,4 +16,7 @@
 - **One leitmotif, re-orchestrated**: for multi-part films, write one catchy theme and carry it through every section,
   changing instrumentation per section (era, mood) and joining sections with musical bridges, not hard switches.
 
-Feedback log: 「配乐不好」「太大声了，太突兀了」「配乐有点太糙了，换点其他音色的」「动效设计，以及配合的声音，音乐设计要好好做」.
+- **Music with meaning**: tie the score's structure to the film's idea so it can lift and resonate — e.g. a theme that is
+  heard incomplete until the story completes it, and an emotional turn (minor iv → I) placed on the film's most human line.
+
+Feedback log: 「配乐不好」「太大声了，太突兀了」「配乐有点太糙了，换点其他音色的」「动效设计，以及配合的声音，音乐设计要好好做」「做好合适的配乐 有意义，有升华，引发人共鸣」.
