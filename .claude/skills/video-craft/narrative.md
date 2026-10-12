@@ -22,5 +22,9 @@ clue → how it works → what it unlocked → the human payoff → the lift**.
   60 captions / 841 characters, one idea per ~8 s → "节奏太慢，信息密度太低"). Prefer 60–90 s. Pick topics whose
   content can be *seen and heard* (sound, motion, shape); for fact-heavy topics, turn facts into visual encodings
   (heights, colours, sizes, sonification) instead of sentences.
+  **One stage, many lenses** keeps that density readable: keep one set of objects on screen and re-encode it for each
+  idea (the periodic-table 60-s cut re-colours, lifts, resizes and re-arranges the same 118 tiles about 30 times;
+  each lens = a colour field + one label + one big number + its own sound gesture), and frame the film with one
+  everyday metaphor the viewer already owns (元素周期表 = 宇宙的配料表) that opens and closes it.
 
 Feedback log: 「感觉把不相关的素材拼在一起了」「增加科普性，展开成吸引人的故事性科普」「给我选题先」「控制在60秒以内」「a 意义不明」「节奏太慢，信息密度太低，没有音乐的形状有趣」.
