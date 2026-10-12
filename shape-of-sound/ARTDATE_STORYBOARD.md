@@ -38,7 +38,7 @@ question smoothly, shuts down "这我也能画" with "但你没有", and they cl
 | 现代与抽象馆 | 达达 Dada 1916 · 「小便池也算艺术」 | own drawing of a urinal signed "R. MUTT 1917" (示意图) | original |
 | 现代与抽象馆 | 抽象表现主义 (进阶动作 beat) | own colour-field canvas (风格示意) | original |
 | 现代与抽象馆 | 波普 Pop Art 1950s–60s · 「网点 · 漫画 · 广告」 | own Ben-Day comic panel (风格示意) | original |
-| 设计馆 | 新艺术运动 Art Nouveau 1890–1910 · 「藤蔓曲线 · 长发女神」 | 穆夏 F. Champenois 海报 1897 | PD, Commons |
+| 设计馆 | 新艺术运动 Art Nouveau 1890–1910 · 「藤蔓曲线」 | 穆夏《遐想》Rêverie 1897（为 F. Champenois 作） | PD, Commons |
 | 设计馆 | 装饰艺术 Art Deco 1920s–30s · 「几何 · 对称 · 金色放射」 | own Deco poster (风格示意) | original |
 | 设计馆 | 包豪斯 Bauhaus 1919–1933 · 「方圆三角 · 三原色」 | own Bauhaus poster (风格示意) | original |
 

@@ -2,14 +2,14 @@
 // changes render both states and reveal the new one through a stroke-shaped mask (the film's signature transition).
 import { staticFile } from "remotion";
 import J from "./artdate.json";
-import { coupleScreen, drawCouple, drawProps, MAT_NATURAL } from "./couple";
+import { coupleScreen, drawCouple, drawPasserby, drawProps, MAT_NATURAL } from "./couple";
 import { clamp01, Step, stepAt, VH, VW } from "./motion";
 import { drawMask } from "./masks";
-import { drawClink } from "./ending";
+import { drawClink, drawFinaleShell } from "./ending";
 import { canvasTex, field, grab, grainTex, overlayTex, paintDots, paintStrokes, brokenColour, plainColour } from "./npr";
-import { drawArt, stylizeBg, stylizeFg } from "./styleops";
+import { drawArt, drawBauhausCouple, drawHalo, drawOrn, drawSupremCouple, drawXray, stylizeBg, stylizeFg } from "./styleops";
 import { STYLES, stylePal, styleMat } from "./styles";
-import { ARCH, Cam, camAt, drawFrame, workRect } from "./world";
+import { ARCH, Cam, camAt, drawFrame, OUTLINE, P, workRect } from "./world";
 
 type Ctx = CanvasRenderingContext2D;
 const pool: Record<string, HTMLCanvasElement> = {};
@@ -29,6 +29,7 @@ export const loadAssets = () => {
   return loading;
 };
 export const aspectOf = (w: (typeof J.works)[number]) => {
+  if ("aspect" in w && w.aspect) return w.aspect as number;
   const im = "img" in w && w.img ? IMGS[w.img as string] : null;
   if (im) return im.naturalWidth / im.naturalHeight;
   return ({ urinal: 0.9, colorfield: 0.78, pop: 1.0, deco: 0.72, bauhaus: 0.72 } as Record<string, number>)[(w as { kind?: string }).kind ?? ""] ?? 1;
@@ -58,10 +59,17 @@ const light = (ctx: Ctx, kind: string | undefined, c: Cam, t: number) => {
     ctx.globalCompositeOperation = "multiply"; const g2 = ctx.createLinearGradient(0, VH * 0.55, 0, VH); g2.addColorStop(0, "rgba(255,255,255,1)"); g2.addColorStop(1, "rgba(175,185,220,1)"); ctx.fillStyle = g2; ctx.fillRect(0, 0, VW, VH);
     ctx.globalCompositeOperation = "source-over"; ctx.filter = "blur(40px)";
     for (let i = 0; i < 7; i++) { const x = ((i * 337 + t * 22 - c.x * c.s * 0.6) % (VW + 600) + VW + 600) % (VW + 600) - 300, y = 60 + (i * 97) % 380; ctx.fillStyle = `rgba(236,240,246,${0.16 + (i % 3) * 0.05})`; ctx.beginPath(); ctx.ellipse(x, y, 260, 90, 0, 0, Math.PI * 2); ctx.fill(); }
-    ctx.filter = "none"; vig(0.16);
+    ctx.filter = "none";
+    ctx.globalCompositeOperation = "screen";                       // light shafts falling through the glass vault
+    for (let i = 0; i < 5; i++) {
+      const x0 = ((i * 410 - c.x * c.s * 0.35) % (VW + 800) + VW + 800) % (VW + 800) - 400, w = 70 + (i % 3) * 40;
+      const g3 = ctx.createLinearGradient(0, 0, 0, VH); g3.addColorStop(0, "rgba(255,244,214,0.34)"); g3.addColorStop(1, "rgba(255,244,214,0)");
+      ctx.fillStyle = g3; ctx.beginPath(); ctx.moveTo(x0, -10); ctx.lineTo(x0 + w, -10); ctx.lineTo(x0 + w - 380, VH); ctx.lineTo(x0 - 380 - w * 0.6, VH); ctx.closePath(); ctx.fill();
+    }
+    ctx.globalCompositeOperation = "source-over"; vig(0.16);
   }
   else if (kind === "night") { ctx.globalCompositeOperation = "multiply"; ctx.fillStyle = "rgba(120,140,200,1)"; ctx.fillRect(0, 0, VW, VH); ctx.globalCompositeOperation = "source-over"; vig(0.3); }
-  else vig(0.16);
+  else if (kind !== "none") vig(0.16);
   ctx.restore();
   void c; void t;
 };
@@ -79,10 +87,16 @@ const drawWorks = (ctx: Ctx, c: Cam, t: number, style: string) => {
   for (const w of J.works) {
     if (Math.abs(w.x - c.x) > VW / c.s + 3) continue;
     const r = workRect(c, w, aspectOf(w), t), im = "img" in w && w.img ? IMGS[w.img as string] : null;
+    if (w.frame === "plinth") {                                        // a white plinth from the floor to the work
+      const [, yf] = P(c, w.x, 0, 0.25), [xl, yt] = P(c, w.x - 0.42, 0.62, 0.25), [xr] = P(c, w.x + 0.42, 0.62, 0.25);
+      ctx.fillStyle = "#F4F2EE"; ctx.fillRect(xl, yt, xr - xl, yf - yt); ctx.fillStyle = "rgba(0,0,0,0.08)"; ctx.fillRect(xr - (xr - xl) * 0.18, yt, (xr - xl) * 0.18, yf - yt);
+      ctx.strokeStyle = "rgba(0,0,0,0.25)"; ctx.lineWidth = 1; ctx.strokeRect(xl, yt, xr - xl, yf - yt);
+    }
     ctx.save(); ctx.translate(r.x + r.w / 2, r.y + r.h / 2); ctx.rotate(r.rot);
     if (im) { ctx.imageSmoothingQuality = "high"; ctx.drawImage(im, -r.w / 2, -r.h / 2, r.w, r.h); }
     else drawArt(ctx, (w as { kind?: string }).kind ?? "", r.w, r.h, c, t, style);
     ctx.restore();
+    if (w.id === "blacksquare") drawXray(ctx, r, t);
   }
 };
 
@@ -91,16 +105,23 @@ export const renderStyled = (out: Ctx, style: string, arch: string, build: numbe
   const S = STYLES[style] ?? STYLES.flat;
   const bs = cx2("bgsrc");
   bs.setTransform(1, 0, 0, 1, 0, 0); bs.clearRect(0, 0, VW, VH);
+  OUTLINE.color = S.outline?.color ?? ""; OUTLINE.w = S.outline?.w ?? 0;
   ARCH[arch](bs, c, { pal: stylePal(style, arch), build, t });
+  drawOrn(bs, S.orn, c, t);
   drawFrames(bs, c, t);
+  OUTLINE.w = 0;
   light(bs, S.light, c, t);
   out.save();
   stylizeBg(out, bs, S.bg ?? "none", c, t, style);
   drawWorks(out, c, t, style);
   const fs = cx2("fgsrc");
   fs.setTransform(1, 0, 0, 1, 0, 0); fs.clearRect(0, 0, VW, VH);
-  drawCouple(fs, styleMat(style), c, t);
-  drawProps(fs, c, arch, styleMat(style));
+  if (style === "nouveau") drawHalo(fs, c, t);
+  if (S.figure === "bauhaus") drawBauhausCouple(fs, c, t);
+  else if (S.figure === "suprematist") drawSupremCouple(fs, c, t);
+  else drawCouple(fs, styleMat(style, fs), c, t);
+  drawProps(fs, c, arch, MAT_NATURAL);
+  drawPasserby(fs, c, t);
   if (S.light === "spot" || S.light === "night") { fs.save(); fs.globalCompositeOperation = "source-atop"; fs.fillStyle = S.light === "spot" ? "rgba(40,20,10,0.35)" : "rgba(20,30,70,0.3)"; fs.fillRect(0, 0, VW, VH); fs.restore(); }
   stylizeFg(out, fs, S.fg ?? "none", c, t, style);
   if (S.varnish) { out.globalCompositeOperation = "multiply"; out.fillStyle = S.varnish; out.fillRect(0, 0, VW, VH); out.globalCompositeOperation = "source-over"; }
@@ -111,8 +132,16 @@ export const renderStyled = (out: Ctx, style: string, arch: string, build: numbe
 
 // ── the frame
 const steps = (k: "styles" | "arch") => J[k] as Step[];
+// the finale: every hall in its own place, flat and natural, the couple tiny in the white cube
+const renderFinale = (out: Ctx, t: number, c: Cam) => {
+  drawFinaleShell(out, c, t, (id) => { ARCH[id](out, c, { pal: stylePal("flat", id), build: 1, t }); });
+  drawWorks(out, c, t, "flat");
+  drawCouple(out, styleMat("flat", out), c, t);
+  overlayTex(out, grainTex(), 0.1, "overlay", Math.floor(t * 30) * 97);
+};
 export const renderFrame = (out: Ctx, tIn: number) => {
   const t = sceneTime(tIn), c = camAt(t);
+  if (t >= 69.25) { renderFinale(out, t, c); drawClink(out, tIn); return { c, t }; }
   const st = stepAt(steps("styles"), t), ar = stepAt(steps("arch"), t);
   const sTr = st.p < 1, aTr = ar.p < 1;
   if (!sTr && !aTr) renderStyled(out, st.cur.id, ar.cur.id, 1, t, c);
@@ -128,8 +157,8 @@ export const renderFrame = (out: Ctx, tIn: number) => {
   }
   // whip-pans: directional blur from the camera's screen velocity
   const v = Math.abs(c.vx) / 30;
-  if (v > 25) {
-    const W = cx2("W"), n = 10, L = Math.min(520, v * 0.9);
+  if (v > 45) {
+    const W = cx2("W"), n = 10, L = Math.min(520, (v - 45) * 0.9);
     W.setTransform(1, 0, 0, 1, 0, 0); W.clearRect(0, 0, VW, VH); W.drawImage(out.canvas, 0, 0);
     out.save(); out.globalAlpha = 1; out.fillStyle = "#000";
     for (let i = 0; i < n; i++) { out.globalAlpha = 1 / (i + 1); out.drawImage(cv("W"), (i / (n - 1) - 0.5) * L * Math.sign(c.vx), 0); }

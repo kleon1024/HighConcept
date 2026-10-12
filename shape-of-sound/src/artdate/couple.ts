@@ -17,7 +17,8 @@ export const MAT_NATURAL: Mat = {
 };
 
 // ── pose from the timeline
-export type Pose = { walk: number; phase: number; turn: number; panic: number; cool: number; eyeroll: number; smile: number; raise: number; squint: number; sway: number; hairSwing: number; scarfSwing: number };
+export type Pose = { walk: number; phase: number; turn: number; panic: number; cool: number; eyeroll: number; smile: number; raise: number; squint: number; sway: number; hairSwing: number; scarfSwing: number;
+  chin: number; point: number; shrug: number; excited: number; proud: number; lean: number; cross: number };
 const actAt = (who: string, act: string, t: number) => {
   let v = 0;
   for (const a of J.acts as { t: number; who: string; act: string; to: number; dur: number }[]) {
@@ -45,6 +46,7 @@ export const poseAt = (who: "him" | "her", t: number): Pose => {
     walk, phase: ph + off, turn: actAt(who, "turn", t), panic: actAt(who, "panic", t), cool: actAt(who, "cool", t), eyeroll: actAt(who, "eyeroll", t),
     smile: actAt(who, "smile", t), raise: actAt(who, "raise", t), squint: actAt(who, "squint", t), sway: Math.sin(t * 1.3 + off) * 0.6 * (1 - walk),
     hairSwing: ang * (who === "her" ? 1 : 0.7), scarfSwing: ang * 0.8,
+    chin: actAt(who, "chin", t), point: actAt(who, "point", t), shrug: actAt(who, "shrug", t), excited: actAt(who, "excited", t), proud: actAt(who, "proud", t), lean: actAt(who, "lean", t), cross: actAt(who, "cross", t),
   };
 };
 
@@ -121,27 +123,60 @@ const head = (ctx: Ctx, m: Mat, cx: number, cy: number, rx: number, ry: number, 
 };
 const smoothY = (v: number) => clamp01(1 - Math.abs(v) * 0.15);
 
-// ── him (178 cm). x0/y0 = screen position of the feet, k = px per cm
+// an arm as a sleeve tube shoulder → elbow → wrist, with a cuff and a hand; points in local cm
+type V2 = [number, number];
+const arm = (ctx: Ctx, m: Mat, sh: V2, el: V2, wr: V2, w: number, sleeve: Fill, hand = true, cuff?: Fill, open = 0) => {
+  ctx.save(); ctx.lineCap = "round"; ctx.lineJoin = "round";
+  const tube = (lw: number, col: Fill | string) => { ctx.strokeStyle = col as string; ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(sh[0], sh[1]); ctx.quadraticCurveTo(el[0], el[1], (el[0] + wr[0]) / 2, (el[1] + wr[1]) / 2); ctx.lineTo(wr[0], wr[1]); ctx.stroke(); };
+  if (m.lw > 0) tube(w + m.lw * 2, m.line);
+  tube(w, sleeve);
+  if (m.shade) { ctx.globalAlpha = 0.22; tube(w * 0.35, "#1A0E08"); ctx.globalAlpha = 1; }
+  if (cuff) { ctx.fillStyle = cuff; ctx.beginPath(); ctx.arc(wr[0], wr[1], w * 0.42, 0, Math.PI * 2); ctx.fill(); }
+  if (hand) {
+    const ang = Math.atan2(wr[1] - el[1], wr[0] - el[0]);
+    ctx.translate(wr[0] + Math.cos(ang) * w * 0.55, wr[1] + Math.sin(ang) * w * 0.55); ctx.rotate(ang - Math.PI / 2);
+    ctx.beginPath(); ctx.ellipse(0, open * 1.5, w * 0.36 + open, w * 0.52, 0, 0, Math.PI * 2); fillLine(ctx, m, m.skin);
+    ctx.beginPath(); ctx.ellipse(w * 0.32 + open * 1.5, -w * 0.05, w * 0.12, w * 0.3, 0.5 + open * 0.6, 0, Math.PI * 2); fillLine(ctx, m, m.skin);   // thumb
+  }
+  ctx.restore();
+};
+const L = (a: V2, b: V2, k: number): V2 => [lerp(a[0], b[0], k), lerp(a[1], b[1], k)];
+// blend a rest arm toward pose arms by weights
+const blendArm = (rest: [V2, V2], poses: [number, [V2, V2]][]): [V2, V2] => {
+  let el = rest[0], wr = rest[1];
+  for (const [w, [e, r]] of poses) if (w > 0) { el = L(el, e, w); wr = L(wr, r, w); }
+  return [el, wr];
+};
+
+// ── him (178 cm). X/Y = screen position of the feet, k = px per cm
 export const drawHim = (ctx: Ctx, m: Mat, X: number, Y: number, k: number, p: Pose) => {
   ctx.save(); ctx.translate(X, Y); ctx.scale(k, -k);
   const step = Math.sin(p.phase) * p.walk, bob = Math.abs(Math.cos(p.phase)) * 1.4 * p.walk;
   const lift = (sgn: number) => Math.max(0, sgn * step) * 9;
-  const sh = p.panic * 3 - p.cool * 1.2, sway = p.sway + Math.sin(p.phase) * 0.9 * p.walk;
-  // legs + shoes
-  for (const s of [-1, 1]) {
+  const sh = p.panic * 3 + p.shrug * 3.5 - p.cool * 1.2 - p.proud * 0.5, sway = p.sway + Math.sin(p.phase) * 0.9 * p.walk;
+  ctx.rotate(-p.lean * 0.05);
+  for (const s of [-1, 1]) {                                            // legs + shoes
     const l = lift(s);
     path(ctx, [[s * 3.2 + sway * 0.3, 62], [s * 12.6 + sway * 0.3, 62], [s * 11.2, 8 + l], [s * 4.4, 8 + l]]); fillLine(ctx, m, m.trousers);
     ctx.beginPath(); ctx.ellipse(s * 7.8, 4 + l, 5.2, 4.2 + l * 0.08, 0, 0, Math.PI * 2); fillLine(ctx, m, m.shoeM);
     if (l > 2) { ctx.beginPath(); ctx.ellipse(s * 7.8, 2.8 + l, 4.2, 2.2, 0, 0, Math.PI * 2); ctx.fillStyle = "#5A4030"; ctx.fill(); }
   }
   ctx.translate(sway, bob);
-  // sleeves (behind the coat body at the shoulder), swinging opposite the legs
+  // arms (drawn before the coat: whatever bends in front of him is hidden by his back)
   for (const s of [-1, 1]) {
-    const sw = -s * step * 3, up = p.raise * (s > 0 ? 1 : 0);
-    const cuff: [number, number] = [s * (26.5 + p.cool * (s < 0 ? -1.5 : 0)) + sw * 0.3, lerp(91 + Math.abs(sw) * 0.4 + sh, 128, up)];
-    path(ctx, [[s * 18.5, 132 + sh], [s * 24.6, 141 + sh], [cuff[0] + s * 1.6, cuff[1]], [cuff[0] - s * 4.4, cuff[1] + 1]]); fillLine(ctx, m, m.coat);
-    if (m.shade) volume(ctx, cuff[0] - 6, cuff[0] + 6, 0.2, -s);
-    if (!(p.cool > 0.5 && s < 0)) { ctx.beginPath(); ctx.ellipse(cuff[0] - s * 1.4, cuff[1] - 4.2, 3.2, 4.6, 0, 0, Math.PI * 2); fillLine(ctx, m, m.skin); }
+    const sw = -s * step * 3, shoulder: V2 = [s * 20.5, 139 + sh];
+    const rest: [V2, V2] = [[s * 25 + sw * 0.15, 113 + sh * 0.6], [s * 26.5 + sw * 0.3, 90 + Math.abs(sw) * 0.4 + sh * 0.3]];
+    const right = s > 0;
+    const [el, wr] = blendArm(rest, [
+      [p.cool * (right ? 0 : 1), [[-24, 112], [-17, 95]]],                         // left hand in the pocket
+      [p.chin * (right ? 1 : 0), [[27, 122], [15, 150]]],                          // right hand to the chin
+      [p.point * (right ? 1 : 0), [[27, 152], [21, 176]]],                         // pointing up at the painting
+      [p.shrug, [[s * 27, 118], [s * 41, 126]]],                                   // forearms out, palms up
+      [p.excited, [[s * 28, 126], [s * 34, 152]]],                                 // both hands up: "wow"
+      [p.raise * (right ? 1 : 0), [[27, 124], [24, 146]]],                         // raising a glass
+    ]);
+    const hidden = p.cool * (right ? 0 : 1) > 0.5;
+    arm(ctx, m, shoulder, el, wr, 9.5, m.coat, !hidden && p.chin * (right ? 1 : 0) < 0.5, undefined, p.shrug + p.excited);
   }
   // coat body
   blob(ctx, [[-24, 58], [-21.2, 80], [-20.4, 102], [-21.4, 126], [-24.2 + sh * 0.2, 140 + sh], [-15, 147 + sh], [0, 149 + sh], [15, 147 + sh], [24.2 - sh * 0.2, 140 + sh], [21.4, 126], [20.4, 102], [21.2, 80], [24, 58], [12, 56.5], [0, 56], [-12, 56.5]]);
@@ -150,20 +185,27 @@ export const drawHim = (ctx: Ctx, m: Mat, X: number, Y: number, k: number, p: Po
   ctx.strokeStyle = typeof m.coatDk === "string" ? m.coatDk : "#7A5530"; ctx.lineWidth = 0.7; ctx.lineCap = "round";
   ctx.beginPath(); ctx.moveTo(0, 147 + sh); ctx.lineTo(0, 78); ctx.lineTo(-2.2, 74); ctx.lineTo(-2.2, 57); ctx.stroke();          // back seam + vent
   ctx.beginPath(); ctx.moveTo(-17, 100); ctx.quadraticCurveTo(0, 98, 17, 100); ctx.stroke();                                       // half-belt
-  // collar, neck, scarf
+  for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(s * 20, 134 + sh); ctx.quadraticCurveTo(s * 14, 128 + sh, s * 12, 120 + sh); ctx.stroke(); }   // shoulder seams
+  // collar, neck, scarf (one end thrown over the left shoulder, swinging)
   path(ctx, [[-9.5, 145 + sh], [9.5, 145 + sh], [8.4, 153 + sh], [-8.4, 153 + sh]]); fillLine(ctx, m, m.coatDk);
   path(ctx, [[-5.4, 150], [5.4, 150], [5.0, 160], [-5.0, 160]]); fillLine(ctx, m, m.skin);
-  blob(ctx, [[-9.2, 148 + sh], [0, 147 + sh], [9.2, 148 + sh], [9.0, 155 + sh], [0, 156.2 + sh], [-9.0, 155 + sh]]); fillLine(ctx, m, m.scarf);
-  ctx.save(); ctx.translate(-5.5, 151 + sh); ctx.rotate(-p.scarfSwing * 0.6);                                                   // the tail swings
-  path(ctx, [[-3.6, 0], [3.6, 0], [3.0, -30], [-3.0, -30]]); fillLine(ctx, m, m.scarf);
-  ctx.fillStyle = m.scarf2; for (const y of [-8, -13, -24]) ctx.fillRect(-3.4, y, 6.6, 1.6);
-  for (let i = 0; i < 5; i++) ctx.fillRect(-2.8 + i * 1.4, -33, 0.6, 3.2);
+  ctx.save(); ctx.translate(-8.5, 150 + sh); ctx.rotate(-0.16 - p.scarfSwing * 0.5);
+  blob(ctx, [[-4.2, 2], [4.2, 2], [4.6, -14], [3.6, -27], [-3.4, -27], [-4.4, -12]]); fillLine(ctx, m, m.scarf);
+  ctx.fillStyle = m.scarf2; for (const y of [-7, -11, -21]) ctx.fillRect(-4.2, y, 8.4, 1.5);
+  for (let i = 0; i < 6; i++) ctx.fillRect(-3.2 + i * 1.3, -30, 0.55, 3.4);
   ctx.restore();
-  ctx.fillStyle = m.scarf2; ctx.fillRect(-9, 151.2 + sh, 18, 1.4);
-  // head (turns to profile; panic stiffens, cool tilts)
-  ctx.save(); ctx.translate(0, 167 + sh * 0.6); ctx.rotate((p.cool * -0.04 + p.panic * 0.01) * -1); ctx.scale(1, -1);
-  head(ctx, m, 0, 0, 9.3, 11.6, p.turn, m.hairM, m.hairMhi, false, 0, 0);
+  blob(ctx, [[-9.4, 147.5 + sh], [0, 146.5 + sh], [9.4, 147.5 + sh], [9.2, 155 + sh], [0, 156.5 + sh], [-9.2, 155 + sh]]); fillLine(ctx, m, m.scarf);
+  ctx.fillStyle = m.scarf2; ctx.fillRect(-9, 151 + sh, 18, 1.4);
+  // head (turns to profile; panic stiffens, proud lifts the chin)
+  ctx.save(); ctx.translate(0, 167 + sh * 0.6); ctx.rotate(p.proud * 0.12 * (p.turn >= 0 ? 1 : -1) - p.cool * 0.03 + p.shrug * 0.06 * (p.turn >= 0 ? -1 : 1)); ctx.scale(1, -1);
+  head(ctx, m, 0, 0, 9.3, 11.6, p.turn, m.hairM, m.hairMhi, false, Math.max(p.proud, p.cool * 0.6), 0);
   ctx.restore();
+  if (p.chin > 0.3) {                                                   // the thinking hand under the chin
+    ctx.globalAlpha = clamp01((p.chin - 0.3) * 3);
+    ctx.save(); ctx.translate(0, 167 + sh * 0.6);
+    ctx.beginPath(); ctx.ellipse(10.5 * (p.turn >= 0 ? 1 : -1), -8.5, 3.6, 4.4, 0.3, 0, Math.PI * 2); fillLine(ctx, m, m.skin);
+    ctx.restore(); ctx.globalAlpha = 1;
+  }
   ctx.restore();
 };
 
@@ -172,6 +214,7 @@ export const drawHer = (ctx: Ctx, m: Mat, X: number, Y: number, k: number, p: Po
   ctx.save(); ctx.translate(X, Y); ctx.scale(k, -k);
   const step = Math.sin(p.phase) * p.walk, bob = Math.abs(Math.cos(p.phase)) * 1.2 * p.walk;
   const lift = (sgn: number) => Math.max(0, sgn * step) * 8, sway = p.sway + Math.sin(p.phase) * 1.1 * p.walk;
+  ctx.rotate(p.lean * 0.07 - p.cross * 0.035);                          // leans toward him when impressed, away when not
   for (const s of [-1, 1]) {
     const l = lift(s);
     blob(ctx, [[s * 2.6, 54], [s * 8.8, 54], [s * 8.2, 34 + l], [s * 6.8, 12 + l], [s * 4.4, 12 + l], [s * 3.4, 34 + l]]); fillLine(ctx, m, m.legs);
@@ -180,11 +223,15 @@ export const drawHer = (ctx: Ctx, m: Mat, X: number, Y: number, k: number, p: Po
   }
   ctx.translate(sway, bob);
   for (const s of [-1, 1]) {
-    const sw = -s * step * 3, up = p.raise * (s < 0 ? 1 : 0);
-    const cuff: [number, number] = [s * 19.5 + sw * 0.3, lerp(84 + Math.abs(sw) * 0.4, 122, up)];
-    path(ctx, [[s * 13.5, 128], [s * 18.2, 134.5], [cuff[0] + s * 1.4, cuff[1]], [cuff[0] - s * 3.6, cuff[1] + 1]]); fillLine(ctx, m, m.dress);
-    if (m.shade) volume(ctx, cuff[0] - 5, cuff[0] + 5, 0.2, -s);
-    ctx.beginPath(); ctx.ellipse(cuff[0] - s * 1.1, cuff[1] - 3.6, 2.6, 4.0, 0, 0, Math.PI * 2); fillLine(ctx, m, m.skin);
+    const sw = -s * step * 3, shoulder: V2 = [s * 15.5, 133];
+    const rest: [V2, V2] = [[s * 19 + sw * 0.15, 108], [s * 20 + sw * 0.3, 85 + Math.abs(sw) * 0.4]];
+    const toward = s < 0;                                                // her left arm is on his side
+    const [el, wr] = blendArm(rest, [
+      [p.cross, [[s * 21, 112], [s * 6, 116]]],                                    // arms crossed: elbows out, hands hidden
+      [p.lean * (toward ? 1 : 0), [[s * 20, 114], [s * 9, 126]]],                  // a hand to her chest
+      [p.raise * (toward ? 1 : 0), [[-21, 118], [-19, 140]]],
+    ]);
+    arm(ctx, m, shoulder, el, wr, 7, m.dress, p.cross < 0.5 && !(p.lean > 0.5 && toward));
   }
   const fl = Math.sin(p.phase * 1) * 1.6 * p.walk;
   blob(ctx, [[-24 + fl, 52], [-19, 68], [-13.2, 98], [-14.2, 116], [-17.8, 133], [-10, 138.5], [0, 139.5], [10, 138.5], [17.8, 133], [14.2, 116], [13.2, 98], [19, 68], [24 + fl, 52], [12, 50.4], [0, 50], [-12, 50.4]]);
@@ -195,16 +242,14 @@ export const drawHer = (ctx: Ctx, m: Mat, X: number, Y: number, k: number, p: Po
   ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(-13.2, 99); ctx.quadraticCurveTo(0, 97, 13.2, 99); ctx.stroke();               // waist seam
   path(ctx, [[-7, 138.6], [0, 124], [7, 138.6]]); fillLine(ctx, m, m.skin);                                                       // a V back
   path(ctx, [[-4.4, 137], [4.4, 137], [4.2, 148], [-4.2, 148]]); fillLine(ctx, m, m.skin);
-  // head + ponytail + earrings
-  ctx.save(); ctx.translate(0, 155); ctx.rotate(p.eyeroll * 0.08 * (p.turn >= 0 ? 1 : -1)); ctx.scale(1, -1);
-  // the ponytail hangs from the nape and swings (follow-through)
+  ctx.save(); ctx.translate(0, 155); ctx.rotate(p.eyeroll * 0.1 * (p.turn >= 0 ? -1 : 1) + p.cross * 0.06 * (p.turn >= 0 ? -1 : 1) + p.lean * 0.05 * (p.turn >= 0 ? 1 : -1)); ctx.scale(1, -1);
   ctx.save(); ctx.translate(-p.turn * 2.5, 7.5); ctx.rotate(p.hairSwing * 0.9 + p.turn * 0.25);
   blob(ctx, [[-3.4, -0.5], [3.4, -0.5], [4.2, 9], [3.0, 20], [0.8, 28], [-1.4, 22], [-3.6, 10]]); fillLine(ctx, m, m.hairF);
   if (m.shade) { ctx.strokeStyle = typeof m.hairFhi === "string" ? m.hairFhi : "#6B3F26"; ctx.lineWidth = 0.7; for (const dx of [-1.5, 0.3, 1.8]) { ctx.beginPath(); ctx.moveTo(dx, 1); ctx.quadraticCurveTo(dx + 1.2, 12, dx * 0.4, 25); ctx.stroke(); } }
   ctx.fillStyle = "#151012"; ctx.fillRect(-3.2, -0.6, 6.4, 2.4);
   ctx.restore();
   head(ctx, m, 0, 0, 8.6, 10.8, p.turn, m.hairF, m.hairFhi, true, p.smile, p.eyeroll);
-  for (const s of [-1, 1]) {                                           // gold drops under the ears, swinging a little
+  for (const s of [-1, 1]) {
     const near = (Math.sign(p.turn) || 1) === s, a = Math.abs(p.turn);
     if (!near && a > 0.35) continue;
     const ex = s * (near ? lerp(8.4, -0.6, a) : 8.4), sw = p.hairSwing * 3;
@@ -214,18 +259,46 @@ export const drawHer = (ctx: Ctx, m: Mat, X: number, Y: number, k: number, p: Po
   ctx.restore();
 };
 
+// the passer-by at the end: a soft, out-of-focus silhouette crossing the near foreground
+export const passerby = (c: Cam, t: number) => {
+  const a = 65.35, b = 67.5;
+  if (t < a || t > b) return null;
+  const q = (t - a) / (b - a), x = lerp(c.x - 1.6, c.x + 1.5, q), d = c.z - 2.7, k = K(c, d) / 100;
+  const [X, Y] = P(c, x, 0, d), bob = Math.abs(Math.sin(q * Math.PI * 4)) * 2 * k;
+  return { X, Y, k, bob, head: [X + 30 * k, Y - 185 * k] as [number, number] };
+};
+export const drawPasserby = (ctx: Ctx, c: Cam, t: number) => {
+  const pb = passerby(c, t);
+  if (!pb) return null;
+  const { X, Y, k, bob } = pb;
+  ctx.save(); ctx.filter = `blur(${Math.round(6 + k * 1.5)}px)`; ctx.fillStyle = "#2A2523"; ctx.globalAlpha = 0.92;
+  ctx.beginPath(); ctx.ellipse(X, Y - 165 * k - bob, 10 * k, 12 * k, 0, 0, Math.PI * 2); ctx.fill();
+  blob(ctx, [[X - 24 * k, Y - 60 * k], [X - 22 * k, Y - 140 * k - bob], [X, Y - 150 * k - bob], [X + 22 * k, Y - 140 * k - bob], [X + 24 * k, Y - 60 * k], [X, Y - 52 * k]]); ctx.fill();
+  ctx.restore();
+  return pb.head;
+};
+
 // the couple in the world: him left, her right; returns the screen anchors for bubbles and effects
 export const coupleScreen = (c: Cam, t: number) => {
   const cp = coupleAt(t), k = K(c, cp.d) / 100;
   const him = P(c, cp.x - 0.4, 0, cp.d), her = P(c, cp.x + 0.38, 0, cp.d);
   return { cp, k, him, her, himHead: [him[0], him[1] - 178 * k] as [number, number], herHead: [her[0], her[1] - 166 * k] as [number, number] };
 };
+
 // foreground props per hall (nearer than the couple → stronger parallax when the camera trucks)
 export const drawProps = (ctx: Ctx, c: Cam, arch: string, m: Mat) => {
   const xs = [c.x - VWm(c), c.x + VWm(c)];
   if (arch === "cube" || arch === "design" || arch === "hightech") {
+    if (arch === "cube") {                                                         // a quiet visitor reading a wall label
+      const [X, Y] = P(c, 12.95, 0, 0.7), k = K(c, 0.7) / 100;
+      ctx.save(); ctx.translate(X, Y); ctx.fillStyle = "#8E8B87";
+      ctx.fillRect(-7 * k, -86 * k, 5 * k, 86 * k); ctx.fillRect(2 * k, -86 * k, 5 * k, 86 * k);
+      ctx.fillStyle = "#6F7B86"; ctx.beginPath(); ctx.moveTo(-17 * k, -84 * k); ctx.lineTo(-19 * k, -142 * k); ctx.quadraticCurveTo(0, -150 * k, 19 * k, -142 * k); ctx.lineTo(17 * k, -84 * k); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#5B544E"; ctx.beginPath(); ctx.ellipse(0, -160 * k, 9 * k, 11 * k, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
     for (let x = Math.floor(xs[0] / 9) * 9 + 2.6; x < xs[1] + 4; x += 9) {          // a low gallery bench
-      const d = 3.3, [X0, Y0] = P(c, x - 0.8, 0.45, d), [X1, Y1] = P(c, x + 0.8, 0, d), [X2, Y2] = P(c, x - 0.8, 0.45, d + 0.45), [X3] = P(c, x + 0.8, 0.45, d + 0.45);
+      const d = arch === "cube" ? 1.2 : 3.3, [X0, Y0] = P(c, x - 0.8, 0.45, d), [X1, Y1] = P(c, x + 0.8, 0, d), [X2, Y2] = P(c, x - 0.8, 0.45, d + 0.45), [X3] = P(c, x + 0.8, 0.45, d + 0.45);
       ctx.fillStyle = arch === "cube" ? "#1F1D1C" : "#2A2A2A"; ctx.fillRect(X0, Y0, X1 - X0, Y1 - Y0);
       ctx.fillStyle = arch === "cube" ? "#3A3634" : "#D2342A"; ctx.beginPath(); ctx.moveTo(X0, Y0); ctx.lineTo(X1, Y0); ctx.lineTo(X3, Y2); ctx.lineTo(X2, Y2); ctx.closePath(); ctx.fill();
       ctx.fillStyle = "rgba(0,0,0,0.25)"; ctx.fillRect(X0, Y1 - 4, X1 - X0, 6);
