@@ -531,7 +531,7 @@ shot(24, 30.1, (t, w, cam, st) => {
   const k = easeInOutSine(seg(t, 24.0, 30.0));
   const tc = t < 27.4 ? t : 27.4 + (t - 27.4) * 0.75 - 0.06 * (t - 27.4) * (t - 27.4);        // the camera eases off: she pulls away toward the gate
   const pos = finalPos(Math.max(23.9, tc)).addScaledVector(FIN_DIR, -lerp(30, 46, k)).addScaledVector(FIN_SIDE, lerp(-2.5, 3.5, k)).add(V(0, lerp(2.5, 6, k) - 1.5 * Math.sin(tc * 2.1), 0));
-  const tgt = pos.clone().add(FIN_DIR.clone().add(V(0, lerp(0.06, 0.13, k), 0)).normalize().multiplyScalar(1000));
+  const tgt = pos.clone().add(FIN_DIR.clone().add(V(0, lerp(0.06, 0.13, k) + 0.2 * easeInOut(seg(t, 27.1, 28.5)), 0)).normalize().multiplyScalar(1000));   // tilt up to the sky for the title
   aim(cam, pos, tgt, 54, -0.03 * Math.sin(t * 0.9));
   if (!_c9) { const r = R(91); _c9 = []; for (let i = 0; i < 60; i++) { const a = r() * 6.283, d = 1500 + 15000 * Math.pow(r(), 0.6); const wd = 900 + 2200 * r(); _c9.push({ p: V(Math.cos(a) * d, 4380 + wd * 0.1, -6000 + Math.sin(a) * d * 0.8), w: wd, h: wd * 0.45, cell: Math.floor(r() * 8), op: 0.95, flip: r() < 0.5 }); }
     // the cloud bank the stair rises out of (kept below the gate base)
