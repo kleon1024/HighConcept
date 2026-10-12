@@ -17,4 +17,10 @@ clue → how it works → what it unlocked → the human payoff → the lift**.
 - **Truth**: verify every number and claim before it goes on screen; label demonstrations ("实验示意") and paraphrases ("大意").
 - **Topic first**: when the user asks for a video about a broad subject, offer a ranked shortlist of angles before building.
 
-Feedback log: 「感觉把不相关的素材拼在一起了」「增加科普性，展开成吸引人的故事性科普」「给我选题先」「控制在60秒以内」「a 意义不明」.
+- **Density and tempo (the 声音的形状 benchmark)**: a new visual idea every 2–3 s, shown rather than read — labels
+  of a few characters, not sentences (声音的形状: 76 s, ~25 ideas, almost no captions; the periodic-table v1: 192 s,
+  60 captions / 841 characters, one idea per ~8 s → "节奏太慢，信息密度太低"). Prefer 60–90 s. Pick topics whose
+  content can be *seen and heard* (sound, motion, shape); for fact-heavy topics, turn facts into visual encodings
+  (heights, colours, sizes, sonification) instead of sentences.
+
+Feedback log: 「感觉把不相关的素材拼在一起了」「增加科普性，展开成吸引人的故事性科普」「给我选题先」「控制在60秒以内」「a 意义不明」「节奏太慢，信息密度太低，没有音乐的形状有趣」.
