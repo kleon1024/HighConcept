@@ -220,7 +220,7 @@ note(PNO, 61.75, 0.3, 69, 72)                                                   
 lounge(62.0, (0, 7), v=2, stop=66.6)
 theme(PNO, 62.0, (0, 8), v=80, sw=True, pickup=False, stop=66.0)
 theme(VIB, 64.0, (4, 8), v=60, sw=True, pickup=False)
-chord(VIB, 65.35, 0.8, [72, 76, 81], 56)
+chord(VIB, 65.0, 0.8, [72, 76, 81], 56)   # her 「哇。」
 walking(65.5, 66.6, lambda t: 'Gm9')
 chord(PNO, 66.85, 0.45, [36, 58, 61, 64, 67], 86); note(BR, 66.85, 0.2, 38, 70); note(BASS, 66.85, 0.4, 36, 84)   # 「但你没有。」
 for k in range(7): chord(STR, 67.3 + k * 0.1, 0.12, [48, 55, 60, 64, 70], 40 + k * 8, h=0)
@@ -366,7 +366,7 @@ for u in ui('bubble'):
     put(u['t'], L[1120], -33 if u.get('small') else -31, 'pop_soft (1120)', f"bubble: {u['lines'][0]}")
 put(2.0, L[2605], -31, 'air_quick (2605)', 'punch-in', align='peak'); put(2.25, s_drop(), -27, 'water-drop pluck (synth, C6)', 'sweat drop')
 put(4.0, L[2001], -24, 'card placement (2001)', 'guide card slams in'); put(4.0, s_thump(), -29, 'low thump (synth)', 'guide card weight')
-for t, why in [(8.0, 'whip-pan → Gothic'), (20.0, 'whip-pan → station hall'), (32.0, 'whip-pan → white cube'), (48.0, 'whip-pan → design hall'), (62.0, 'whip-pan → black square')]: put(t, L[1489], -25 if t in (8.0, 62.2) else -27, 'whoosh_air (1489)', why, align='peak')
+for t, why in [(7.75, 'whip-pan → Gothic (cut hidden in the blur)'), (20.0, 'whip-pan → station hall'), (32.0, 'whip-pan → white cube'), (48.0, 'whip-pan → design hall'), (62.0, 'whip-pan → black square')]: put(t, L[1489], -25 if t in (7.75, 62.2) else -27, 'whoosh_air (1489)', why, align='peak')
 put(61.75, L[1489], -30, 'whoosh_air (1489)', 'whip begins', align='peak')
 for u in ui('stamp'):
     put(u['t'], s_thump(110, 60, 0.18), -24 - 0.6 * (u['n'] - 1), 'stamp body (synth)', f"stamp №{u['n']}"); put(u['t'], L[2001], -30 - 0.6 * (u['n'] - 1), 'paper (2001)', f"stamp №{u['n']}")
@@ -426,6 +426,13 @@ if os.environ.get('STEM_DIR'):
     sf.write(os.path.join(os.environ['STEM_DIR'], '_music.wav'), music.astype(np.float32), SR)
     sf.write(os.path.join(os.environ['STEM_DIR'], '_sfx.wav'), sfx_mix.astype(np.float32), SR)
 
+# duck the band ~3 dB under each 装逼 line card so the line gets the floor (the 踩雷 cards and 「但你没有。」 already
+# get a full stop in the arrangement; the X-ray line at 38.5 is already down to bass + vibes)
+dk = np.ones(N)
+for u in J['ui']:
+    if u.get('type') == 'line' and u['t'] not in (38.5,):
+        a, b = int((u['t'] - 0.05) * SR), int((u['t'] + 1.3) * SR); dk[a:b] = 10 ** (-3 / 20)
+dk = np.convolve(dk, np.ones(int(0.25 * SR)) / int(0.25 * SR), 'same'); music = music * dk[:, None]
 x = music + sfx_mix
 x = x + 0.45 * sosfilt(butter(1, [1200, 5000], 'band', fs=SR, output='sos'), x, axis=0)       # presence for phone speakers
 fade = np.ones(N); f0 = int((DUR - 0.5) * SR); fade[f0:] = np.cos(np.linspace(0, np.pi / 2, N - f0)) ** 2; x *= fade[:, None]

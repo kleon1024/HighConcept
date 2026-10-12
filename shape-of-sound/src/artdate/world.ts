@@ -4,14 +4,16 @@
 import J from "./artdate.json";
 import { clamp01, hash, hash2, lerp, outBack, outCubic, sampleKeys, VH, VW } from "./motion";
 
-export type Cam = { x: number; s: number; z: number; h: number; yh: number; f: number; vx: number; vs: number };
+export type Cam = { x: number; s: number; z: number; h: number; yh: number; f: number; vx: number; vs: number; whip: boolean };
 const camRaw = (t: number) => {
   const c = sampleKeys(J.cam as never, t, ["x", "s", "z", "h", "yh"], ["s"]);
-  return { x: c.x, s: c.s, z: c.z, h: c.h, yh: c.yh };
+  return { x: c.x, s: c.s, z: c.z, h: c.h, yh: c.yh, seg: c.seg };
 };
+// a segment is a whip-pan when the key it travels to is eased "whip" (only those get the stylised streak blur)
+const isWhip = (seg: number) => (J.cam[Math.min(seg + 1, J.cam.length - 1)] as { e?: string }).e === "whip";
 export const camAt = (t: number): Cam => {
-  const c = camRaw(t), a = camRaw(t - 1 / 60), b = camRaw(t + 1 / 60);
-  return { ...c, f: c.s * c.z, vx: ((b.x - a.x) * 30) * c.s, vs: (Math.log(b.s) - Math.log(a.s)) * 30 };
+  const { seg, ...c } = camRaw(t), a = camRaw(t - 1 / 60), b = camRaw(t + 1 / 60);
+  return { ...c, f: c.s * c.z, vx: ((b.x - a.x) * 30) * c.s, vs: (Math.log(b.s) - Math.log(a.s)) * 30, whip: isWhip(seg) && b.x !== a.x };
 };
 // project world (x, y up, d toward camera) → screen
 export const P = (c: Cam, x: number, y: number, d = 0): [number, number] => {

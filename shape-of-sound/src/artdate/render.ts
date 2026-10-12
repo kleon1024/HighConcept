@@ -125,7 +125,7 @@ export const renderStyled = (out: Ctx, style: string, arch: string, build: numbe
   if (S.light === "spot" || S.light === "night") { fs.save(); fs.globalCompositeOperation = "source-atop"; fs.fillStyle = S.light === "spot" ? "rgba(40,20,10,0.35)" : "rgba(20,30,70,0.3)"; fs.fillRect(0, 0, VW, VH); fs.restore(); }
   stylizeFg(out, fs, S.fg ?? "none", c, t, style);
   if (S.varnish) { out.globalCompositeOperation = "multiply"; out.fillStyle = S.varnish; out.fillRect(0, 0, VW, VH); out.globalCompositeOperation = "source-over"; }
-  if (S.grain) overlayTex(out, grainTex(), S.grain * 2.4, "overlay", Math.floor(t * 30) * 97);
+  if (S.grain) overlayTex(out, grainTex(), S.grain * 2.4, "overlay", Math.floor(t * 10) * 97);
   if (S.bg === "oil" || S.bg === "sfumato") overlayTex(out, canvasTex(), 0.18, "overlay");
   out.restore();
 };
@@ -137,7 +137,7 @@ const renderFinale = (out: Ctx, t: number, c: Cam) => {
   drawFinaleShell(out, c, t, (id) => { ARCH[id](out, c, { pal: stylePal("flat", id), build: 1, t }); });
   drawWorks(out, c, t, "flat");
   drawCouple(out, styleMat("flat", out), c, t);
-  overlayTex(out, grainTex(), 0.1, "overlay", Math.floor(t * 30) * 97);
+  overlayTex(out, grainTex(), 0.1, "overlay", Math.floor(t * 10) * 97);
 };
 export const renderFrame = (out: Ctx, tIn: number) => {
   const t = sceneTime(tIn), c = camAt(t);
@@ -156,9 +156,10 @@ export const renderFrame = (out: Ctx, tIn: number) => {
     out.drawImage(cv("A"), 0, 0); out.drawImage(cv("B"), 0, 0);
   }
   // whip-pans: directional blur from the camera's screen velocity
-  const v = Math.abs(c.vx) / 30;
-  if (v > 45) {
-    const W = cx2("W"), n = 10, L = Math.min(520, (v - 45) * 0.9);
+  // (whips get a long stylised streak; any other fast move gets only a natural ~180° shutter smear)
+  const v = Math.abs(c.vx) / 30, L = c.whip ? Math.min(520, (v - 45) * 0.9) : Math.min(60, (v - 40) * 0.5);
+  if (L > 2) {
+    const W = cx2("W"), n = c.whip ? 10 : 6;
     W.setTransform(1, 0, 0, 1, 0, 0); W.clearRect(0, 0, VW, VH); W.drawImage(out.canvas, 0, 0);
     out.save(); out.globalAlpha = 1; out.fillStyle = "#000";
     for (let i = 0; i < n; i++) { out.globalAlpha = 1 / (i + 1); out.drawImage(cv("W"), (i / (n - 1) - 0.5) * L * Math.sign(c.vx), 0); }

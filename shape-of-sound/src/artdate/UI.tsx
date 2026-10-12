@@ -4,7 +4,7 @@ import React from "react";
 import { useCurrentFrame } from "remotion";
 import J from "./artdate.json";
 import { coupleScreen, passerby, poseAt } from "./couple";
-import { BEAT, clamp01, FPS, inCubic, lerp, outBack, outExpo, range, spring, VH, VW } from "./motion";
+import { BEAT, clamp01, FPS, inCubic, inOutSine, lerp, outBack, outExpo, range, spring, VH, VW } from "./motion";
 import { aspectOf, sceneTime } from "./render";
 import { camAt, workRect } from "./world";
 
@@ -66,7 +66,7 @@ const Bubble: React.FC<{ it: Item; t: number }> = ({ it, t }) => {
   const size = small ? 40 : 44, w = Math.max(...lines.map((l) => Array.from(l).length)) * size + 64, h = lines.length * size * 1.3 + 44;
   let [hx, hy] = who === "her" ? cs.herHead : who === "him" ? cs.himHead : (passerby(c, st)?.head ?? [1000, 380]);
   hy = Math.max(hy, 220);
-  const left = Math.min(Math.max(70, hx + (who === "her" ? 40 : -w + 30)), 880 - w + (who === "stranger" ? 500 : 0)), top = Math.max(70, hy - h - 70);
+  const left = Math.min(Math.max(70, hx + (who === "her" ? 40 : -w + 30)), 880 - w + (who === "stranger" ? 500 : 0)), top = Math.min(Math.max(70, hy - h - 70), VH - 70 - h - 40);   // stays in the safe area while the camera pushes in
   const a = spring(t - it.t, 0.5, 3.2), e = inCubic(range(t, it.out - 0.22, it.out));
   const hall = hallOf(t).id, pop = hall === "modern" && t > 44.3 && t < 48;
   const bg = pop ? "#FFFFFF" : cool ? "#1B1714" : "#FFFFFF", fg = cool ? "#F6F0E4" : "#1B1714", border = pop ? "4px solid #111" : cool ? "2px solid #C9A24A" : "2px solid rgba(0,0,0,0.12)";
@@ -219,12 +219,17 @@ const Cheers: React.FC<{ it: Item; t: number }> = ({ it, t }) => {
   );
 };
 const Final: React.FC<{ it: Item; t: number }> = ({ it, t }) => {
-  const lt = it.lt as number[];
+  const lt = it.lt as number[], back = inOutSine(range(t, it.t + 0.1, it.t + 0.6));
   return (
+    <>
+    {/* a soft dusk band behind the line, so it reads over the bright gallery wall during the pull-back */}
+    <div style={{ position: "absolute", left: 0, right: 0, top: 0, height: 330, opacity: back,
+      background: "linear-gradient(to bottom, rgba(22,20,34,0.78) 0%, rgba(22,20,34,0.62) 55%, rgba(22,20,34,0) 100%)" }} />
     <div style={{ position: "absolute", left: 0, right: 0, top: 96, textAlign: "center", textShadow: "0 2px 14px rgba(0,0,0,0.55)" }}>
       <KText text={(it.lines as string[])[0]} at={lt[0]} t={t} size={60} color="#FDF8EE" weight={700} stagger={0.08} />
       <KText text={(it.lines as string[])[1]} at={lt[1]} t={t} size={60} color="#FDF8EE" weight={900} stagger={0.08} style={{ marginTop: 6 }} />
     </div>
+    </>
   );
 };
 const Credits: React.FC<{ it: Item; t: number }> = ({ it, t }) => (
