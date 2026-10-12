@@ -7,8 +7,13 @@
   "private": true,
   "dependencies": {
     "@fontsource/archivo-black": "^5.3.0",
+    "@fontsource/cormorant-garamond": "^5.3.0",
+    "@fontsource/jost": "^5.3.0",
     "@fontsource/noto-sans-sc": "^5.3.1",
+    "@fontsource/noto-serif-sc": "^5.3.1",
+    "@fontsource/poiret-one": "^5.3.0",
     "@fontsource/space-grotesk": "^5.3.0",
+    "@fontsource/zcool-qingke-huangyou": "^5.3.0",
     "@remotion/cli": "4.0.534",
     "@remotion/media": "^4.0.534",
     "react": "19.2.3",

@@ -86,5 +86,69 @@
   "author": "Sergb95",
   "license": "CC BY-SA 4.0",
   "used_in": "optogenetics problem"
+ },
+ {
+  "file": "ad_lastsupper.jpg",
+  "commons": "File:Leonardo da Vinci - The Last Supper high res.jpg",
+  "author": "Leonardo da Vinci (1495–1498)",
+  "license": "Public domain",
+  "used_in": "art date: Renaissance",
+  "orig_w": 5381
+ },
+ {
+  "file": "ad_caravaggio.jpg",
+  "commons": "File:Caravaggio - La vocazione di San Matteo.jpg",
+  "author": "Caravaggio (1599–1600)",
+  "license": "Public domain (PD-Art)",
+  "used_in": "art date: Baroque",
+  "orig_w": 1283
+ },
+ {
+  "file": "ad_monet.jpg",
+  "commons": "File:Monet - Impression, Sunrise.jpg",
+  "author": "Claude Monet (1872)",
+  "license": "Public domain",
+  "used_in": "art date: Impressionism",
+  "orig_w": 4000
+ },
+ {
+  "file": "ad_starrynight.jpg",
+  "commons": "File:Van Gogh - Starry Night - Google Art Project.jpg",
+  "author": "Vincent van Gogh (1889)",
+  "license": "Public domain",
+  "used_in": "art date: Post-Impressionism",
+  "orig_w": 12000
+ },
+ {
+  "file": "ad_matisse.jpg",
+  "direct": "https://api.smk.dk/api/v1/download/W3siaW1nX3VybCI6Imh0dHBzOi8vaWlwLnNtay5kay9paWlmL2pwMi9rZDE3Y3g4MHdfS01TcjE3MS1jcm9wLnRpZi5qcDIvZnVsbC9mdWxsLzAvbmF0aXZlLmpwZyIsInB1YmxpY19kb21haW4iOnRydWUsIm9iamVjdF9udW1iZXIiOiJLTVNyMTcxIiwibnVtIjoiIn1d/KMSr171.jpg",
+  "source_page": "https://open.smk.dk/artwork/image/KMSr171",
+  "author": "Henri Matisse (1905), Statens Museum for Kunst",
+  "license": "Public Domain Mark 1.0 (SMK Open)",
+  "used_in": "art date: Fauvism"
+ },
+ {
+  "file": "ad_gris.jpg",
+  "commons": "File:Juan Gris - Portrait of Pablo Picasso - Google Art Project.jpg",
+  "author": "Juan Gris (1912)",
+  "license": "Public domain",
+  "used_in": "art date: Cubism",
+  "orig_w": 6221
+ },
+ {
+  "file": "ad_blacksquare.jpg",
+  "commons": "File:Kazimir Malevich, 1915, Black Suprematic Square, oil on linen canvas, 79.5 x 79.5 cm, Tretyakov Gallery, Moscow.jpg",
+  "author": "Kazimir Malevich (1915)",
+  "license": "Public domain",
+  "used_in": "art date: hook, Abstraction, ending",
+  "orig_w": 1718
+ },
+ {
+  "file": "ad_mucha.jpg",
+  "commons": "File:Alfons Mucha - F. Champenois Imprimeur-Éditeur.jpg",
+  "author": "Alphonse Mucha (1897)",
+  "license": "Public domain",
+  "used_in": "art date: Art Nouveau",
+  "orig_w": 3000
  }
 ]
