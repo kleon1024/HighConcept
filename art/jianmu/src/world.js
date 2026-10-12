@@ -185,7 +185,7 @@ export function karstG(seed, R, H, floating = false, depth = 0) {
     const r = R * (i === 0 ? 0.62 : 0.3 + 0.25 * rng()); const h = H * (i === 0 ? 1 : 0.55 + 0.4 * rng());
     const bottom = floating ? -depth * (i === 0 ? 1 : 0.5 + 0.4 * rng()) : -400;
     const g = columnG(seed * 13 + i, r, h, floating, bottom); g.translate(Math.cos(a) * d, 0, Math.sin(a) * d);
-    parts.push(g); tops.push(V3(Math.cos(a) * d, h, Math.sin(a) * d).setComponent(3, 0)); tops[tops.length - 1].r = r;
+    parts.push(g); { const tv = V3(Math.cos(a) * d, h, Math.sin(a) * d); tv.r = r; tops.push(tv); }
   }
   const geo = merge(parts.map(g => setColors(g, (v, nn, out) => {
     if (nn.y > 0.55) { out.copy(PAL.grass).lerp(PAL.pine, clamp(noise3(v.x / 15, v.y / 15, v.z / 15) * 1.3 - 0.2)); return; }
