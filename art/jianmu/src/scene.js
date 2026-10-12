@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { mulberry32, lerp, clamp } from './util.js';
 import { ENV, skyMesh, paintMat } from './materials.js';
 import { CloudField, cloudSea, scatter, STORM } from './clouds.js';
-import { buildJianmu, buildIsland, buildPeaks, Chain, catenary, giantSwordG, TRUNK, PAL, CHAIN_MAT, merge, pagodaG, hallG, HALL_MAT, roofG, boxG } from './world.js';
+import { buildJianmu, buildIsland, buildPeaks, Chain, catenary, giantSwordG, TRUNK, PAL, CHAIN_MAT, merge, pagodaG, hallG, HALL_MAT, roofG, boxG, mesaG, peachTreeG, pineG, ISLAND_MAT, PINE_MAT, CANOPY_MAT } from './world.js';
 const solidC = (g, c) => { const n = g.attributes.position.count; const a = new Float32Array(n * 3); for (let i = 0; i < n; i++) { a[i * 3] = c.r; a[i * 3 + 1] = c.g; a[i * 3 + 2] = c.b; } g.setAttribute('color', new THREE.BufferAttribute(a, 3)); return g; };
 const col = (h) => new THREE.Color(h);
 const roofG2 = (w, d, h, lift, y, x = 0) => { const g = roofG(w, d, h, lift, PAL.roofGlaze, y); if (x) g.translate(x, 0, 0); return g; };
@@ -31,7 +31,7 @@ export const ISLANDS = [
   { id: 'l3', seed: 47, R: 100, depth: 360, p: V(2475, 1150, -1800), halls: [{ x: 0, z: 0, w: 18, h: 10, double: true }], fall: [] },
 ];
 // the sect mountain where she stands (S4/S5): a large floating massif far from the trunk, cliff edge facing the trunk
-export const SECT = { p: V(2700, 620, 2300), R: 330, depth: 700 };
+export const SECT = { p: V(4700, 700, 3900), R: 380, depth: 900 };
 export const EDGE = V(2700 - 260 * 0.72, 620 + 30, 2300 - 260 * 0.69);   // approx cliff edge toward trunk (refined at build)
 
 export function buildWorld(renderer, atlas) {
@@ -45,11 +45,25 @@ export function buildWorld(renderer, atlas) {
   for (const d of ISLANDS) {
     const g = buildIsland(d.seed, d.R, d.depth, { halls: d.halls }); g.position.copy(d.p); g.rotation.y = d.seed * 0.7; scene.add(g); islands[d.id] = g; g.userData.def = d;
   }
-  // sect mountain: broad plateau, steep cliff; halls set back from the edge facing the trunk
-  const toTrunk = Math.atan2(-SECT.p.z, -SECT.p.x);
-  const sect = buildIsland(101, SECT.R, SECT.depth, { topH: 40, taper: 0.9, pines: 46, halls: [
-    { x: 0.25, z: -0.35, w: 60, h: 20, double: true, glaze: true }, { x: 0.55, z: 0.1, w: 30, h: 12 }, { x: -0.05, z: -0.75, w: 18, h: 16, pagoda: true, tiers: 5 }, { x: 0.6, z: -0.6, w: 26, h: 11 }] });
-  sect.position.copy(SECT.p); sect.rotation.y = -toTrunk + Math.PI; scene.add(sect);
+  // sect mountain: a broad flat mesa with a clean cliff edge facing the trunk; halls set back, a vermilion pavilion,
+  // pines and peach trees near the edge
+  const toTrunk = V(-SECT.p.x, 0, -SECT.p.z).normalize(); const sideV = V(toTrunk.z, 0, -toTrunk.x);
+  const sect = new THREE.Group(); sect.position.copy(SECT.p); scene.add(sect);
+  const sectRock = new THREE.Mesh(mesaG(101, SECT.R, SECT.depth), ISLAND_MAT); sect.add(sectRock);
+  sect.userData = { R: SECT.R, depth: SECT.depth, top: 40, rock: sectRock, toTrunk, sideV };
+  { const at = (fwd, side) => toTrunk.clone().multiplyScalar(fwd).addScaledVector(sideV, side);
+    const yaw = Math.atan2(toTrunk.x, toTrunk.z);
+    const put = (g, mat, p, sc2 = 1, ry = yaw) => { const m = new THREE.Mesh(g, mat); m.position.copy(p); m.position.y = 40; m.scale.setScalar(sc2); m.rotation.y = ry; sect.add(m); return m; };
+    put(hallG(64, 40, 20, { double: true, glaze: true }), HALL_MAT, at(-150, -60));
+    put(hallG(34, 24, 13, { roof: col(0xb2402a) }), HALL_MAT, at(-60, 110));
+    put(pagodaG(18, 6, 16), HALL_MAT, at(-230, 90));
+    put(hallG(16, 16, 9, { cols: 4, roof: col(0xb2402a) }), HALL_MAT, at(330, -95));           // edge pavilion (亭)
+    const r = mulberry32(55); const pinesM = []; const peachM = [];
+    for (let i = 0; i < 60; i++) { const a = r() * 6.28, d = SECT.R * (0.35 + 0.6 * Math.sqrt(r())); const p = V(Math.cos(a) * d, 40, Math.sin(a) * d); if (p.dot(toTrunk) > 250 && Math.abs(p.dot(sideV)) < 60) continue; pinesM.push(new THREE.Matrix4().compose(p, new THREE.Quaternion().setFromAxisAngle(V(0, 1, 0), r() * 6), V(1, 1, 1).multiplyScalar(14 + 14 * r()))); }
+    for (let i = 0; i < 14; i++) { const p = at(220 + 120 * r(), (r() - 0.5) * 300); p.y = 40; if (Math.abs(p.clone().sub(at(345, 0)).dot(sideV)) < 25 && p.dot(toTrunk) > 300) continue; peachM.push(new THREE.Matrix4().compose(p, new THREE.Quaternion().setFromAxisAngle(V(0, 1, 0), r() * 6), V(1, 1, 1).multiplyScalar(8 + 6 * r()))); }
+    const ip = new THREE.InstancedMesh(pineG(1, 9), PINE_MAT, pinesM.length); pinesM.forEach((m, i) => ip.setMatrixAt(i, m)); sect.add(ip);
+    const ik = new THREE.InstancedMesh(peachTreeG(1, 3), CANOPY_MAT, peachM.length); peachM.forEach((m, i) => ik.setMatrixAt(i, m)); sect.add(ik);
+  }
   // giant sword in the 'sw' island
   const swordM = new THREE.Mesh(giantSwordG(520), paintMat({ brushScale: 0.05, stretch: [1, 0.3, 1], brush: 0.25, rim: 0.8 }));
   swordM.position.copy(islands.sw.position).add(V(0, 330, 0)); swordM.rotation.set(0.12, 0.6, -0.18); scene.add(swordM);

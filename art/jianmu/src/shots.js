@@ -19,8 +19,8 @@ const P = {
     zen: 0x8db1b8, hor: 0xefe5cc, voidc: 0xbccac8, glow: 0xffcf86, lit: 0xfff6ea, shade: 0xb3c1cb, crim: 0xffd48a, seaVoid: 0x9fb0bc },
   cold: { sun: [-0.2, 0.42, -0.88], sunCol: 0xc9d3d2, sunK: 0.75, skyAmb: 0x93abb0, groundAmb: 0x5f6f70, rim: 0xd8e0de, fog: 0xc9d5d4, fogSun: 0xdfe5e2, fogDen: 0.00022, fogH: 250, fogFall: 600,
     zen: 0x8fa7ad, hor: 0xd6dedb, voidc: 0xb3c2c2, glow: 0xe4e8e2, lit: 0xe7ecea, shade: 0x9aabae, crim: 0xe0e6e2, seaVoid: 0x9fb2b4 },
-  sect: { sun: [0.55, 0.38, -0.74], sunCol: 0xe6ddc8, sunK: 0.95, skyAmb: 0x7a929a, groundAmb: 0x55605e, rim: 0xf1e2c0, fog: 0xccd8d6, fogSun: 0xe9e6da, fogDen: 0.00019, fogH: 300, fogFall: 700,
-    zen: 0x93acb2, hor: 0xdde3dd, voidc: 0xb5c4c3, glow: 0xf0e8d4, lit: 0xeef1ec, shade: 0x9fb1b3, crim: 0xf2e8d2, seaVoid: 0xa7b9ba },
+  sect: { sun: [-0.55, 0.32, -0.77], sunCol: 0xf0d2a8, sunK: 1.2, skyAmb: 0x46707b, groundAmb: 0x4b524f, rim: 0xffd9a0, fog: 0xc7d3d2, fogSun: 0xe9dcc4, fogDen: 0.0001, fogH: 300, fogFall: 700, fogStart: 200,
+    zen: 0x7ea2ad, hor: 0xdedfd4, voidc: 0xb5c4c3, glow: 0xf3dcb0, lit: 0xf3f2ec, shade: 0x9fb1bb, crim: 0xf2e0c0, seaVoid: 0x99adb5 },
   flight: { sun: [-0.45, 0.5, -0.74], sunCol: 0xffd096, sunK: 1.5, skyAmb: 0x3f6a76, groundAmb: 0x4c524c, rim: 0xffd48a, fog: 0xc9d6d3, fogSun: 0xf3dfba, fogDen: 0.00009, fogH: 300, fogFall: 700, fogStart: 500,
     zen: 0x5f93a6, hor: 0xe4e3d2, voidc: 0xb3c4c4, glow: 0xffd08a, lit: 0xfdf4e4, shade: 0x9fb2bf, crim: 0xffd48a, seaVoid: 0x93a6b2 },
   storm: { sun: [-0.2, 0.6, -0.77], sunCol: 0x5d7a84, sunK: 0.5, skyAmb: 0x2f4c56, groundAmb: 0x1d2f36, rim: 0x9fc0c8, fog: 0x1f3c47, fogSun: 0x2e4f5a, fogDen: 0.00035, fogH: 300, fogFall: 900,
@@ -106,13 +106,12 @@ function groundY(obj, x, z) { ray.set(V(x, 5000, z), V(0, -1, 0)); const h = ray
 let EDGE = null;
 function sectEdge(w) {
   if (EDGE) return EDGE;
-  const c = SECT.p; const dir = V(-c.x, 0, -c.z).normalize();          // toward the trunk
+  const c = SECT.p; const ud = w.sect.userData; const dir = ud.toTrunk.clone();
   w.sect.updateMatrixWorld(true);
-  const rock = w.sect.children[0];
-  // walk outward until the ground drops: the cliff lip
+  const rock = ud.rock;
   let lip = null, lipY = null;
-  for (let r = 150; r < 420; r += 2) { const x = c.x + dir.x * r, z = c.z + dir.z * r; const y = groundY(rock, x, z); if (y === null || (lipY !== null && y < lipY - 25)) break; lip = V(x, y, z); lipY = y; }
-  const stand = lip.clone().addScaledVector(dir, -9); stand.y = groundY(rock, stand.x, stand.z);
+  for (let r = 200; r < SECT.R * 1.3; r += 2) { const x = c.x + dir.x * r, z = c.z + dir.z * r; const y = groundY(rock, x, z); if (y === null || (lipY !== null && y < lipY - 25)) break; lip = V(x, y, z); lipY = y; }
+  const stand = lip.clone().addScaledVector(dir, -7); stand.y = groundY(rock, stand.x, stand.z);
   EDGE = { dir, lip, stand, left: V(dir.z, 0, -dir.x) };
   return EDGE;
 }
@@ -281,13 +280,13 @@ function stumpDust(t, seed = 41) { const r = R(seed); const out = []; for (let i
 let _c4 = null;
 function sectCam(w, cam, t, push, tiltDown = 0) {
   const E = sectEdge(w);
-  const back = lerp(14, 10, push), side = 3.6, up = 2.4;
-  const pos = E.stand.clone().addScaledVector(E.dir, -back).addScaledVector(E.left, side).add(V(0, up + 1.7 - 2.5 * tiltDown, 0));
-  // look toward the stump, yawed so it sits in the left third; pitch up ~14°
-  const toStump = V(0, TRUNK.breakY + 80, 0).sub(pos); const yaw = Math.atan2(toStump.x, toStump.z) - 0.09;
-  const pitch = lerp(0.24, -0.35, tiltDown);
+  const back = lerp(10.5, 7.5, push), side = 2.6;
+  const pos = E.stand.clone().addScaledVector(E.dir, -back).addScaledVector(E.left, side).add(V(0, 1.55 - 1.0 * tiltDown, 0));
+  const tgtP = axisOff(TRUNK.breakY).add(V(0, TRUNK.breakY - 350, 0));
+  const toStump = tgtP.sub(pos); const yaw = Math.atan2(toStump.x, toStump.z) - 0.07;
+  const pitch = lerp(0.1, -0.3, tiltDown);
   const f = V(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch));
-  aim(cam, pos, pos.clone().add(f.multiplyScalar(100)), 48, 0, 0.5);
+  aim(cam, pos, pos.clone().add(f.multiplyScalar(100)), 48, 0, 0.3);
   return E;
 }
 shot(9, 12, (t, w, cam, st) => {

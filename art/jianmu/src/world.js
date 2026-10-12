@@ -158,8 +158,8 @@ export function pineG(h, seed) {
 
 // ─────────────────────────────── karst pillars (张家界): a cluster of irregular rock columns of different heights,
 // vertically cracked, with mossy ledges and domed tops; floating ones end in jagged hanging spurs
-function columnG(seed, r, h, floating, bottom) {
-  const g = new THREE.CylinderGeometry(1, 1, 1, 28, Math.max(12, Math.round(h / (r * 0.35))), false);
+function columnG(seed, r, h, floating, bottom, round = 0.6, segR = 48) {
+  const g = new THREE.CylinderGeometry(1, 1, 1, segR, Math.max(16, Math.round((h - bottom) / (r * 0.12))), false);
   const p = g.attributes.position; const sx = seed * 5.3;
   for (let i = 0; i < p.count; i++) {
     const x = p.getX(i), yy = p.getY(i) + 0.5, z = p.getZ(i); const th = Math.atan2(z, x); const onCap = Math.abs(Math.hypot(x, z) - 1) > 0.01 && (yy > 0.999 || yy < 0.001);
@@ -167,11 +167,11 @@ function columnG(seed, r, h, floating, bottom) {
     const y = lerp(bottom, h, yy);
     let f = 1 + 0.18 * (ridged(th * 4 + sx, y / (r * 2.2), 1.3) - 0.5) + 0.22 * (fbm3(Math.cos(th) * 1.3 + sx, y / (r * 1.8), Math.sin(th) * 1.3, 3) - 0.5);
     f += 0.05 * Math.sin(y / (r * 0.4) + noise3(th, y / r, sx) * 3);
-    const topK = clamp((y - (h - r * 0.6)) / (r * 0.6));                       // round the top
+    const topK = clamp((y - (h - r * round)) / (r * round));                       // round the top
     f *= Math.sqrt(Math.max(0.02, 1 - topK * topK * 0.9)) * (1 - 0.25 * clamp(y / h));
     let ny = y;
     if (floating) { const bk = clamp((bottom * 0.45 - y) / (-bottom * 0.55)); const spur = Math.pow(Math.max(0, Math.cos(2 * th + sx)) , 2); f *= lerp(1, 0.08 + 0.9 * spur * (1 - bk * 0.7), smooth(bk)); }
-    if (yy > 0.999) ny = h + r * 0.15 * (noise3(x * 2 + sx, 1, z * 2) - 0.3);
+    if (yy > 0.999) ny = h + r * 0.15 * round * (noise3(x * 2 + sx, 1, z * 2) - 0.3);
     p.setXYZ(i, Math.cos(th) * r * f * rr, ny, Math.sin(th) * r * f * rr);
   }
   g.computeVertexNormals();
@@ -197,6 +197,22 @@ export function karstG(seed, R, H, floating = false, depth = 0) {
   return { geo, tops };
 }
 const V3k = (x, y, z) => new THREE.Vector3(x, y, z);
+export function mesaG(seed, R, depth) {
+  const g = columnG(seed, R, 40, true, -depth, 0.06, 96);
+  setColors(g, (v, nn, out) => {
+    if (nn.y > 0.6) { out.copy(PAL.grass).lerp(PAL.grassHi, clamp(noise3(v.x / 30, 1, v.z / 30) * 1.4 - 0.4)); return; }
+    const crack = ridged(Math.atan2(v.z, v.x) * 13 + seed, v.y / 90, 4.3);
+    out.copy(PAL.rockLit).lerp(PAL.rockMid, clamp(-v.y / depth * 1.2)).lerp(PAL.rockLow, clamp(-v.y / depth * 1.4 - 0.4));
+    out.multiplyScalar(0.75 + 0.35 * crack); if (nn.y > 0.2) out.lerp(PAL.moss, 0.6);
+  });
+  return g;
+}
+export function peachTreeG(h, seed) {
+  const rng = mulberry32(seed); const parts = [cylG(h * 0.05, h * 0.08, h * 0.6, col(0x4a3a30), 0, 0, 0, 6)];
+  for (let i = 0; i < 9; i++) { const g = new THREE.IcosahedronGeometry(1, 2); const s = h * (0.22 + 0.16 * rng()); g.scale(s, s * 0.75, s); const a = rng() * 6.28, d = h * 0.3 * rng(); g.translate(Math.cos(a) * d, h * (0.6 + 0.3 * rng()), Math.sin(a) * d);
+    parts.push(setColors(g, (v, n, o) => o.copy(col(0xe98fa0)).lerp(col(0xffd6dc), clamp(n.y * 0.6 + 0.3 + (noise3(v.x / 2, v.y / 2, v.z / 2) - 0.5) * 0.6)))); }
+  return merge(parts);
+}
 export function islandGeom(seed, R, depth, o = {}) {
   const k = karstG(seed, R, R * 0.5, true, depth);
   k.geo.userData.tops = k.tops; return k.geo;
