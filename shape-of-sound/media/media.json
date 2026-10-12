@@ -150,5 +150,21 @@
   "license": "Public domain",
   "used_in": "art date: Art Nouveau",
   "orig_w": 3000
+ },
+ {
+  "file": "el_lecoq.jpg",
+  "commons": "File:Lecoq de Boisbaudran.jpg",
+  "orig_w": 0,
+  "author": "Unknown",
+  "license": "Public domain",
+  "used_in": "periodic table opening"
+ },
+ {
+  "file": "el_mendeleev.jpg",
+  "commons": "File:DIMendeleevCab.jpg",
+  "orig_w": 0,
+  "author": "Unknown (1897)",
+  "license": "Public domain",
+  "used_in": "periodic table opening"
  }
 ]

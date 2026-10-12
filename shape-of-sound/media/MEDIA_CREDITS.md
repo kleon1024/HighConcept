@@ -12,6 +12,8 @@ re-downloads into `public/media` (Wikimedia asks for standard thumbnail sizes an
 | `public/media/halzen.jpg` | IceCube prize card | INFN | CC0 | https://commons.wikimedia.org/wiki/File:Francis_Halzen_(2025).jpg |
 | `public/media/opto_lab.jpg` | optogenetics opening | Bd008 | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:Optogenetics_imetronic.JPG |
 | `public/media/pond.jpg` | optogenetics pond | danxoneil (Flickr) | CC BY 2.0 | https://www.flickr.com/photos/danxoneil/4835834487 |
+| `public/media/el_lecoq.jpg` | periodic table opening | Unknown (before 1912) | Public domain | https://commons.wikimedia.org/wiki/File:Lecoq_de_Boisbaudran.jpg |
+| `public/media/el_mendeleev.jpg` | periodic table opening | Unknown (1897) | Public domain | https://commons.wikimedia.org/wiki/File:DIMendeleevCab.jpg |
 | `public/media/chlamy.jpg` | optogenetics pond | Dartmouth Electron Microscope Facility | Public domain | https://commons.wikimedia.org/wiki/File:Chlamydomonas6-1.jpg |
 | `public/media/rp_fundus.jpg` | optogenetics sight | Christian Hamel | CC BY 2.0 | https://commons.wikimedia.org/wiki/File:Fundus_of_patient_with_retinitis_pigmentosa,_mid_stage.jpg |
 | `public/media/deisseroth.jpg` | optogenetics prize | Christopher Michel | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:Karl_Deisseroth_by_Christopher_Michel_04.jpg |
