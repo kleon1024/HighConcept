@@ -69,7 +69,7 @@ export const makeProj = (c: Cam, dy = 36): Proj => {
 export const posAt = (e: El, L: number, t: number): [number, number] => {
   const k = eInOut(clamp01(L * 1.5 - (e.z / 118) * 0.5));
   let y = lerp(e.y, e.ly, k);
-  if (e.f !== null) y += eInOut(range(t, 179.0, 179.9)) * 1.45 * (1 - k);   // the ending makes room for row 8
+  if (e.f !== null) y += eInOut(range(t, 179.3, 180.2)) * 1.45 * (1 - k);   // the ending makes room for row 8
   return [lerp(e.x, e.lx, k), y];
 };
 
@@ -157,7 +157,7 @@ export const tileAt = (e: El, t: number): Tile => {
     return s;
   }
   // 4 · where they came from: the table goes dark, then lights up by origin
-  if (t < 179.4) {
+  if (t < 179.8) {
     const back = eInOut(range(t, COS.back[0], COS.back[1]));
     const at = originAt(e.origin) + (e.origin === "bb" || e.origin === "ns" || e.origin === "hm" || e.origin === "decay" ? 0 : (e.x / 18) * 1.2);
     const on = eOut(range(t, at, at + 0.5));

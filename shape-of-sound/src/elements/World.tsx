@@ -64,7 +64,7 @@ export const TableWorld: React.FC<{ t: number }> = ({ t }) => {
   if (t < 12.9) return null;
   const cam = camAt(t);
   const pr = makeProj(cam);
-  const night = t > 158.2 && t < 179.2;
+  const night = t > 158.2 && t < 179.5;
   const dimTo = night ? P.night : P.dimTop;
   const items = EL.map((e) => {
     const [x, y] = posAt(e, cam.L, t);

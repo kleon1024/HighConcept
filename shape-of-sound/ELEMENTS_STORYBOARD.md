@@ -36,6 +36,28 @@ an oblique view and true isometric, flying district to district.
 | 158–178 | Lens 4 | night; the Big Bang lights H/He; stars light C–Fe (「你血液里的铁，来自一颗早已死去的恒星。」); two neutron stars spiral in and collide: gold and platinum; the rest are human-made; 「你身上几乎每个原子，都比地球还老。」 | pads, strings, choir; a real inspiral **chirp** (f ∝ (t꜀−t)^−3/8) |
 | 178–192 | Ending | back to paper; an empty row 8 appears, 119 and 120 blink "?"; 「门捷列夫留下的空格——今天还在。」; end card: the title tiles plus an empty "?" tile, 「下一个空格，也许等你来填。」 | solo piano; the theme with a gap; a warm final C |
 
+## Music: a melody with notes missing
+The periodic table began as a pattern with holes in it, so the score is one 8-bar theme in C major
+(I – V⁶ – vi – IV | ii⁷ – iii⁷ – IV – **iv** – I) that is only heard whole once the table is whole
+(`music/elements_score.py`):
+
+| Where | What the theme does | Why |
+|---|---|---|
+| Cold open | an A-minor pizzicato ostinato and a clock; the 5.9 slam lands on **C**, the theme's home chord; then the theme's first bar with its top note missing | a question with a hole in it |
+| Title | the first phrase, whole and warm (piano, strings) | the promise |
+| History | a light discovery groove; every tile that lands plays a note | finding things is fun |
+| Mendeleev | the first phrase on clarinet with **three notes left out** (the theme's three peaks) | his three blanks |
+| The gaps fill | gallium, scandium and germanium each play back **the exact missing note** | the prediction comes true, audibly |
+| Roll call | all 118 elements as running notes (pitch = column: each row rises and starts over), and above them, **for the first time, the whole theme** on strings, horn and piano | every piece in its place |
+| Neighbourhoods | the band, light; the theme passed from flute to horn to marimba to bassoon… one voice per district | each family has its own voice |
+| Cosmos | no drums: strings, horns, choir; the second phrase arrives with the neutron-star merger, turns to **F minor** on 「你身上几乎每个原子，都比地球还老」 and resolves to C as the film comes home | the emotional peak: we are made of this |
+| Ending | solo piano; the theme with its peak still missing at 「门捷列夫留下的空格」; the last chord resolves but keeps one note open (C add 9) | the next empty square is yours |
+
+Sound effects (`music/elements.py`): ceramic tile knocks for every tile, paper and cards for Mendeleev, a laugh for
+Newlands, sodium's splash and 砰, fireworks, a phone buzzing, a neon hum, the Big Bang, and a synthesised inspiral chirp
+(f ∝ (t꜀−t)^−3/8). All soft, about 15 dB under the music (median); master −16.2 LUFS. A sound-effects-only version is
+written to `out/elements_sfx_only.wav` for posting with a platform track.
+
 ## Facts and sources
 | On screen | Source / note |
 |---|---|
