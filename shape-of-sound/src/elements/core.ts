@@ -13,6 +13,7 @@ export const W = 1920, H = 1080;
 export const P = {
   paper: "#F6F0E4", ink: "#17172B", ghost: "#D8CFBE", night: "#0D1130", night2: "#1B2150", dimTop: "#E9E2D3",
 };
+const FAM_C = { h: "#6FD6F2", alk: "#FF5B4F", ae: "#FF9F43", tm: "#4D7CFE", pt: "#9B8CFF", md: "#B9D24A", nm: "#2FC27E", hal: "#FFD23F", ng: "#FF6FB1", ln: "#2CCFC7", an: "#C77DFF" };
 export const FAM: Record<string, { c: string; name: string }> = {
   h: { c: "#6FD6F2", name: "氢" }, alk: { c: "#FF5B4F", name: "碱金属" }, ae: { c: "#FF9F43", name: "碱土金属" },
   tm: { c: "#4D7CFE", name: "过渡金属" }, pt: { c: "#9B8CFF", name: "后过渡金属" }, md: { c: "#B9D24A", name: "类金属" },
@@ -24,6 +25,28 @@ export const ORIGIN: Record<string, { c: string; name: string }> = {
   lm: { c: "#FFA94D", name: "小恒星晚年" }, ms: { c: "#FF6B5A", name: "大恒星爆炸" }, wd: { c: "#FF9ECF", name: "白矮星爆炸" },
   ns: { c: "#FFD84D", name: "中子星相撞" }, decay: { c: "#8E95B2", name: "放射性衰变" }, hm: { c: "#DDE1EC", name: "人类制造" },
 };
+
+// ───────────── the background: one full-screen colour per chapter / district, changed with a diagonal sweep
+export const BGC: Record<string, string> = {
+  paper: "#F6F0E4", ink: "#14142B", yellow: "#FFD23F", pink: "#FF3D7F", old: "#F1E4C8", blue: "#2D5BFF", violet: "#6C3CFF",
+  black: "#0E0E12", mint: "#00D9A3", night: "#0D1130",
+};
+const BG_SEG: [number, string][] = [
+  [0, BGC.paper], [13.6, BGC.ink], [18.0, BGC.yellow], [31.4, BGC.pink], [36.8, BGC.old], [50.4, BGC.yellow],
+  [56.0, BGC.blue], [74.0, BGC.violet], [80.4, BGC.blue], [82.4, BGC.black], [104.0, BGC.mint],
+  ...(J.hood as { t: number; fam?: string; id: string }[]).map((d) => [d.t, d.id === "nm" ? "#2FC27E" : d.id === "h" ? "#6FD6F2" : (FAM_C as Record<string, string>)[d.fam as string]] as [number, string]),
+  [158.0, BGC.night], [179.4, BGC.paper],
+];
+export const WIPE = 0.42;
+export const bgAt = (t: number) => {
+  let i = 0;
+  while (i + 1 < BG_SEG.length && BG_SEG[i + 1][0] - WIPE <= t) i++;
+  const [t0, c] = BG_SEG[i], prev = i > 0 ? BG_SEG[i - 1][1] : c;
+  const k = i > 0 ? clamp01((t - (t0 - WIPE)) / WIPE) : 1;
+  return { c, prev, k, t0, i };
+};
+export const bgColorAt = (t: number) => { const b = bgAt(t); return mix(b.prev, b.c, b.k); };
+export const isDark = (c: string) => { const v = [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16) / 255); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2] < 0.45; };
 
 // ───────────── small helpers
 export const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
@@ -89,15 +112,17 @@ export const yearAt = (t: number): string => {
 const GAPS = [31, 21, 32];
 
 // ───────────── the state of one tile at time t
-export type Tile = { show: number; ghost: boolean; h: number; drop: number; col: string; dim: number; glow: number; q: number; lit: number };
+export type Tile = { show: number; ghost: boolean; h: number; drop: number; col: string; dim: number; glow: number; q: number; lit: number; beam: number; ripple: number; white: number };
 const hood = T.hood as { id: string; t: number; out: number; z?: number[]; fam?: string }[];
 const inHood = (e: El, d: (typeof hood)[number]) => (d.z ? d.z.includes(e.z) : e.fam === d.fam);
 const COS = T.cosmos;
+const ROW_END: Record<number, number> = {};
+for (const e of EL) ROW_END[e.period] = Math.max(ROW_END[e.period] ?? 0, e.roll);
 const originAt = (o: string) => (o === "bb" ? COS.bb : o === "ns" ? COS.ns : o === "hm" || o === "decay" ? COS.hm : COS.stars);
 
 export const tileAt = (e: El, t: number): Tile => {
   const base = FAM[e.fam].c;
-  const s: Tile = { show: 1, ghost: false, h: 0.2, drop: 0, col: base, dim: 0, glow: 0, q: 0, lit: 0 };
+  const s: Tile = { show: 1, ghost: false, h: 0.2, drop: 0, col: base, dim: 0, glow: 0, q: 0, lit: 0, beam: 0, ripple: -1, white: 0 };
   // before the table exists, and the title: ghost cells only
   if (t < 18.6) { s.ghost = true; s.show = clamp01((t - 12.9) / 0.9); return s; }
   // 1 · history: tiles drop in as they are discovered; Mendeleev's cards (36.8–41.8) shuffle the known ones
@@ -139,7 +164,11 @@ export const tileAt = (e: El, t: number): Tile => {
     if (t > 82.4) {
       const before = t < e.roll, k = range(t, 82.4, 83.0);
       if (before) s.dim = 0.72 * k;
-      else { const d = t - e.roll; s.h = 0.2 + 0.85 * Math.exp(-d / 0.16) * clamp01(d / 0.04); s.glow = Math.exp(-d / 0.3); s.lit = 1; }
+      else {
+        const d = t - e.roll; s.h = 0.2 + 1.3 * Math.exp(-d / 0.18) * clamp01(d / 0.04); s.glow = Math.exp(-d / 0.3); s.lit = 1;
+        s.beam = Math.exp(-d / 0.32); s.ripple = d < 0.6 ? d : -1;
+        const re = ROW_END[e.period]; if (t >= re) s.glow = Math.max(s.glow, 0.85 * Math.exp(-(t - re) / 0.35));
+      }
       if (t > 103.6) s.dim = 0;
     }
     return s;
@@ -151,7 +180,8 @@ export const tileAt = (e: El, t: number): Tile => {
     if (intro > 0) s.h = 0.2 + 0.35 * intro * (0.5 + 0.5 * Math.sin((e.group ?? 3) * 0.9 + t * 6));
     if (d) {
       const k = win(t, d.t - 0.3, d.out + 0.3, 0.45, 0.45);
-      if (inHood(e, d)) { s.h = 0.2 + 0.95 * k; s.glow = 0.25 * k; } else s.dim = 0.62 * k;
+      const kk2 = win(t, d.t - 0.3 + ((e.z * 7) % 11) * 0.025, d.out + 0.3, 0.55, 0.45);
+      if (inHood(e, d)) { s.h = 0.2 + 2.3 * backOut(kk2, 1.6); s.white = kk2; } else { s.dim = 0.7 * k; s.h = 0.2 - 0.1 * k; }
       for (const tool of T.tools) if (tool.z === e.z) { const kk = win(t, tool.t, tool.t + 1.2, 0.2, 0.25); s.h += 0.9 * kk; s.glow = Math.max(s.glow, kk * 0.8); }
     }
     return s;

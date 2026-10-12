@@ -38,7 +38,7 @@ export const Captions: React.FC<{ t: number }> = ({ t }) => {
   return (
     <div style={{ position: "absolute", left: 0, right: 0, top, display: "flex", flexDirection: "column", alignItems: "center", opacity: 1 - out, transform: `translateY(${-out * 18}px)` }}>
       <Sticker style={{ padding: "16px 34px 18px", transform: `scale(${0.86 + 0.14 * inK}) rotate(${(1 - inK) * -2}deg)` }}>
-        <div style={{ fontFamily: FONT_CN, fontWeight: 900, fontSize: 50, color: P.ink, lineHeight: 1.2 }}><Chars text={c.text} t={t} at={c.t + 0.05} /></div>
+        <div style={{ fontFamily: FONT_CN, fontWeight: 900, fontSize: Array.from(c.text).length > 18 ? 44 : 50, color: P.ink, lineHeight: 1.2 }}><Chars text={c.text} t={t} at={c.t + 0.05} /></div>
       </Sticker>
       {c.note && (
         <div style={{ marginTop: 16, fontFamily: FONT_CN, fontWeight: 700, fontSize: 26, color: P.ink, opacity: eOut(range(t, c.t + 0.5, c.t + 0.9)) * 0.8, background: "#FFD23F", padding: "4px 14px", borderRadius: 8 }}>{c.note}</div>
@@ -104,7 +104,8 @@ export const HoodTag: React.FC<{ t: number }> = ({ t }) => {
   const c = FAM[d.fam ?? (d.id === "h" ? "h" : "nm")].c;
   return (
     <div style={{ position: "absolute", left: 64, top: 200, opacity: k, transform: `translateX(${(1 - k) * -40}px)` }}>
-      <Sticker bg={c} style={{ padding: "10px 26px" }} radius={16} shadow={6}>
+      <Sticker bg="#FFFFFF" style={{ padding: "10px 26px", display: "flex", alignItems: "center", gap: 14 }} radius={16} shadow={6}>
+        <div style={{ width: 26, height: 26, borderRadius: 6, background: c, border: `3px solid ${P.ink}` }} />
         <div style={{ fontFamily: FONT_CN, fontWeight: 900, fontSize: 40, color: P.ink }}>{d.name}</div>
       </Sticker>
     </div>

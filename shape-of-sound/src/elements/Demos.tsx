@@ -8,7 +8,7 @@ const Panel: React.FC<React.PropsWithChildren<{ t: number; a: number; b: number;
   const k = win(t, a, b, 0.3, 0.3);
   if (k <= 0) return null;
   return (
-    <div style={{ position: "absolute", right: 70, top, opacity: k, transform: `scale(${0.85 + 0.15 * backOut(range(t, a, a + 0.35), 2)}) rotate(${(1 - k) * 3}deg)` }}>
+    <div style={{ position: "absolute", right: 70, top: top - 40, opacity: k, transform: `scale(${1.05 + 0.18 * backOut(range(t, a, a + 0.35), 2)}) rotate(${(1 - k) * 3}deg)`, transformOrigin: "right top" }}>
       <Sticker bg={bg} style={{ width: 440, height: 440, position: "relative", overflow: "hidden" }}>{children}</Sticker>
     </div>
   );

@@ -118,7 +118,7 @@ export const Title: React.FC<{ t: number }> = ({ t }) => {
   const chars = [["元", "1", FAM.h.c], ["素", "6", FAM.nm.c], ["周", "26", FAM.tm.c], ["期", "10", FAM.ng.c], ["表", "11", FAM.alk.c]];
   return (
     <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", opacity: k }}>
-      <div style={{ fontFamily: FONT_CN, fontWeight: 900, fontSize: 56, color: P.ink, marginBottom: 26, opacity: eOut(range(t, 14.05, 14.4)) }}>一次看懂</div>
+      <div style={{ fontFamily: FONT_CN, fontWeight: 900, fontSize: 56, color: "#FFFFFF", marginBottom: 26, opacity: eOut(range(t, 14.05, 14.4)) }}>一次看懂</div>
       <div style={{ display: "flex", gap: 22 }}>
         {chars.map(([ch, n, c], i) => {
           const d = range(t, 14.1 + i * 0.09, 14.1 + i * 0.09 + 0.5);
@@ -248,7 +248,7 @@ const Nucleus: React.FC<{ t: number }> = ({ t }) => {
   const R = 22 + 8.5 * Math.sqrt(n);
   const e = EL[n - 1];
   return (
-    <div style={{ position: "absolute", right: 70, top: 220, opacity: k, transform: `scale(${0.9 + 0.1 * k})` }}>
+    <div style={{ position: "absolute", right: 70, top: 200, opacity: k, transform: `scale(${1.12 + 0.1 * k})`, transformOrigin: "right top" }}>
       <Sticker style={{ width: 400, height: 470, display: "flex", flexDirection: "column", alignItems: "center" }}>
         <svg width={300} height={300} viewBox="-150 -150 300 300" style={{ marginTop: 18 }}>
           <circle r={R + 18} fill="#FFF3B0" />
@@ -297,7 +297,7 @@ const Shells: React.FC<{ t: number }> = ({ t }) => {
   const build = Math.round(lerp(1, 18, eInOut(range(t, 64.6, 68.8))));
   const shellsFor = (n: number) => { const s: number[] = []; let left = n; for (const cap of [2, 8, 8]) { if (left <= 0) break; s.push(Math.min(cap, left)); left -= cap; } return s; };
   return (
-    <div style={{ position: "absolute", right: 70, top: 220, opacity: k }}>
+    <div style={{ position: "absolute", right: 70, top: 190, opacity: k, transform: `scale(1.15)`, transformOrigin: "right top" }}>
       <Sticker style={{ width: 420, height: 500, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
         {!phase2 ? (
           <>

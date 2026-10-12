@@ -8,29 +8,22 @@ import "@fontsource/archivo-black/400.css";
 import React from "react";
 import { AbsoluteFill, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { Audio } from "@remotion/media";
-import { P, eIn, range } from "./core";
+import { eIn, range } from "./core";
 import { TableWorld } from "./World";
-import { Captions, HoodTag, RollTicker, SectionChip, YearCounter } from "./UI";
+import { Captions, HoodTag, RollTicker, YearCounter } from "./UI";
+import { Background, ChapterHeader, Geometry, GiantType } from "./Look";
 import { ColdOpen, MapWidgets, Mendeleev, Newlands, Title } from "./Scenes";
 import { Cosmos, EndCard, HoodDemos } from "./Demos";
-
-// a faint superflat dot grid on the paper
-const Paper: React.FC = () => (
-  <AbsoluteFill style={{ background: P.paper }}>
-    <svg width={1920} height={1080} style={{ position: "absolute", inset: 0 }}>
-      <defs><pattern id="dots" width={36} height={36} patternUnits="userSpaceOnUse"><circle cx={18} cy={18} r={2} fill="#E4DCCB" /></pattern></defs>
-      <rect width={1920} height={1080} fill="url(#dots)" />
-    </svg>
-  </AbsoluteFill>
-);
 
 export const Elements: React.FC = () => {
   const f = useCurrentFrame(), { fps } = useVideoConfig();
   const t = f / fps;
   return (
     <AbsoluteFill style={{ overflow: "hidden" }}>
-      <Paper />
+      <Background t={t} />
+      <Geometry t={t} />
       <Cosmos t={t} />
+      <GiantType t={t} />
       <TableWorld t={t} />
       <ColdOpen t={t} />
       <Title t={t} />
@@ -41,7 +34,7 @@ export const Elements: React.FC = () => {
       <YearCounter t={t} />
       <RollTicker t={t} />
       <HoodTag t={t} />
-      <SectionChip t={t} />
+      <ChapterHeader t={t} />
       <Captions t={t} />
       <EndCard t={t} />
       <AbsoluteFill style={{ background: "#000", opacity: eIn(range(t, 191.4, 192)), pointerEvents: "none" }} />
