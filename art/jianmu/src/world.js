@@ -2,14 +2,14 @@
 // halls and waterfalls; pillar peaks; chains; the colossal buried sword; debris. 1 unit = 1 m. Cloud-sea top at y = 0.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { mulberry32, fbm3, noise3, clamp, lerp } from './util.js';
+import { mulberry32, fbm3, noise3, clamp, lerp, smooth } from './util.js';
 import { paintMat, glowMat } from './materials.js';
 
 const col = h => new THREE.Color(h);
 export const PAL = {
-  bark: col(0x5d5c55), barkHi: col(0xaaa496), moss: col(0x5b7e62), lichen: col(0xb4c0b0),
+  bark: col(0x4a4841), barkHi: col(0x948d7d), moss: col(0x4d7a5c), lichen: col(0xaab8a6),
   beam: col(0x7c3a2a), beamHi: col(0xa8513a), bronze: col(0x557f72), gold: col(0xd9b16a),
-  rockLit: col(0xc4a676), rockMid: col(0x7d8783), rockLow: col(0x45606b), grass: col(0x4a8a70), grassHi: col(0x7aa883),
+  rockLit: col(0xb8aa90), rockMid: col(0x7b847f), rockLow: col(0x45606b), grass: col(0x4a8a70), grassHi: col(0x7aa883),
   pine: col(0x2f4f42), pineHi: col(0x4c6d55), stone: col(0xe7e3d8), verm: col(0xc8452e), roof: col(0x3c5359), roofGlaze: col(0x3d6c66),
   white: col(0xf1efe8),
 };
@@ -24,42 +24,45 @@ const solid = (g, c) => setColors(g, (v, n, o) => o.copy(c));
 // merge with consistent attributes (non-indexed, position/normal/color only)
 export function merge(list) { return mergeGeometries(list.map(g => { const x = g.index ? g.toNonIndexed() : g; if (x.attributes.uv) x.deleteAttribute('uv'); return x; })); }
 
-// ─────────────────────────────── 建木 trunk: a colossal fissured tree, slowly twisting, with regular branch-rungs
-export const TRUNK = { R: 200, y0: -700, breakY: 2290, y1: 10500, rungStep: 190, rungY0: 230 };
+const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
+// ─────────────────────────────── 建木 trunk: a colossal ancient tree, fissured and buttressed, its axis meandering
+export const TRUNK = { R: 300, y0: -900, breakY: 2400, y1: 11000, rungStep: 230, rungY0: 300 };
+export function axisOff(y) { return new THREE.Vector3(70 * Math.sin(y / 1900 + 1.0) + 22 * Math.sin(y / 650), 0, 60 * Math.cos(y / 2300) + 18 * Math.sin(y / 870 + 2)); }
 const ridged = (x, y, z) => 1 - Math.abs(2 * noise3(x, y, z) - 1);
 export function trunkRadius(th, y) {
-  const { R } = TRUNK; const tw = th + y * 0.00012;
-  let r = R * (1 - 0.18 * clamp(y / 10000, 0, 1));
-  r *= 1 + 0.08 * (fbm3(Math.cos(tw) * 1.2, y / 700, Math.sin(tw) * 1.2, 3) - 0.5);
-  const u = tw * R / 38;
-  const rg = ridged(u, y / 320, 1.7) * 0.65 + ridged(u * 2.1, y / 160, 5.3) * 0.35;
-  r += 22 * rg * rg - 11 + 5 * (noise3(u * 3, y / 40, 9) - 0.5);
-  if (y < 0) r *= 1 + 0.45 * Math.pow(clamp(-y / 700), 1.6);
+  const { R } = TRUNK; const tw = th + y * 0.00028;
+  let r = R * (1 - 0.2 * clamp(y / 11000, 0, 1));
+  r *= 1 + 0.11 * Math.cos(5 * tw + 0.8 * Math.sin(y / 900)) + 0.05 * Math.cos(9 * tw - y / 700);
+  r *= 1 + 0.08 * (fbm3(Math.cos(tw) * 1.2, y / 800, Math.sin(tw) * 1.2, 3) - 0.5);
+  const u = tw * R / 46;
+  const rg = ridged(u, y / 360, 1.7) * 0.65 + ridged(u * 2.1, y / 170, 5.3) * 0.35;
+  r += 30 * rg * rg - 15 + 6 * (noise3(u * 3, y / 40, 9) - 0.5);
+  r += 22 * (noise3(Math.cos(tw) * 2, y / 260, Math.sin(tw) * 2) - 0.5);   // burls
+  if (y < 0) r *= 1 + 0.5 * Math.pow(clamp(-y / 900), 1.6);
   return r;
 }
 function trunkGeom(ya, yb, jagTop, jagBot, seed) {
-  const segR = 180, segY = Math.ceil((yb - ya) / (ya > 2000 ? 30 : 20));
+  const segR = 200, segY = Math.ceil((yb - ya) / (ya > 2000 ? 34 : 20));
   const g = new THREE.CylinderGeometry(1, 1, 1, segR, segY, true);
   const p = g.attributes.position; const rng = mulberry32(seed);
   for (let i = 0; i < p.count; i++) {
     const x = p.getX(i), yy = p.getY(i) + 0.5, z = p.getZ(i);
     let y = lerp(ya, yb, yy); const th = Math.atan2(z, x);
-    const r = trunkRadius(th, y);
-    if (jagTop && yy > 0.985) y -= 20 + 170 * Math.pow(noise3(th * 9, 3, 9), 1.5) + 40 * rng();
-    if (jagBot && yy < 0.015) y += 30 + 130 * Math.pow(noise3(th * 9, 3, 9), 1.5);
-    p.setXYZ(i, Math.cos(th) * r, y, Math.sin(th) * r);
+    const r = trunkRadius(th, y); const o = axisOff(y);
+    if (jagTop && yy > 0.985) y -= 20 + 200 * Math.pow(noise3(th * 9, 3, 9), 1.5) + 40 * rng();
+    if (jagBot && yy < 0.015) y += 30 + 160 * Math.pow(noise3(th * 9, 3, 9), 1.5);
+    p.setXYZ(i, o.x + Math.cos(th) * r, y, o.z + Math.sin(th) * r);
   }
   g.computeVertexNormals();
   setColors(g, (v, n, o) => {
-    const th = Math.atan2(v.z, v.x); const tw = th + v.y * 0.00012; const u = tw * TRUNK.R / 38;
-    const rg = ridged(u, v.y / 320, 1.7) * 0.65 + ridged(u * 2.1, v.y / 160, 5.3) * 0.35;
-    o.copy(PAL.bark).lerp(PAL.barkHi, clamp(rg * rg * 1.1));
-    o.lerp(col(0x2f302c), clamp(0.55 - rg) * 0.9);                          // dark fissures
-    const moss = clamp((noise3(v.x / 90, v.y / 200, v.z / 90) - 0.52) * 3.5) * clamp(rg * 1.5);
-    o.lerp(PAL.moss, moss * 0.55);
-    const lich = clamp((noise3(v.x / 30 + 9, v.y / 70, v.z / 30) - 0.66) * 5);
-    o.lerp(PAL.lichen, lich * 0.55);
-    
+    const ax = axisOff(v.y); const th = Math.atan2(v.z - ax.z, v.x - ax.x); const tw = th + v.y * 0.00028; const u = tw * TRUNK.R / 46;
+    const rg = ridged(u, v.y / 360, 1.7) * 0.65 + ridged(u * 2.1, v.y / 170, 5.3) * 0.35;
+    o.copy(PAL.bark).lerp(PAL.barkHi, clamp(rg * rg * 1.15));
+    o.lerp(col(0x2b2c28), clamp(0.5 - rg) * 1.0);                           // deep fissures
+    const moss = clamp((noise3(v.x / 110, v.y / 240, v.z / 110) - 0.48) * 3.2) * clamp(rg * 1.6) * clamp(0.3 + n.y * 2.0 + 0.4);
+    o.lerp(PAL.moss, moss * 0.8);
+    const lich = clamp((noise3(v.x / 30 + 9, v.y / 70, v.z / 30) - 0.64) * 5);
+    o.lerp(PAL.lichen, lich * 0.6);
   });
   return g;
 }
@@ -122,8 +125,9 @@ export function hallG(w, d, colH, o = {}) {
   for (let i = 0; i < nc; i++) { const x = lerp(-w / 2, w / 2, i / (nc - 1)); for (const z of [-d / 2, d / 2]) parts.push(cylG(colH * 0.06, colH * 0.06, colH, PAL.verm, x, colH * 0.25, z, 6)); }
   parts.push(boxG(w * 1.02, colH * 0.12, d * 1.02, PAL.verm, 0, colH * 1.25 - colH * 0.06, 0));
   const ry = colH * 1.25;
-  parts.push(roofG(w * 1.5, d * 1.6, colH * 0.75, colH * 0.32, o.glaze ? PAL.roofGlaze : PAL.roof, ry));
-  if (o.double) { parts.push(boxG(w * 0.7, colH * 0.5, d * 0.6, PAL.verm, 0, ry + colH * 0.5, 0)); parts.push(roofG(w * 1.0, d * 1.05, colH * 0.6, colH * 0.25, o.glaze ? PAL.roofGlaze : PAL.roof, ry + colH * 0.7)); }
+  const rc = o.roof || (o.glaze ? PAL.roofGlaze : PAL.roof);
+  parts.push(roofG(w * 1.5, d * 1.6, colH * 0.75, colH * 0.32, rc, ry));
+  if (o.double) { parts.push(boxG(w * 0.7, colH * 0.5, d * 0.6, PAL.verm, 0, ry + colH * 0.5, 0)); parts.push(roofG(w * 1.0, d * 1.05, colH * 0.6, colH * 0.25, rc, ry + colH * 0.7)); }
   return merge(parts);
 }
 export function pagodaG(w, tiers, tierH) {
@@ -152,38 +156,50 @@ export function pineG(h, seed) {
   return merge(parts);
 }
 
-// ─────────────────────────────── floating island (rock, inverted cone) with grass top
-export function islandGeom(seed, R, depth, o = {}) {
-  const rng = mulberry32(seed);
-  const prof = [];
-  const top = o.topH ?? R * 0.08;
-  prof.push(new THREE.Vector2(0.001, top));
-  for (let i = 1; i <= 6; i++) prof.push(new THREE.Vector2(R * i / 6, top * (1 - Math.pow(i / 6, 3) * 0.6)));
-  const steps = 44;
-  for (let i = 1; i <= steps; i++) { const k = i / steps; const r = R * Math.pow(1 - k, o.taper ?? 1.25) * (1 + 0.08 * Math.sin(k * 9 + seed)); prof.push(new THREE.Vector2(Math.max(r, 0.5), -depth * k)); }
-  const g = new THREE.LatheGeometry(prof, 110);
-  const p = g.attributes.position; const sx = rng() * 100;
+// ─────────────────────────────── karst pillars (张家界): a cluster of irregular rock columns of different heights,
+// vertically cracked, with mossy ledges and domed tops; floating ones end in jagged hanging spurs
+function columnG(seed, r, h, floating, bottom) {
+  const g = new THREE.CylinderGeometry(1, 1, 1, 28, Math.max(12, Math.round(h / (r * 0.35))), false);
+  const p = g.attributes.position; const sx = seed * 5.3;
   for (let i = 0; i < p.count; i++) {
-    const x = p.getX(i), y = p.getY(i), z = p.getZ(i); const rr = Math.hypot(x, z) + 1e-6;
-    const th = Math.atan2(z, x);
-    let d = (fbm3(x / R * 1.6 + sx, y / R * 1.2, z / R * 1.6, 4) - 0.5) * R * 0.55;
-    d += (noise3(th * 3 + sx, y / (R * 0.15), 3) - 0.5) * R * 0.18;   // vertical clefts
-    const strata = Math.sin(y / (R * 0.06) + noise3(x / R * 3, y / R, z / R * 3) * 3) * R * 0.015;
-    const k = y > top * 0.3 ? 0.25 : 1;
-    const nr = Math.max(0.3, rr + (d + strata) * k * (rr / R + 0.15));
-    let ny = y; if (y > 0) ny = y + (noise3(x / R * 2.2 + sx, 5, z / R * 2.2) - 0.5) * top * 1.4;
-    p.setXYZ(i, Math.cos(th) * nr, ny, Math.sin(th) * nr);
+    const x = p.getX(i), yy = p.getY(i) + 0.5, z = p.getZ(i); const th = Math.atan2(z, x); const onCap = Math.abs(Math.hypot(x, z) - 1) > 0.01 && (yy > 0.999 || yy < 0.001);
+    let rr = onCap ? Math.hypot(x, z) : 1;
+    const y = lerp(bottom, h, yy);
+    let f = 1 + 0.18 * (ridged(th * 4 + sx, y / (r * 2.2), 1.3) - 0.5) + 0.22 * (fbm3(Math.cos(th) * 1.3 + sx, y / (r * 1.8), Math.sin(th) * 1.3, 3) - 0.5);
+    f += 0.05 * Math.sin(y / (r * 0.4) + noise3(th, y / r, sx) * 3);
+    const topK = clamp((y - (h - r * 0.6)) / (r * 0.6));                       // round the top
+    f *= Math.sqrt(Math.max(0.02, 1 - topK * topK * 0.9));
+    let ny = y;
+    if (floating) { const bk = clamp((bottom * 0.45 - y) / (-bottom * 0.55)); const spur = Math.pow(Math.max(0, Math.cos(2 * th + sx)) , 2); f *= lerp(1, 0.08 + 0.9 * spur * (1 - bk * 0.7), smooth(bk)); }
+    if (yy > 0.999) ny = h + r * 0.15 * (noise3(x * 2 + sx, 1, z * 2) - 0.3);
+    p.setXYZ(i, Math.cos(th) * r * f * rr, ny, Math.sin(th) * r * f * rr);
   }
   g.computeVertexNormals();
-  setColors(g, (v, n, out) => {
-    const h = v.y / depth;
-    if (n.y > 0.55 && v.y > -top) { out.copy(PAL.grass).lerp(PAL.grassHi, clamp(noise3(v.x / 30, 1, v.z / 30) * 1.4 - 0.4)); return; }
-    out.copy(PAL.rockLit).lerp(PAL.rockMid, clamp(-h * 1.4)).lerp(PAL.rockLow, clamp(-h * 1.6 - 0.6));
-    const band = 0.5 + 0.5 * Math.sin(v.y / (R * 0.05) + noise3(v.x / 40, v.y / 80, v.z / 40) * 4);
-    out.multiplyScalar(0.88 + 0.2 * band);
-    if (n.y > 0.2) out.lerp(PAL.moss, 0.55);
-  });
   return g;
+}
+export function karstG(seed, R, H, floating = false, depth = 0) {
+  const rng = mulberry32(seed); const parts = []; const tops = [];
+  const n = 3 + Math.floor(rng() * 3);
+  for (let i = 0; i < n; i++) {
+    const a = rng() * 6.283, d = i === 0 ? 0 : R * (0.35 + 0.35 * rng());
+    const r = R * (i === 0 ? 0.62 : 0.3 + 0.25 * rng()); const h = H * (i === 0 ? 1 : 0.55 + 0.4 * rng());
+    const bottom = floating ? -depth * (i === 0 ? 1 : 0.5 + 0.4 * rng()) : -400;
+    const g = columnG(seed * 13 + i, r, h, floating, bottom); g.translate(Math.cos(a) * d, 0, Math.sin(a) * d);
+    parts.push(g); tops.push(V3(Math.cos(a) * d, h, Math.sin(a) * d).setComponent(3, 0)); tops[tops.length - 1].r = r;
+  }
+  const geo = merge(parts.map(g => setColors(g, (v, nn, out) => {
+    if (nn.y > 0.55) { out.copy(PAL.grass).lerp(PAL.pine, clamp(noise3(v.x / 15, v.y / 15, v.z / 15) * 1.3 - 0.2)); return; }
+    const crack = ridged(Math.atan2(v.z, v.x) * 9 + seed, v.y / 90, 4.3);
+    out.copy(PAL.rockLit).lerp(PAL.rockMid, clamp(1 - (v.y + 200) / (H + 200)) * 0.8);
+    out.multiplyScalar(0.75 + 0.35 * crack);
+    if (nn.y > 0.15) out.lerp(PAL.moss, 0.65);
+  })));
+  return { geo, tops };
+}
+const V3k = (x, y, z) => new THREE.Vector3(x, y, z);
+export function islandGeom(seed, R, depth, o = {}) {
+  const k = karstG(seed, R, R * 0.5, true, depth);
+  k.geo.userData.tops = k.tops; return k.geo;
 }
 
 // an island with dressing; returns Group. topY of plateau ≈ top
@@ -192,10 +208,10 @@ export function buildIsland(seed, R, depth, o = {}) {
   const rockMat = o.mat || ISLAND_MAT;
   const geo = islandGeom(seed, R, depth, o);
   const m = new THREE.Mesh(geo, rockMat); grp.add(m);
-  const top = o.topH ?? R * 0.08;
-  // pines on the rim
-  const pines = []; const np = o.pines ?? Math.round(R / 8);
-  for (let i = 0; i < np; i++) { const a = rng() * 6.28, rr = R * (0.55 + 0.42 * rng()); pines.push([Math.cos(a) * rr, top * 0.6, Math.sin(a) * rr, (R * 0.05 + 6) * (0.6 + 0.8 * rng()), rng() * 6.28]); }
+  const top = o.topH ?? R * 0.12;
+  // pines crowding each column top (the bumpy tree line is the karst silhouette)
+  const pines = []; const tops = geo.userData.tops || [];
+  for (const tp of tops) { const np = Math.round(4 + tp.r / 9); for (let i = 0; i < np; i++) { const a = rng() * 6.28, rr = tp.r * 0.75 * Math.sqrt(rng()); pines.push([tp.x + Math.cos(a) * rr, tp.y - 2 + (1 - rr / tp.r) * tp.r * 0.05, tp.z + Math.sin(a) * rr, (tp.r * 0.16 + 5) * (0.6 + 0.8 * rng()), rng() * 6.28]); } }
   if (pines.length) {
     const pg = pineG(1, seed); const im = new THREE.InstancedMesh(pg, PINE_MAT, pines.length); const mm = new THREE.Matrix4();
     pines.forEach(([x, y, z, s, a], i) => { mm.compose(new THREE.Vector3(x, y - s * 0.1, z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), a), new THREE.Vector3(s, s, s)); im.setMatrixAt(i, mm); });
@@ -204,7 +220,8 @@ export function buildIsland(seed, R, depth, o = {}) {
   // halls / pagoda
   if (o.halls) for (const hdef of o.halls) {
     const g = hdef.pagoda ? pagodaG(hdef.w, hdef.tiers || 4, hdef.h) : hallG(hdef.w, hdef.d || hdef.w * 0.6, hdef.h, hdef);
-    const hm = new THREE.Mesh(g, HALL_MAT); hm.position.set(hdef.x * R, top * 0.75 + (hdef.dy || 0), hdef.z * R); hm.rotation.y = hdef.ry || 0; grp.add(hm);
+    const t0 = (geo.userData.tops || [])[0]; const hy = t0 ? t0.y - 4 : top * 0.75;
+    const hm = new THREE.Mesh(g, HALL_MAT); hm.position.set(hdef.x * R * 0.5 + (t0 ? t0.x : 0), hy + (hdef.dy || 0), hdef.z * R * 0.5 + (t0 ? t0.z : 0)); hm.rotation.y = hdef.ry || 0; grp.add(hm);
   }
   grp.userData = { R, depth, top };
   return grp;
@@ -218,85 +235,103 @@ export const BEAM_MAT = paintMat({ brushScale: 0.05, stretch: [0.4, 1, 0.4], bru
 export const PEAK_MAT = paintMat({ brushScale: 0.012, stretch: [1, 3, 1], brush: 0.2, rim: 0.5, wrap: 0.4, rock: 0.8 });
 
 // ─────────────────────────────── the tree-ladder assembly
-// branch template: gnarled tapering limb curving upward, a stone path with vermilion rails along its top, a hall at the tip
-function branchTemplate(L, seed, withHall, withLeaves) {
-  const R = TRUNK.R; const rng = mulberry32(seed);
-  const rise = L * (0.18 + 0.12 * rng());
-  const pts = [V3(R * 0.55, -12, 0), V3(R + L * 0.3, 4, (rng() - 0.5) * 20), V3(R + L * 0.7, rise * 0.45, (rng() - 0.5) * 30), V3(R + L, rise, (rng() - 0.5) * 20)];
-  const r0 = 62 + 12 * rng(), r1 = 20;
-  const barkCol = (v, n, o) => { o.copy(PAL.bark).lerp(PAL.barkHi, clamp(0.4 + n.y * 0.5)); o.lerp(PAL.moss, clamp(n.y * 1.4 - 0.5) * 0.8); o.lerp(col(0x2f302c), clamp(-n.y) * 0.4); };
-  const parts = [gnarlTube(pts, s => lerp(r0, r1, Math.pow(s, 0.8)) * (s < 0.08 ? 1 + (0.08 - s) * 6 : 1), 40, 14, seed, barkCol)];
-  const curve = new THREE.CatmullRomCurve3(pts);
-  // stone path + rails on top
-  const rail = [];
-  for (let i = 4; i <= 36; i++) {
-    const s = i / 40; const c = curve.getPointAt(s); const rr = lerp(r0, r1, Math.pow(s, 0.8)) * 0.92;
-    rail.push(boxG(L / 36 * 1.05, 2.2, 10, PAL.stone, c.x, c.y + rr + 1, c.z));
-    if (i % 2 === 0) for (const zz of [-6, 6]) rail.push(boxG(1.2, 5, 1.2, PAL.verm, c.x, c.y + rr + 4, c.z + zz));
-  }
-  for (const zz of [-6, 6]) { const a0 = curve.getPointAt(0.1), a1 = curve.getPointAt(0.9); const g = new THREE.CylinderGeometry(0.7, 0.7, a0.distanceTo(a1), 4); g.rotateZ(Math.PI / 2 - Math.atan2(a1.y - a0.y, a1.x - a0.x)); const m = a0.clone().lerp(a1, 0.5); g.translate(m.x, m.y + lerp(r0, r1, 0.5) * 0.92 + 6.5, m.z + zz); rail.push(solid(g, PAL.verm)); }
-  parts.push(...rail);
-  const tip = curve.getPointAt(1);
-  if (withHall) { const h = hallG(30, 22, 12, { double: true, glaze: seed % 2 === 0 }); h.translate(tip.x - 6, tip.y + r1 * 0.6, tip.z); parts.push(h); parts.push(boxG(46, 6, 36, PAL.stone, tip.x - 6, tip.y + r1 * 0.55, tip.z)); }
-  if (withLeaves) for (let i = 0; i < 4; i++) { const s = 0.45 + i * 0.15; const c = curve.getPointAt(s); const g = new THREE.IcosahedronGeometry(1, 1); const sz = 40 + 25 * rng(); g.scale(sz, sz * 0.32, sz * 0.8); g.translate(c.x + (rng() - 0.5) * 20, c.y + lerp(r0, r1, s) + sz * 0.15, c.z + (rng() - 0.5) * 50); parts.push(setColors(g, (v, n, o) => o.copy(PAL.pine).lerp(PAL.pineHi, clamp(n.y)))); }
-  return { geo: merge(parts), tip, lanterns: [0.3, 0.55, 0.8].map(s => { const c = curve.getPointAt(s); return V3(c.x, c.y - lerp(r0, r1, s) - 9, c.z); }) };
+// branch template: a thick gnarled limb rising at the end (九欘), a stair with vermilion rails along its top, a twig branching
+// off mid-way, a vermilion-roofed hall at the tip, jade canopies glowing at both ends, lanterns underneath
+function canopyG(c, sz, rng) {
+  const parts = [];
+  for (let i = 0; i < 6; i++) { const g = new THREE.IcosahedronGeometry(1, 2); const s = sz * (0.55 + 0.45 * rng()); g.scale(s, s * 0.42, s * 0.85); g.rotateY(rng() * 6.28);
+    g.translate(c.x + (rng() - 0.5) * sz * 1.1, c.y + (rng() - 0.2) * sz * 0.45, c.z + (rng() - 0.5) * sz * 1.1);
+    parts.push(setColors(g, (v, n, o) => { o.copy(col(0x2f8a6c)).lerp(col(0x9fe6c2), clamp(n.y * 0.8 + 0.1 + (noise3(v.x / 9, v.y / 9, v.z / 9) - 0.5) * 0.6)); })); }
+  return merge(parts);
 }
-const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
+function branchTemplate(L, seed) {
+  const R = TRUNK.R; const rng = mulberry32(seed);
+  const rise = L * (0.3 + 0.12 * rng()); const sway = (rng() - 0.5) * L * 0.25;
+  const pts = [V3(R * 0.5, -30, 0), V3(R + L * 0.25, 10, sway * 0.2), V3(R + L * 0.6, rise * 0.25, sway * 0.7), V3(R + L * 0.88, rise * 0.7, sway), V3(R + L, rise, sway * 0.9)];
+  const r0 = 100 + 18 * rng(), r1 = 26;
+  const rf = s => lerp(r0, r1, Math.pow(s, 0.75)) * (s < 0.06 ? 1 + (0.06 - s) * 9 : 1);
+  const barkCol = (v, n, o) => { o.copy(PAL.bark).lerp(PAL.barkHi, clamp(0.5 + n.y * 0.5)); o.lerp(PAL.moss, clamp(n.y * 1.5 - 0.45) * 0.85); o.lerp(col(0x2b2c28), clamp(-n.y) * 0.3); };
+  const parts = [gnarlTube(pts, rf, 44, 16, seed, barkCol)];
+  const curve = new THREE.CatmullRomCurve3(pts);
+  // twig
+  const s0 = 0.5 + 0.1 * rng(); const tp = curve.getPointAt(s0); const tdir = V3(0.3, 0.9, (rng() - 0.5) * 1.2).normalize();
+  const twigPts = [tp.clone(), tp.clone().addScaledVector(tdir, L * 0.18).add(V3(0, 0, 0)), tp.clone().addScaledVector(tdir, L * 0.36).add(V3(L * 0.08, 0, 0))];
+  parts.push(gnarlTube(twigPts, s => lerp(rf(s0) * 0.5, 12, s), 14, 10, seed + 5, barkCol));
+  const twigEnd = twigPts[2];
+  // stair + rails along the top of the main limb
+  const stairPts = [];
+  for (let i = 3; i <= 40; i++) {
+    const s = i / 44; const c = curve.getPointAt(s); const rr = rf(s) * 0.93; const tan = curve.getTangentAt(s);
+    const yaw = Math.atan2(-tan.z, tan.x);
+    parts.push(boxG(12, 2.4, 14, PAL.stone, c.x, c.y + rr + 1.2, c.z, yaw));
+    stairPts.push(V3(c.x, c.y + rr + 3, c.z));
+    if (i % 2 === 0) for (const zz of [-7.5, 7.5]) { const off = V3(-Math.sin(yaw) * 0, 0, 0); parts.push(boxG(1.5, 7, 1.5, PAL.verm, c.x + Math.sin(yaw) * zz, c.y + rr + 5, c.z + Math.cos(yaw) * zz)); }
+  }
+  for (const zz of [-7.5, 7.5]) { const rp = []; for (let i = 3; i <= 40; i += 3) { const s = i / 44; const c = curve.getPointAt(s); const tan = curve.getTangentAt(s); const yaw = Math.atan2(-tan.z, tan.x); rp.push(V3(c.x + Math.sin(yaw) * zz, c.y + rf(s) * 0.93 + 8.5, c.z + Math.cos(yaw) * zz)); }
+    parts.push(solid(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(rp), 30, 0.9, 4, false), PAL.verm)); }
+  // tip: platform, hall (vermilion roof, gold ridge), jade canopy behind; canopy on the twig
+  const tip = curve.getPointAt(1);
+  parts.push(boxG(64, 8, 50, PAL.stone, tip.x - 8, tip.y + r1 * 0.6, tip.z));
+  const h = hallG(40, 28, 15, { double: true, roof: rng() < 0.6 ? col(0xb2402a) : PAL.roofGlaze }); h.translate(tip.x - 8, tip.y + r1 * 0.6 + 4, tip.z); parts.push(h);
+  const canopies = [canopyG(tip.clone().add(V3(40, 50, 0)), 120, rng), canopyG(twigEnd.clone().add(V3(0, 30, 0)), 100, rng)];
+  const lanterns = [0.25, 0.45, 0.65, 0.85].map(s => { const c = curve.getPointAt(s); return V3(c.x, c.y - rf(s) - 10, c.z); });
+  lanterns.push(tip.clone().add(V3(-30, -6, 22)), tip.clone().add(V3(-30, -6, -22)), tip.clone().add(V3(14, -6, 22)), tip.clone().add(V3(14, -6, -22)));
+  return { geo: merge(parts), canopy: merge(canopies), tip, lanterns, stairPts };
+}
 
 export function buildJianmu() {
   const { R, y0, breakY, y1, rungStep, rungY0 } = TRUNK;
   const lower = new THREE.Group(), upper = new THREE.Group();
   lower.add(new THREE.Mesh(trunkGeom(y0, breakY, true, false, 11), TRUNK_MAT));
   upper.add(new THREE.Mesh(trunkGeom(breakY, y1, false, true, 12), TRUNK_MAT));
-  // intact sleeve over the break seam (hidden when the trunk snaps)
-  const sleeve = new THREE.Mesh(trunkGeom(breakY - 280, breakY + 280, false, false, 13), TRUNK_MAT);
+  const sleeve = new THREE.Mesh(trunkGeom(breakY - 300, breakY + 300, false, false, 13), TRUNK_MAT);
   sleeve.scale.set(1.012, 1, 1.012); lower.add(sleeve);
   const splinters = new THREE.Group(); lower.add(splinters); splinters.visible = false;
-  // splinters on the stump (inside the upper part until the break)
   {
-    const rng = mulberry32(77); const parts = [];
-    for (let i = 0; i < 34; i++) { const a = rng() * 6.28, rr = R * (0.55 + 0.45 * rng()); const h = 60 + 260 * rng() * rng(); const g = new THREE.ConeGeometry(10 + 20 * rng(), h, 5); g.rotateZ((rng() - 0.5) * 0.5); g.rotateX((rng() - 0.5) * 0.5); g.translate(Math.cos(a) * rr, breakY - 60 + h / 2, Math.sin(a) * rr); parts.push(solid(g, col(0xc9b48c).lerp(col(0xeadbb8), rng()))); }
+    const rng = mulberry32(77); const parts = []; const o = axisOff(breakY);
+    for (let i = 0; i < 40; i++) { const a = rng() * 6.28, rr = R * (0.5 + 0.5 * rng()); const h = 80 + 300 * rng() * rng(); const g = new THREE.ConeGeometry(14 + 26 * rng(), h, 5); g.rotateZ((rng() - 0.5) * 0.5); g.rotateX((rng() - 0.5) * 0.5); g.translate(o.x + Math.cos(a) * rr, breakY - 80 + h / 2, o.z + Math.sin(a) * rr); parts.push(solid(g, col(0xc9b48c).lerp(col(0xeadbb8), rng()))); }
     splinters.add(new THREE.Mesh(merge(parts), TRUNK_MAT));
   }
-  const tpls = [0, 1, 2, 3, 4, 5].map(i => branchTemplate(300 + 70 * (i % 3), 100 + i, true, false));
-  const levels = []; for (let y = rungY0; y < y1 - 300; y += rungStep) levels.push(y);
+  const tpls = [0, 1, 2, 3, 4].map(i => branchTemplate(470 + 90 * (i % 3), 100 + i));
+  const levels = []; for (let y = rungY0; y < y1 - 400; y += rungStep) levels.push(y);
   const lists = { lower: tpls.map(() => []), upper: tpls.map(() => []) };
   const lantern = { lower: [], upper: [] };
   const rungInfo = [];
   levels.forEach((y, k) => {
-    const key = y < breakY ? 'lower' : 'upper';
-    const a0 = k * (Math.PI + 0.62) + 0.18 * Math.sin(k * 1.7);
-    for (const side of [0]) {
-      const ang = a0;
-      const ti = (k * 2 + side * 3) % tpls.length; const T = tpls[ti];
-      const m = new THREE.Matrix4().compose(V3(0, y, 0), new THREE.Quaternion().setFromAxisAngle(V3(0, 1, 0), ang), V3(1, 1, 1));
-      lists[key][ti].push(m);
-      for (const lp of T.lanterns) lantern[key].push(new THREE.Matrix4().compose(lp.clone().applyMatrix4(m), new THREE.Quaternion(), V3(4.5, 6, 4.5)));
-      rungInfo.push({ y, end: T.tip.clone().applyMatrix4(m), upper: key === 'upper', ang });
-    }
+    const key = y < breakY - 120 ? 'lower' : 'upper';
+    const ang = k * (Math.PI + 0.55) + 0.2 * Math.sin(k * 1.7);
+    const ti = (k * 3) % tpls.length; const T = tpls[ti];
+    const o = axisOff(y);
+    const m = new THREE.Matrix4().compose(V3(o.x, y, o.z), new THREE.Quaternion().setFromAxisAngle(V3(0, 1, 0), ang), V3(1, 1, 1));
+    lists[key][ti].push(m);
+    for (const lp of T.lanterns) lantern[key].push(new THREE.Matrix4().compose(lp.clone().applyMatrix4(m), new THREE.Quaternion(), V3(5, 7, 5)));
+    rungInfo.push({ y, end: T.tip.clone().applyMatrix4(m), upper: key === 'upper', ang, m, ti });
   });
-  const lanternMat = glowMat(0xffb35c, { k: 1.5 });
+  const lanternMat = glowMat(0xffb35c, { k: 1.6 });
   const lanternG = new THREE.SphereGeometry(1, 8, 6);
   for (const [key, grp] of [['lower', lower], ['upper', upper]]) {
-    tpls.forEach((T, i) => { const L = lists[key][i]; if (!L.length) return; const im = new THREE.InstancedMesh(T.geo, BRANCH_MAT, L.length); L.forEach((m, j) => im.setMatrixAt(j, m)); im.frustumCulled = false; grp.add(im); });
+    tpls.forEach((T, i) => { const L = lists[key][i]; if (!L.length) return;
+      const im = new THREE.InstancedMesh(T.geo, BRANCH_MAT, L.length); L.forEach((m, j) => im.setMatrixAt(j, m)); im.frustumCulled = false; grp.add(im);
+      const ic = new THREE.InstancedMesh(T.canopy, CANOPY_MAT, L.length); L.forEach((m, j) => ic.setMatrixAt(j, m)); ic.frustumCulled = false; grp.add(ic); });
     const LL = lantern[key]; const im = new THREE.InstancedMesh(lanternG, lanternMat, LL.length); LL.forEach((m, j) => im.setMatrixAt(j, m)); im.frustumCulled = false; grp.add(im);
   }
-  // spiral stair (栈道) around the trunk with a vermilion railing
-  const SR = R + 22, pitch = 540;
+  // spiral stair (栈道) wrapping the trunk with a vermilion railing
+  const pitch = 620;
+  const stairAt = (y, dr = 0) => { const a = (y / pitch) * Math.PI * 2; const o = axisOff(y); const r = trunkRadius(a, y) + 14 + dr; return V3(o.x + Math.cos(a) * r, y, o.z + Math.sin(a) * r); };
   const stair = (ya, yb) => {
-    const turns = (yb - ya) / pitch, N = Math.ceil(turns * 220); const pos = [], cols = [], idx = [];
+    const turns = (yb - ya) / pitch, N = Math.ceil(turns * 260); const pos = [], cols = [], idx = [];
     for (let i = 0; i <= N; i++) {
-      const k = i / N, y = lerp(ya, yb, k), a = (y / pitch) * Math.PI * 2;
-      const ri = SR - 14, ro = SR + 6;
-      for (const [r, yy, c] of [[ri, y, PAL.stone], [ro, y, PAL.stone], [ro, y + 5, PAL.verm], [ro + 1.5, y + 5, PAL.verm]]) { pos.push(Math.cos(a) * r, yy, Math.sin(a) * r); cols.push(c.r, c.g, c.b); }
+      const y = lerp(ya, yb, i / N); const pi = stairAt(y, -12), po = stairAt(y, 8);
+      for (const [p, dy, c] of [[pi, 0, PAL.stone], [po, 0, PAL.stone], [po, 6, PAL.verm], [po.clone().add(V3(0, 0, 0)).multiplyScalar(1), 7.5, PAL.verm]]) { pos.push(p.x, p.y + dy, p.z); cols.push(c.r, c.g, c.b); }
       if (i < N) { const b = i * 4; idx.push(b, b + 4, b + 1, b + 1, b + 4, b + 5, b + 2, b + 6, b + 3, b + 3, b + 6, b + 7, b + 1, b + 5, b + 2, b + 2, b + 5, b + 6); }
     }
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3)); g.setIndex(idx); g.computeVertexNormals();
     return new THREE.Mesh(g, paintMat({ brush: 0.05, rim: 0.3, side: THREE.DoubleSide }));
   };
-  lower.add(stair(-100, breakY - 80)); upper.add(stair(breakY + 80, y1 - 400));
-  return { lower, upper, sleeve, splinters, levels, rungInfo, stairPoint: (y) => { const a = (y / pitch) * Math.PI * 2; return V3(Math.cos(a) * (SR - 4), y + 3, Math.sin(a) * (SR - 4)); } };
+  lower.add(stair(-100, breakY - 100)); upper.add(stair(breakY + 100, y1 - 500));
+  return { lower, upper, sleeve, splinters, levels, rungInfo, tpls, stairPoint: (y) => stairAt(y, -2).add(V3(0, 4, 0)) };
 }
+export const CANOPY_MAT = paintMat({ brushScale: 0.08, brush: 0.18, rim: 1.4, wrap: 0.7, emissive: 0.16 });
 export const BRANCH_MAT = paintMat({ brushScale: 0.04, stretch: [0.5, 1.5, 0.5], brush: 0.22, rim: 0.55, wrap: 0.4 });
 
 // ─────────────────────────────── pillar peaks (张家界 / 黄山) rising from the cloud sea
@@ -322,17 +357,16 @@ export function peakGeom(seed, r, h) {
 }
 export function buildPeaks(seed, n, rMin, rMax, center = new THREE.Vector3(), opts = {}) {
   const rng = mulberry32(seed); const grp = new THREE.Group();
-  const geos = []; for (let i = 0; i < 6; i++) geos.push(peakGeom(seed + i * 31, 1, 1));
-  // instanced by template with non-uniform scale (width, height)
-  const lists = geos.map(() => []);
+  const tpl = []; for (let i = 0; i < 5; i++) tpl.push(karstG(seed * 7 + i, 1, 1.0, false).geo);
+  // unit templates: radius 1, height 1 (+ base below); scale per instance (w, h, w)
+  const lists = tpl.map(() => []);
   for (let i = 0; i < n; i++) {
     const a = (opts.a0 ?? 0) + rng() * (opts.arc ?? Math.PI * 2), d = lerp(rMin, rMax, Math.sqrt(rng()));
-    const w = (opts.wMin ?? 70) + rng() * (opts.wVar ?? 220), h = (opts.hMin ?? 250) + rng() * rng() * (opts.hVar ?? 1500);
+    const wd = (opts.wMin ?? 70) + rng() * (opts.wVar ?? 220), h = (opts.hMin ?? 250) + rng() * rng() * (opts.hVar ?? 1500);
     const x = center.x + Math.cos(a) * d, z = center.z + Math.sin(a) * d;
-    lists[i % geos.length].push(new THREE.Matrix4().compose(new THREE.Vector3(x, (opts.y ?? -300), z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rng() * 6.28), new THREE.Vector3(w, h + 300, w)));
+    lists[i % tpl.length].push(new THREE.Matrix4().compose(new THREE.Vector3(x, (opts.y ?? -60), z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rng() * 6.28), new THREE.Vector3(wd, h, wd)));
   }
-  // NB: geometry is unit radius / unit height; normals are approximately right under non-uniform scale for these shapes
-  geos.forEach((g, i) => { if (!lists[i].length) return; const im = new THREE.InstancedMesh(g, PEAK_MAT, lists[i].length); lists[i].forEach((m, j) => im.setMatrixAt(j, m)); im.frustumCulled = false; grp.add(im); });
+  tpl.forEach((g, i) => { if (!lists[i].length) return; const im = new THREE.InstancedMesh(g, PEAK_MAT, lists[i].length); lists[i].forEach((m, j) => im.setMatrixAt(j, m)); im.frustumCulled = false; grp.add(im); });
   return grp;
 }
 

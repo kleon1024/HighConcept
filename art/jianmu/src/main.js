@@ -4,7 +4,7 @@ THREE.ColorManagement.enabled = false;
 import { W, H } from './util.js';
 import { ENV, skyMesh } from './materials.js';
 import { bakeCloudAtlas, CloudField, cloudSea } from './clouds.js';
-import { Post } from './post.js';
+import { Post, GRADE } from './post.js';
 import { buildWorld } from './scene.js';
 import { applyShot } from './shots.js';
 
@@ -30,6 +30,12 @@ window.renderAt = (t) => {
   camera.updateMatrixWorld();
   const dir = new THREE.Vector3(); camera.getWorldDirection(dir);
   world.update(t, camera, dir, st);
+  { // sun screen position for god rays (fade when the sun is behind the camera)
+    const sp = camera.position.clone().addScaledVector(ENV.uSunDir.value, 40000).project(camera);
+    GRADE.uSunUV.value.set(sp.x * 0.5 + 0.5, sp.y * 0.5 + 0.5);
+    const facing = dir.dot(ENV.uSunDir.value);
+    GRADE.uRays.value = (st.rays ?? 0) * Math.max(0, Math.min(1, (facing + 0.15) / 0.45));
+  }
   post.render(r => {
     world.sky.position.copy(camera.position);
     r.render(world.scene, camera);

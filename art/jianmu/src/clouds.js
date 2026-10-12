@@ -14,55 +14,44 @@ const COLS = 4, ROWS = 4;   // 16 cells: 0-7 cumulus, 8-11 long mist bands, 12-1
 const BAKE_FS = /* glsl */`
 uniform float uCell; varying vec2 vUv;
 ${GLSL_NOISE}
-float h1(float n){ return fract(sin(n * 127.1) * 43758.5453); }
-// cumulus heightfield: max of sphere caps along a flat base, eroded by fbm
+float billow(vec2 p, int oct){ float s = 0.0, a = 0.5; for (int i = 0; i < 6; i++){ if (i >= oct) break; s += a * abs(vnoise(p) * 2.0 - 1.0); p = p * 2.07 + vec2(1.7, 9.2); a *= 0.5; } return s; }
+// cumulus heightfield: a soft dome envelope with cauliflower billows, flat base
 float cumH(vec2 uv, float seed){
   vec2 p = vec2(uv.x * 2.0, uv.y);
-  float baseY = 0.22; float h = 0.0;
-  for (int i = 0; i < 11; i++){
-    float fi = float(i);
-    float cx = 0.18 + 1.64 * h1(seed + fi * 3.7);
-    float bell = 1.0 - pow((cx - 1.0) / 0.85, 2.0);
-    float r = (0.07 + 0.17 * h1(seed + fi * 5.3)) * (0.45 + 0.75 * max(bell, 0.0));
-    float cy = baseY + r * (0.35 + 0.5 * h1(seed + fi * 9.1)) * (0.6 + 0.6 * bell);
-    vec2 d = p - vec2(cx, cy);
-    h = max(h, sqrt(max(r * r - dot(d, d), 0.0)));
-  }
-  h -= (fbm2(p * 7.0 + seed, 4) - 0.5) * 0.08 + (fbm2(p * 16.0 + seed * 2.0, 3) - 0.5) * 0.02;
-  h *= smoothstep(baseY - 0.035, baseY + 0.05, uv.y);
+  vec2 w = vec2(fbm2(p * 1.6 + seed, 3), fbm2(p * 1.6 + seed + 7.1, 3)) - 0.5;
+  vec2 q = p + w * 0.35;
+  float base = 0.2;
+  float bump = 0.0;
+  for (int i = 0; i < 5; i++){ float fi = float(i); float cx = 0.35 + 1.3 * fract(sin(seed * 3.1 + fi * 12.9) * 4375.5); float r = 0.18 + 0.2 * fract(sin(seed * 7.7 + fi * 3.3) * 2375.1);
+    bump = max(bump, r - length((q - vec2(cx, base + r * 0.35)) * vec2(0.85, 1.0))); }
+  float env = 0.42 - length((q - vec2(1.0, base)) * vec2(0.55, 1.35));
+  float h = max(env, bump * 0.9) + (billow(q * 3.2 + seed, 5) - 0.35) * 0.16;
+  h *= smoothstep(base - 0.03, base + 0.07, uv.y);
   return h;
 }
-float bandD(vec2 uv, float seed){
-  vec2 c = (uv - 0.5) * vec2(1.0, 2.0);
-  float e = 1.0 - smoothstep(0.25, 1.0, length(c * vec2(2.1, 2.4)) + (fbm2(uv * vec2(3.0, 6.0) + seed, 4) - 0.5) * 0.6);
-  return e * (0.75 + 0.35 * fbm2(uv * vec2(4.0, 10.0) + seed * 2.0, 3));
+float bandH(vec2 uv, float seed){
+  vec2 p = vec2(uv.x * 2.0, uv.y);
+  float top = 0.55 + (billow(vec2(p.x * 2.5 + seed, seed), 4) - 0.35) * 0.35 + (fbm2(vec2(p.x * 0.8, seed), 3) - 0.5) * 0.3;
+  float bot = 0.3 + (fbm2(vec2(p.x * 1.5 + seed, 3.0), 3) - 0.5) * 0.15;
+  float h = min(top - uv.y, uv.y - bot) * 1.4 + (billow(p * 4.0 + seed, 4) - 0.35) * 0.08;
+  return h * smoothstep(0.0, 0.25, uv.x) * smoothstep(1.0, 0.75, uv.x);
 }
-float wispD(vec2 uv, float seed){
+float wispH(vec2 uv, float seed){
   vec2 c = (uv - 0.5) * vec2(1.0, 2.0);
   float e = 1.0 - smoothstep(0.2, 1.0, length(c * vec2(2.0, 3.2)));
-  float st = fbm2(vec2(uv.x * 3.0, uv.y * 18.0) + vec2(seed, 0.0) + vec2(fbm2(uv * 4.0 + seed, 3) * 1.2, 0.0), 5);
-  return e * smoothstep(0.35, 0.75, st) * 1.3;
+  float st = fbm2(vec2(uv.x * 3.0, uv.y * 14.0) + vec2(seed, 0.0) + vec2(fbm2(uv * 4.0 + seed, 3) * 1.2, 0.0), 5);
+  return (e * smoothstep(0.35, 0.75, st) * 1.2 - 0.1) * 0.25;
 }
+float H(vec2 uv, float kind, float seed){ return kind < 0.5 ? cumH(uv, seed) : (kind < 1.5 ? bandH(uv, seed) : wispH(uv, seed)); }
 void main(){
-  float cell = uCell; float seed = cell * 7.13 + 1.7;
-  float a, light, thick;
-  if (cell < 7.5) {
-    float e = 0.003;
-    float h = cumH(vUv, seed), hx = cumH(vUv + vec2(e, 0.0), seed), hy = cumH(vUv + vec2(0.0, e), seed);
-    vec3 n = normalize(vec3(-(hx - h) / e * 0.5, -(hy - h) / e, 1.0));
-    vec3 L = normalize(vec3(-0.45, 0.8, 0.55));
-    light = clamp(0.5 + 0.5 * dot(n, L), 0.0, 1.0); light = mix(light, 0.5 + 0.5 * vUv.y, 0.3);
-    light *= 0.7 + 0.3 * smoothstep(0.2, 0.55, vUv.y);
-    float fr = fbm2(vec2(vUv.x * 2.0, vUv.y) * 6.0 + seed * 1.7, 4);
-    a = smoothstep(-0.02, 0.09, h + (fr - 0.5) * 0.06) * 0.97;
-    a *= smoothstep(0.0, 0.08, vUv.x) * smoothstep(1.0, 0.92, vUv.x) * smoothstep(1.0, 0.85, vUv.y);
-    thick = clamp(h * 5.0, 0.0, 1.0);
-  } else if (cell < 11.5) {
-    float d = bandD(vUv, seed); a = smoothstep(0.0, 0.8, d); light = clamp(0.55 + (vUv.y - 0.5) * 1.1 + (d - 0.5) * 0.2, 0.0, 1.0); thick = d;
-  } else {
-    float d = wispD(vUv, seed); a = clamp(d, 0.0, 1.0) * 0.85; light = 0.7 + 0.3 * vUv.y; thick = d * 0.5;
-  }
-  gl_FragColor = vec4(a, light, thick, 1.0);
+  float cell = uCell; float kind = cell < 7.5 ? 0.0 : (cell < 11.5 ? 1.0 : 2.0); float seed = cell * 7.13 + 1.7;
+  float e = 0.004;
+  float h = H(vUv, kind, seed), hx = H(vUv + vec2(e, 0.0), kind, seed), hy = H(vUv + vec2(0.0, e), kind, seed);
+  vec2 g = vec2(hx - h, hy - h) / e;
+  vec3 n = normalize(vec3(-g.x * 0.25, -g.y * 0.5, 1.0));
+  float a = kind < 1.5 ? smoothstep(-0.005, 0.05, h) : clamp(h * 6.0, 0.0, 0.9);
+  float thick = clamp(h * 4.0, 0.0, 1.0);
+  gl_FragColor = vec4(a, n.x * 0.5 + 0.5, n.y * 0.5 + 0.5, thick);
 }`;
 
 export function bakeCloudAtlas(renderer) {
@@ -89,7 +78,7 @@ export function bakeCloudAtlas(renderer) {
 const VS_SPRITE = /* glsl */`
 attribute vec4 aSprite;   // cell, opacity, flipX, mode (0 = upright billboard, 1 = flat horizontal)
 attribute vec3 aTint;
-varying vec2 vUv; varying vec3 vWP; varying float vOp; varying vec3 vTint;
+varying vec2 vUv; varying vec3 vWP; varying float vOp; varying vec3 vTint; varying vec3 vR, vU, vF; varying float vY;
 uniform vec3 uCamPos;
 void main(){
   vec3 ctr = (modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
@@ -101,9 +90,12 @@ void main(){
     vec3 up = normalize(cross(toCam, right));
     up = normalize(mix(vec3(0.0, 1.0, 0.0), up, 0.35));
     wp = ctr + right * position.x * sw + up * position.y * sh;
+    vR = right; vU = up; vF = normalize(toCam);
   } else {
     wp = ctr + vec3(position.x * sw, 0.0, -position.y * sh);
+    vR = vec3(1.0, 0.0, 0.0); vU = vec3(0.0, 0.0, -1.0); vF = vec3(0.0, 1.0, 0.0);
   }
+  vY = uv.y;
   vWP = wp; vOp = aSprite.y; vTint = aTint;
   float cell = aSprite.x; vec2 uv0 = vec2(mod(cell, 4.0), floor(cell / 4.0)) / 4.0;
   vec2 u = uv; if (aSprite.z > 0.5) u.x = 1.0 - u.x;
@@ -112,19 +104,25 @@ void main(){
 }`;
 const FS_SPRITE = /* glsl */`
 uniform sampler2D uAtlas; uniform vec3 uLit, uShade, uCloudRim, uSunCol, uFlashCol, uFlashPos; uniform float uCloudDark;
-varying vec2 vUv; varying vec3 vWP; varying float vOp; varying vec3 vTint;
+varying vec2 vUv; varying vec3 vWP; varying float vOp; varying vec3 vTint; varying vec3 vR, vU, vF; varying float vY;
 ${GLSL_ATMO}
 void main(){
   vec4 t = texture2D(uAtlas, vUv);
   float a = t.r * vOp; if (a < 0.003) discard;
-  vec3 V = normalize(vWP - uCamPos);
-  float back = pow(max(dot(V, uSunDir), 0.0), 3.0);
-  vec3 col = mix(uShade, uLit, t.g) * vTint;
-  col += uCloudRim * back * (1.0 - t.b) * 0.35 * smoothstep(0.0, 0.5, t.r);   // faint silver lining toward the sun
+  vec2 n2 = t.gb * 2.0 - 1.0; vec3 n = vec3(n2, sqrt(max(0.0, 1.0 - dot(n2, n2))));
+  vec3 S = vec3(dot(uSunDir, vR), dot(uSunDir, vU), dot(uSunDir, vF));
+  float lam = dot(n, normalize(S + vec3(0.0, 0.0, 0.25)));
+  float lit = smoothstep(-0.35, 0.75, lam);
+  float ao = 0.72 + 0.28 * smoothstep(0.15, 0.6, vY);
+  vec3 col = mix(uShade, uLit, lit) * ao * vTint;
+  // backlit: thin edges glow gold (silver lining); front-lit: crisp warm tops
+  float back = clamp(-S.z, 0.0, 1.0);
+  float edge = pow(1.0 - t.a, 2.0) * smoothstep(0.02, 0.5, t.r);
+  col += uCloudRim * (back * 1.6 + 0.25) * edge * (0.5 + 0.5 * smoothstep(-0.2, 0.6, dot(n2, normalize(S.xy + 1e-4))));
   vec3 L = uFlashPos - vWP; float dl = length(L);
-  col += uFlashCol * (0.4 + 0.6 * t.g) * (1400.0 / (dl + 1400.0));
+  col += uFlashCol * (0.4 + 0.6 * lit) * (1400.0 / (dl + 1400.0));
   float fk; col = atmo(col, vWP, fk);
-  gl_FragColor = vec4(col * a, a);                                 // premultiplied
+  gl_FragColor = vec4(col * a, a);
 }`;
 
 export class CloudField {
@@ -210,7 +208,9 @@ void main(){
   vec3 col = mix(uShade, uLit, light);
   col *= mix(vec3(1.0), uSunCol * 0.35 + 0.75, light * 0.5);
   vec3 V = normalize(vWP - uCamPos);
-  col += uCloudRim * pow(max(dot(V, uSunDir), 0.0), 4.0) * 0.3 * (1.0 - light);
+  float rimF = pow(1.0 - clamp(dot(N, -V), 0.0, 1.0), 3.0) * (0.25 + 0.75 * clamp(dot(V, uSunDir) * 0.5 + 0.5, 0.0, 1.0));
+  col += uCloudRim * rimF * 1.1 * smoothstep(0.45, 0.95, h) * smoothstep(-0.2, 0.4, ndl + 0.3);
+  col += uCloudRim * pow(max(dot(V, uSunDir), 0.0), 6.0) * 0.25;
   vec3 L = uFlashPos - vWP; col += uFlashCol * 0.6 * (2000.0 / (length(L) + 2000.0));
   float below = step(vWP.y, uCamPos.y) * 2.0 - 1.0;          // seen from above (+1) or below (-1)
   if (below < 0.0) { col = mix(uShade, uLit, 0.25 + 0.5 * h) * (0.8 + 0.2 * light); }

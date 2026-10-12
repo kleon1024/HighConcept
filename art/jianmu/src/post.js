@@ -13,6 +13,7 @@ export const GRADE = {
   uSat: { value: 1.05 }, uContrast: { value: 1.08 }, uChroma: { value: 0.0016 }, uVignette: { value: 0.22 }, uGrain: { value: 0.035 }, uPaper: { value: 0.035 },
   uFlash: { value: new THREE.Vector4(1, 0.95, 0.85, 0) },  // rgb + amount (additive veil)
   uFrame: { value: 0 }, uFade: { value: 0 },              // fade to black amount
+  uRays: { value: 0.0 }, uSunUV: { value: new THREE.Vector2(0.5, 1.2) }, uRayCol: { value: new THREE.Color(1, 0.85, 0.6) }, uRayThresh: { value: 0.8 },
 };
 
 export class Post {
@@ -22,6 +23,15 @@ export class Post {
     this.rt = new THREE.WebGLRenderTarget(W, H, { type: THREE.HalfFloatType, samples: 4, depthBuffer: true });
     this.b1 = new THREE.WebGLRenderTarget(W / 4, H / 4, opt); this.b1b = new THREE.WebGLRenderTarget(W / 4, H / 4, opt);
     this.b2 = new THREE.WebGLRenderTarget(W / 12, H / 12, opt); this.b2b = new THREE.WebGLRenderTarget(W / 12, H / 12, opt);
+    this.r1 = new THREE.WebGLRenderTarget(W / 4, H / 4, opt); this.r2 = new THREE.WebGLRenderTarget(W / 4, H / 4, opt);
+    this.mRayMask = new THREE.ShaderMaterial({ uniforms: { tSrc: { value: null }, uRayThresh: GRADE.uRayThresh }, vertexShader: VS,
+      fragmentShader: `uniform sampler2D tSrc; uniform float uRayThresh; varying vec2 vUv;
+        void main(){ vec3 c = texture2D(tSrc, vUv).rgb; float l = dot(c, vec3(0.3, 0.59, 0.11)); gl_FragColor = vec4(c * smoothstep(uRayThresh, uRayThresh + 0.25, l), 1.0); }` });
+    this.mRay = new THREE.ShaderMaterial({ uniforms: { tSrc: { value: null }, uSunUV: GRADE.uSunUV, uStep: { value: 1 } }, vertexShader: VS,
+      fragmentShader: `uniform sampler2D tSrc; uniform vec2 uSunUV; uniform float uStep; varying vec2 vUv;
+        void main(){ vec2 d = (uSunUV - vUv) * uStep / 32.0; vec2 uv = vUv; vec3 acc = vec3(0.0); float w = 1.0, ws = 0.0;
+          for (int i = 0; i < 32; i++) { vec2 q = clamp(uv, 0.0, 1.0); acc += texture2D(tSrc, q).rgb * w; ws += w; w *= 0.965; uv += d; }
+          gl_FragColor = vec4(acc / ws, 1.0); }` });
     this.mBright = new THREE.ShaderMaterial({ uniforms: { tSrc: { value: null }, uThresh: GRADE.uBloomThresh, uTexel: { value: new THREE.Vector2(1 / W, 1 / H) } }, vertexShader: VS,
       fragmentShader: `uniform sampler2D tSrc; uniform float uThresh; uniform vec2 uTexel; varying vec2 vUv;
         void main(){ vec3 c = vec3(0.0); for (int i=0;i<4;i++){ vec2 o = vec2(float(i%2)-0.5, float(i/2)-0.5) * uTexel * 2.0; c += texture2D(tSrc, vUv + o).rgb; } c *= 0.25;
@@ -35,9 +45,9 @@ export class Post {
     this.mCopy = new THREE.ShaderMaterial({ uniforms: { tSrc: { value: null } }, vertexShader: VS, fragmentShader: 'uniform sampler2D tSrc; varying vec2 vUv; void main(){ gl_FragColor = texture2D(tSrc, vUv); }' });
     this.textTex = null;
     this.mFinal = new THREE.ShaderMaterial({
-      uniforms: { ...GRADE, tScene: { value: this.rt.texture }, tB1: { value: this.b1.texture }, tB2: { value: this.b2.texture }, tText: { value: null }, uHasText: { value: 0 } },
+      uniforms: { ...GRADE, tScene: { value: this.rt.texture }, tB1: { value: this.b1.texture }, tB2: { value: this.b2.texture }, tRay: { value: this.r1.texture }, tText: { value: null }, uHasText: { value: 0 } },
       vertexShader: VS,
-      fragmentShader: `uniform sampler2D tScene, tB1, tB2, tText; uniform float uHasText;
+      fragmentShader: `uniform sampler2D tScene, tB1, tB2, tText, tRay; uniform float uHasText, uRays; uniform vec3 uRayCol;
 uniform float uExposure, uBloom, uSat, uContrast, uChroma, uVignette, uGrain, uPaper, uFrame, uFade; uniform vec3 uLift, uGamma, uGain; uniform vec4 uFlash;
 varying vec2 vUv;
 ${GLSL_NOISE}
@@ -47,6 +57,7 @@ void main(){
   c.r = texture2D(tScene, vUv + off).r; c.g = texture2D(tScene, vUv).g; c.b = texture2D(tScene, vUv - off).b;
   vec3 bl = texture2D(tB1, vUv).rgb * 0.6 + texture2D(tB2, vUv).rgb * 0.9;
   c += bl * uBloom;
+  c += texture2D(tRay, vUv).rgb * uRayCol * uRays;
   c *= uExposure;
   c += uFlash.rgb * uFlash.a;
   // soft highlight shoulder
@@ -95,6 +106,12 @@ void main(){
     // downsample b1 → b2 by copy (bilinear) then blur wide
     this.mCopy.uniforms.tSrc.value = this.b1.texture; r.setRenderTarget(this.b2); r.render(fsqCache(this.mCopy), CAM);
     this.blur(this.b2, this.b2b, 3);
+    if (GRADE.uRays.value > 0.001) {
+      this.mRayMask.uniforms.tSrc.value = this.rt.texture; r.setRenderTarget(this.r2); r.render(fsqCache(this.mRayMask), CAM);
+      this.mRay.uniforms.tSrc.value = this.r2.texture; this.mRay.uniforms.uStep.value = 0.55; r.setRenderTarget(this.r1); r.render(fsqCache(this.mRay), CAM);
+      this.mRay.uniforms.tSrc.value = this.r1.texture; this.mRay.uniforms.uStep.value = 0.18; r.setRenderTarget(this.r2); r.render(fsqCache(this.mRay), CAM);
+      this.mCopy.uniforms.tSrc.value = this.r2.texture; r.setRenderTarget(this.r1); r.render(fsqCache(this.mCopy), CAM);
+    } else { r.setRenderTarget(this.r1); r.clear(); }
     r.setRenderTarget(null); r.render(this.sFinal, CAM);
   }
 }

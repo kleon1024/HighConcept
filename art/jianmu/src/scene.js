@@ -13,20 +13,20 @@ const V = (x, y, z) => new THREE.Vector3(x, y, z);
 
 // floating islands around the trunk: [seed, R, depth, x, y, z, opts]
 export const ISLANDS = [
-  { id: 'i1', seed: 3, R: 150, depth: 330, p: V(-760, 520, 380), halls: [{ x: -0.2, z: 0.1, w: 34, h: 14, double: true }, { x: 0.35, z: -0.3, w: 14, h: 12, pagoda: true, tiers: 5 }], fall: [[0.92, 0.6]] },
-  { id: 'i2', seed: 7, R: 95, depth: 260, p: V(560, 880, -420), halls: [{ x: 0.1, z: 0.1, w: 22, h: 10 }], fall: [[0.95, 2.2]] },
-  { id: 'i3', seed: 11, R: 230, depth: 480, p: V(-420, 1260, -980), halls: [{ x: 0, z: 0, w: 46, h: 18, double: true, glaze: true }, { x: -0.45, z: 0.3, w: 20, h: 10 }, { x: 0.5, z: 0.25, w: 16, h: 13, pagoda: true, tiers: 4 }], fall: [[0.95, 1.0], [0.9, 2.5]] },
-  { id: 'i4', seed: 13, R: 70, depth: 200, p: V(420, 1520, 640), halls: [{ x: 0, z: 0, w: 16, h: 8 }], fall: [] },
-  { id: 'i5', seed: 17, R: 130, depth: 320, p: V(980, 2010, 160), halls: [{ x: 0.1, z: -0.1, w: 28, h: 12, double: true }], fall: [[0.93, 3.5]] },
-  { id: 'i6', seed: 19, R: 64, depth: 190, p: V(-560, 2280, -220), halls: [{ x: 0, z: 0, w: 10, h: 10, pagoda: true, tiers: 3 }], fall: [] },
-  { id: 'i7', seed: 23, R: 170, depth: 380, p: V(-1100, 2900, 700), halls: [{ x: 0.1, z: 0.2, w: 36, h: 15, double: true, glaze: true }], fall: [[0.94, 5.0]] },
-  { id: 'sw', seed: 29, R: 140, depth: 330, p: V(760, 2760, -780), halls: [], fall: [[0.93, 1.3]] },
-  { id: 'i8', seed: 31, R: 110, depth: 280, p: V(300, 3400, 900), halls: [{ x: 0, z: 0, w: 20, h: 10 }], fall: [[0.92, 4.2]] },
-  { id: 'i9', seed: 37, R: 90, depth: 240, p: V(-700, 3700, -600), halls: [{ x: 0, z: 0, w: 12, h: 12, pagoda: true, tiers: 4 }], fall: [] },
+  { id: 'i1', seed: 3, R: 150, depth: 540, p: V(-1596, 520, 798), halls: [{ x: -0.2, z: 0.1, w: 34, h: 14, double: true }, { x: 0.35, z: -0.3, w: 14, h: 12, pagoda: true, tiers: 5 }], fall: [[0.92, 0.6]] },
+  { id: 'i2', seed: 7, R: 95, depth: 342, p: V(1176, 880, -882), halls: [{ x: 0.1, z: 0.1, w: 22, h: 10 }], fall: [[0.95, 2.2]] },
+  { id: 'i3', seed: 11, R: 230, depth: 828, p: V(-882, 1260, -2058), halls: [{ x: 0, z: 0, w: 46, h: 18, double: true, glaze: true }, { x: -0.45, z: 0.3, w: 20, h: 10 }, { x: 0.5, z: 0.25, w: 16, h: 13, pagoda: true, tiers: 4 }], fall: [[0.95, 1.0], [0.9, 2.5]] },
+  { id: 'i4', seed: 13, R: 70, depth: 252, p: V(882, 1520, 1344), halls: [{ x: 0, z: 0, w: 16, h: 8 }], fall: [] },
+  { id: 'i5', seed: 17, R: 130, depth: 468, p: V(2058, 2010, 336), halls: [{ x: 0.1, z: -0.1, w: 28, h: 12, double: true }], fall: [[0.93, 3.5]] },
+  { id: 'i6', seed: 19, R: 64, depth: 230, p: V(-1176, 2280, -462), halls: [{ x: 0, z: 0, w: 10, h: 10, pagoda: true, tiers: 3 }], fall: [] },
+  { id: 'i7', seed: 23, R: 170, depth: 612, p: V(-2310, 2900, 1470), halls: [{ x: 0.1, z: 0.2, w: 36, h: 15, double: true, glaze: true }], fall: [[0.94, 5.0]] },
+  { id: 'sw', seed: 29, R: 140, depth: 504, p: V(1596, 2760, -1638), halls: [], fall: [[0.93, 1.3]] },
+  { id: 'i8', seed: 31, R: 110, depth: 396, p: V(630, 3400, 1890), halls: [{ x: 0, z: 0, w: 20, h: 10 }], fall: [[0.92, 4.2]] },
+  { id: 'i9', seed: 37, R: 90, depth: 324, p: V(-1470, 3700, -1260), halls: [{ x: 0, z: 0, w: 12, h: 12, pagoda: true, tiers: 4 }], fall: [] },
   // lower ring, seen in the hook and from the sect mountain
-  { id: 'l1', seed: 41, R: 120, depth: 300, p: V(1200, 260, 900), halls: [{ x: 0, z: 0, w: 22, h: 10 }], fall: [[0.9, 1.0]] },
-  { id: 'l2', seed: 43, R: 80, depth: 220, p: V(-1500, 380, -400), halls: [], fall: [[0.92, 0.3]] },
-  { id: 'l3', seed: 47, R: 100, depth: 260, p: V(1650, 1150, -1200), halls: [{ x: 0, z: 0, w: 18, h: 10, double: true }], fall: [] },
+  { id: 'l1', seed: 41, R: 120, depth: 432, p: V(1800, 260, 1350), halls: [{ x: 0, z: 0, w: 22, h: 10 }], fall: [[0.9, 1.0]] },
+  { id: 'l2', seed: 43, R: 80, depth: 288, p: V(-2250, 380, -600), halls: [], fall: [[0.92, 0.3]] },
+  { id: 'l3', seed: 47, R: 100, depth: 360, p: V(2475, 1150, -1800), halls: [{ x: 0, z: 0, w: 18, h: 10, double: true }], fall: [] },
 ];
 // the sect mountain where she stands (S4/S5): a large floating massif far from the trunk, cliff edge facing the trunk
 export const SECT = { p: V(2700, 620, 2300), R: 330, depth: 700 };
@@ -52,8 +52,8 @@ export function buildWorld(renderer, atlas) {
   const swordM = new THREE.Mesh(giantSwordG(520), paintMat({ brushScale: 0.05, stretch: [1, 0.3, 1], brush: 0.25, rim: 0.8 }));
   swordM.position.copy(islands.sw.position).add(V(0, 330, 0)); swordM.rotation.set(0.12, 0.6, -0.18); scene.add(swordM);
   // pillar peaks: near ring (with tops in sun) and far rings fading into mist
-  scene.add(buildPeaks(5, 90, 2600, 7500, V(0, 0, 0), { wMin: 60, wVar: 120, hMin: 450, hVar: 1300 }));
-  scene.add(buildPeaks(6, 110, 7500, 18000, V(0, 0, 0), { wMin: 140, wVar: 300, hMin: 600, hVar: 2200 }));
+  scene.add(buildPeaks(5, 80, 3000, 8000, V(0, 0, 0), { wMin: 140, wVar: 220, hMin: 350, hVar: 1100 }));
+  scene.add(buildPeaks(6, 100, 8000, 18000, V(0, 0, 0), { wMin: 300, wVar: 500, hMin: 500, hVar: 1800 }));
   // set-piece pillar peaks with pines (hook foreground, flight)
   const setPeaks = new THREE.Group(); scene.add(setPeaks);
   const sp = (x, z, w2, h2, seed) => { const g = buildPeaks(seed, 1, 0, 0.001, V(x, 0, z), { wMin: w2, wVar: 0.001, hMin: h2, hVar: 0.001, y: -300 }); setPeaks.add(g); };
@@ -108,6 +108,10 @@ export function buildWorld(renderer, atlas) {
     }
     for (let i = 0; i < 4; i++) { const m = new THREE.Mesh(hallG(1, 0.7, 1, { double: true, glaze: true }), GATE_MAT); m.scale.setScalar(900 - i * 120); m.position.set(GX + (i % 2 ? 600 : -500), GY + 900 + i * 700, GZ - 3000 - i * 2200); gates.add(m); }
   }
+  // clouds wrapping the island bases
+  const islandClouds = [];
+  { const r = mulberry32(707); for (const d of ISLANDS) { for (let i = 0; i < 6; i++) { const a = i / 6 * 6.283 + r(); const wd = d.R * (1.6 + 1.2 * r()); islandClouds.push({ p: d.p.clone().add(V(Math.cos(a) * d.R * 0.9, -d.depth * (0.55 + 0.35 * r()), Math.sin(a) * d.R * 0.9)), w: wd, h: wd * 0.45, cell: Math.floor(r() * 8), op: 0.85, flip: r() < 0.5 }); } } }
+  baseClouds.push(...islandClouds);
   // cranes
   const cranes = new Cranes(80); scene.add(cranes.mesh);
   // effects
@@ -117,7 +121,7 @@ export function buildWorld(renderer, atlas) {
   const hero = new Hero(); heroScene.add(hero.group); scene.add(hero.worldSprite);
 
   const world = {
-    scene, heroScene, sky, sea, storm, jm, setPeaks, gates, islands, sect, swordM, chains, snapChains, clouds, cranes, fx, hero, baseClouds, extraClouds: [],
+    scene, heroScene, sky, sea, storm, jm, setPeaks, gates, islandClouds, islands, sect, swordM, chains, snapChains, clouds, cranes, fx, hero, baseClouds, extraClouds: [],
     update(t, cam, dir, st) {
       gates.visible = !!st.gates;
       // chains to the upper trunk vanish once it breaks; the hanging ones whip loose with it

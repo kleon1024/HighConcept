@@ -17,7 +17,7 @@ export const ENV = {
   uFogHeightFall: { value: 400 },
   uFogMax: { value: 1.0 },
   uFogSunPow: { value: 6 },
-  uHighFog: { value: 0.0 }, uHighFogY: { value: 5000 },
+  uHighFog: { value: 0.0 }, uHighFogY: { value: 5000 }, uFogStart: { value: 250 },
   uTime: { value: 0 },
   uFlashCol: { value: C(0x000000) },     // lightning illumination (colour × intensity)
   uFlashPos: { value: new THREE.Vector3() },
@@ -80,9 +80,10 @@ void main(){
   // warm bounce in the shadow side from the cloud sea below
   col += alb * uGroundAmb * 0.25 * smoothstep(0.2, -0.8, N.y);
   // rim light: back-lit edges toward the sun
-  float fres = pow(1.0 - max(dot(N, V), 0.0), 2.5);
-  float back = smoothstep(-0.3, 0.6, dot(-V, uSunDir));
-  col += uRimCol * fres * (0.35 + 0.65 * back) * uRim;
+  float fres = pow(1.0 - max(dot(N, V), 0.0), 2.2);
+  float back = smoothstep(-0.4, 0.7, dot(-V, uSunDir));
+  float sunSide = smoothstep(-0.2, 0.5, dot(N, uSunDir) + 0.3);
+  col += uRimCol * fres * (0.25 + 0.95 * back) * (0.4 + 0.6 * sunSide) * uRim * 1.4;
   // lightning
   vec3 L2 = uFlashPos - vWP; float dl = length(L2);
   col += alb * uFlashCol * (0.35 + 0.65 * max(dot(N, L2 / dl), 0.0)) * (900.0 / (dl + 900.0));

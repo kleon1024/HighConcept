@@ -6,7 +6,7 @@ import { ENV, SKY } from './materials.js';
 import { CLOUD, SEA } from './clouds.js';
 import { GRADE } from './post.js';
 import { Captions } from './text.js';
-import { TRUNK } from './world.js';
+import { TRUNK, axisOff } from './world.js';
 import { SECT } from './scene.js';
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -15,8 +15,8 @@ const caps = new Captions();
 
 // ───────────────────────── light presets (all colours sRGB-ish display values)
 const P = {
-  dawn: { sun: [-0.645, 0.737, -0.229], sunCol: 0xffd9a4, sunK: 1.25, skyAmb: 0x6a8792, groundAmb: 0x5a5f5a, rim: 0xffdc9c, fog: 0xd3e0de, fogSun: 0xfff2d4, fogDen: 0.00011, fogH: 250, fogFall: 600,
-    zen: 0xb2cfcf, hor: 0xf3f3e8, voidc: 0xcfdcd8, glow: 0xfff0c8, lit: 0xfff9ef, shade: 0xaab5c2, crim: 0xfff0c8, seaVoid: 0x93a2b2 },
+  dawn: { sun: [-0.36, 0.42, -0.83], sunCol: 0xffcf8c, sunK: 1.55, skyAmb: 0x3d6874, groundAmb: 0x4a5049, rim: 0xffcf80, fog: 0xd2dcd3, fogSun: 0xf2dfba, fogDen: 0.00008, fogH: 200, fogFall: 500, fogStart: 700,
+    zen: 0x86aeba, hor: 0xe9e4d2, voidc: 0xbccac8, glow: 0xffd08a, lit: 0xfff4e4, shade: 0xa4b5c0, crim: 0xffd48a, seaVoid: 0x93a6b2 },
   cold: { sun: [-0.2, 0.42, -0.88], sunCol: 0xc9d3d2, sunK: 0.75, skyAmb: 0x93abb0, groundAmb: 0x5f6f70, rim: 0xd8e0de, fog: 0xc9d5d4, fogSun: 0xdfe5e2, fogDen: 0.00022, fogH: 250, fogFall: 600,
     zen: 0x8fa7ad, hor: 0xd6dedb, voidc: 0xb3c2c2, glow: 0xe4e8e2, lit: 0xe7ecea, shade: 0x9aabae, crim: 0xe0e6e2, seaVoid: 0x9fb2b4 },
   sect: { sun: [0.55, 0.38, -0.74], sunCol: 0xe6ddc8, sunK: 0.95, skyAmb: 0x7a929a, groundAmb: 0x55605e, rim: 0xf1e2c0, fog: 0xccd8d6, fogSun: 0xe9e6da, fogDen: 0.00019, fogH: 300, fogFall: 700,
@@ -38,13 +38,13 @@ function setEnv(a, b = a, k = 0) {
   ENV.uFogDen.value = lerp(a.fogDen, b.fogDen, k); ENV.uFogHeight.value = lerp(a.fogH, b.fogH, k); ENV.uFogHeightFall.value = lerp(a.fogFall, b.fogFall, k);
   lc(SKY.uZenith, a.zen, b.zen); lc(SKY.uHorizon, a.hor, b.hor); lc(SKY.uVoid, a.voidc, b.voidc); lc(SKY.uSunGlow, a.glow, b.glow);
   lc(CLOUD.uLit, a.lit, b.lit); lc(CLOUD.uShade, a.shade, b.shade); lc(CLOUD.uCloudRim, a.crim, b.crim); lc(SEA.uVoidCol, a.seaVoid, b.seaVoid);
-  ENV.uFogMax.value = 1.0; ENV.uFogSunPow.value = 6; ENV.uFlashCol.value.set(0, 0, 0); ENV.uHighFog.value = lerp(a.high ?? 0.85, b.high ?? 0.85, k); ENV.uHighFogY.value = lerp(a.highY ?? 4800, b.highY ?? 4800, k);
+  ENV.uFogMax.value = 1.0; ENV.uFogSunPow.value = 10; ENV.uFogStart.value = lerp(a.fogStart ?? 300, b.fogStart ?? 300, k); ENV.uFlashCol.value.set(0, 0, 0); ENV.uHighFog.value = lerp(a.high ?? 0.85, b.high ?? 0.85, k); ENV.uHighFogY.value = lerp(a.highY ?? 4800, b.highY ?? 4800, k);
 }
 function grade(o = {}) {
   GRADE.uExposure.value = o.exp ?? 1.0; GRADE.uBloom.value = o.bloom ?? 0.35; GRADE.uBloomThresh.value = o.thresh ?? 0.8;
   GRADE.uLift.value.set(...(o.lift ?? [0.0, 0.0, 0.0])); GRADE.uGamma.value.set(...(o.gamma ?? [1, 1, 1])); GRADE.uGain.value.set(...(o.gain ?? [1, 1, 1]));
   GRADE.uSat.value = o.sat ?? 1.05; GRADE.uChroma.value = o.chroma ?? 0.0016; GRADE.uVignette.value = o.vig ?? 0.2; GRADE.uGrain.value = o.grain ?? 0.03;
-  GRADE.uPaper.value = o.paper ?? 0.03; GRADE.uFlash.value.set(...(o.flashCol ?? [1, 0.96, 0.86]), o.flash ?? 0); GRADE.uFade.value = o.fade ?? 0;
+  GRADE.uPaper.value = o.paper ?? 0.03; GRADE.uContrast.value = o.contrast ?? 1.1; GRADE.uRayThresh.value = o.rayThresh ?? 0.9; GRADE.uFlash.value.set(...(o.flashCol ?? [1, 0.96, 0.86]), o.flash ?? 0); GRADE.uFade.value = o.fade ?? 0;
 }
 function aim(cam, pos, target, fov = 50, roll = 0, near = 2) {
   cam.position.copy(pos); cam.up.set(0, 1, 0); cam.lookAt(target);
@@ -66,6 +66,8 @@ function wispsAround(seed, n, center, rad, yMin, yMax, wMin, wMax, op = 0.7, ban
   return out;
 }
 let _c1 = null;
+// mist bands wrapping the trunk at several heights (so it vanishes into haze above and below)
+function trunkBands() { const r = R(19); const out = []; for (const y of [650, 1500, 2900, 4300, 5600]) for (let i = 0; i < 9; i++) { const a = i / 9 * 6.283 + r(); const d = 330 + 160 * r(); const o = axisOff(y); const wd = 500 + 400 * r(); out.push({ p: V(o.x + Math.cos(a) * d, y + (r() - 0.5) * 80, o.z + Math.sin(a) * d), w: wd, h: wd * 0.3, cell: 12 + Math.floor(r() * 4), op: 0.35 + 0.2 * r(), flip: r() < 0.5 }); } return out; }
 function ringClouds(seed, n, c, r0, r1, w0, w1, op = 0.95) { const r = R(seed); const out = []; for (let i = 0; i < n; i++) { const a = i / n * 6.283 + r() * 0.3, d = lerp(r0, r1, r()); const w = lerp(w0, w1, r()); out.push({ p: V(c.x + Math.cos(a) * d, c.y + r() * 60, c.z + Math.sin(a) * d), w, h: w * 0.45, cell: Math.floor(r() * 8), op, flip: r() < 0.5 }); } return out; }
 
 // ───────────────────────── shots
@@ -74,20 +76,20 @@ const SHOTS = [];
 function shot(t0, t1, fn) { SHOTS.push({ t0, t1, fn }); }
 
 // S1 · 0–3 · hook: tilt up the colossal trunk out of the cloud sea (高远)
-const S1cam = V(-2500, 420, 2700);
+const S1cam = V(-3500, 520, 3800);
 shot(0, 3, (t, w, cam, st) => {
-  setEnv(P.dawn); grade({ exp: 1.0, bloom: 0.32 });
+  setEnv(P.dawn); grade({ exp: 0.97, bloom: 0.35, contrast: 1.15, rayThresh: 0.9 }); st.rays = 0.4;
   const k = easeInOutSine(seg(t, 0, 3.6));
   const pos = S1cam.clone().add(V(80 * k, 260 * k, -120 * k));
   const L = leftOf(pos, V(0, 0, 0));
-  const tgt = V(0, lerp(80, 4200, k), 0).addScaledVector(L, lerp(640, 820, k));
+  const tgt = V(0, lerp(120, 5200, k), 0).addScaledVector(L, lerp(900, 1150, k));
   aim(cam, pos, tgt, 52);
   intact(w);
   st.cranes = [
-    { c: V(-2280, 560, 2330), v: V(16, 2.5, -6), n: 7, spread: 26, size: 2.6, seed: 3, t0: 0 },
-    { c: V(-1900, 820, 1900), v: V(12, 2, -8), n: 5, spread: 40, size: 2.6, seed: 5, t0: 0 },
+    { c: V(-3240, 650, 3460), v: V(16, 2.5, -6), n: 7, spread: 22, size: 2.6, seed: 3, t0: 0 },
+    { c: V(-2950, 900, 3150), v: V(12, 2, -8), n: 6, spread: 34, size: 2.6, seed: 5, t0: 0 },
   ];
-  if (!_c1) _c1 = w.baseClouds.concat(wispsAround(11, 14, V(-900, 0, 1300), 900, 350, 1500, 160, 420, 0.4, 0.0), ringClouds(12, 10, V(0, 40, 0), 300, 560, 520, 900, 0.9));
+  if (!_c1) _c1 = w.baseClouds.concat(wispsAround(11, 14, V(-900, 0, 1300), 900, 350, 1500, 160, 420, 0.4, 0.0), ringClouds(12, 12, V(0, 40, 0), 420, 760, 600, 1100, 0.9), trunkBands());
   st.clouds = _c1;
   st.caps = [
     { text: '传说，', t0: 0.25, t1: 2.75, x: 300, y: 300, size: 66, align: 'left' },
@@ -190,9 +192,9 @@ shot(3, 6, (t, w, cam, st) => {
   intact(w);
   const k = easeInOutSine(seg(t, 2.6, 6.4));
   const dir = V(-0.62, 0, 0.78).normalize();
-  const pos = dir.clone().multiplyScalar(lerp(1250, 1100, k)); pos.y = lerp(700, 1450, k);
+  const pos = dir.clone().multiplyScalar(lerp(1900, 1700, k)); pos.y = lerp(800, 1550, k);
   const L = leftOf(pos, V(0, pos.y, 0));
-  const tgt = V(0, lerp(1250, 2050, k), 0).addScaledVector(L, 330);
+  const tgt = V(0, lerp(1350, 2150, k), 0).addScaledVector(L, 420);
   aim(cam, pos, tgt, 50);
   if (!_c2) _c2 = w.baseClouds.concat(wispsAround(21, 22, V(-560, 0, 700), 350, 500, 2100, 140, 360, 0.5, 0.2));
   st.clouds = _c2;
@@ -213,7 +215,7 @@ function breakState(w, t) {
   j.sleeve.visible = false; j.splinters.visible = true; j.upper.visible = true;
   const k = easeIn(seg(t, 6.15, 9.6));
   const th = 0.55 * k;
-  const pivot = BREAK_DIR.clone().multiplyScalar(TR * 0.9); pivot.y = breakY;
+  const pivot = BREAK_DIR.clone().multiplyScalar(TR * 0.9).add(axisOff(breakY)); pivot.y = breakY;
   const axis = V(0, 1, 0).cross(BREAK_DIR).normalize();
   const q = new THREE.Quaternion().setFromAxisAngle(axis, th);
   j.upper.quaternion.copy(q);
@@ -231,20 +233,20 @@ shot(6, 9, (t, w, cam, st) => {
   breakState(w, t);
   const k = easeInOutSine(seg(t, 5.6, 9.4));
   const dir = V(-0.55, 0, 0.83).normalize();
-  const pos = dir.clone().multiplyScalar(lerp(1350, 1450, k)); pos.y = lerp(1250, 1150, k);
+  const pos = dir.clone().multiplyScalar(lerp(2100, 2250, k)); pos.y = lerp(1250, 1150, k);
   pos.add(shake(t, 6.0, 9, 1.4));
   const L = leftOf(pos, V(0, pos.y, 0));
-  const tgt = V(0, lerp(2250, 2150, k), 0).addScaledVector(L, 260);
+  const tgt = V(0, lerp(2350, 2250, k), 0).addScaledVector(L, 300);
   aim(cam, pos, tgt, 52);
   if (!_c3) _c3 = w.baseClouds.concat(wispsAround(31, 16, V(-500, 0, 800), 500, 900, 2600, 160, 420, 0.45, 0.25));
   // dust bursting from the break
   const dust = [];
-  if (t > 6.0) { const r = R(33); const d = t - 6.0; for (let i = 0; i < 22; i++) { const a = r() * 6.283; const sp = 40 + 60 * r(); const p = V(Math.cos(a) * (TRUNK.R + sp * d), TRUNK.breakY - 40 + (r() - 0.6) * 80 - d * d * 6, Math.sin(a) * (TRUNK.R + sp * d)); const wd = 120 + 160 * d + 80 * r(); dust.push({ p, w: wd, h: wd * 0.6, cell: 12 + (i % 4), op: 0.75 * Math.min(1, d * 3) * (1 - d / 4), flip: r() < 0.5, tint: C(0xb9b2a2) }); } }
+  if (t > 6.0) { const r = R(33); const d = t - 6.0; for (let i = 0; i < 22; i++) { const a = r() * 6.283; const sp = 40 + 60 * r(); const p = V(Math.cos(a) * (TRUNK.R + sp * d), TRUNK.breakY - 40 + (r() - 0.6) * 80 - d * d * 6, Math.sin(a) * (TRUNK.R + sp * d)).add(axisOff(TRUNK.breakY)); const wd = 120 + 160 * d + 80 * r(); dust.push({ p, w: wd, h: wd * 0.6, cell: 12 + (i % 4), op: 0.75 * Math.min(1, d * 3) * (1 - d / 4), flip: r() < 0.5, tint: C(0xb9b2a2) }); } }
   st.clouds = _c3.concat(dust);
   st.fx = (fx, tt) => {
     godLights(fx, tt, 1, 6.05);
     // the crack of light running around the trunk at 6.0
-    if (tt > 5.95 && tt < 6.9) { const kk = Math.exp(-Math.max(0, tt - 6.0) / 0.25); const pts = []; for (let i = 0; i <= 40; i++) { const a = i / 40 * 6.283; const rr = TRUNK.R * 1.05; pts.push(V(Math.cos(a) * rr, TRUNK.breakY + Math.sin(i * 2.3) * 14, Math.sin(a) * rr)); } fx.lines.poly(pts, () => 10, WHITEGOLD, () => 2.0 * kk); }
+    if (tt > 5.95 && tt < 6.9) { const kk = Math.exp(-Math.max(0, tt - 6.0) / 0.25); const pts = []; const ao = axisOff(TRUNK.breakY); for (let i = 0; i <= 48; i++) { const a = i / 48 * 6.283; const rr = TRUNK.R * 1.18; pts.push(V(ao.x + Math.cos(a) * rr, TRUNK.breakY + Math.sin(i * 2.3) * 18, ao.z + Math.sin(a) * rr)); } fx.lines.poly(pts, () => 10, WHITEGOLD, () => 2.0 * kk); }
   };
   st.debris = (im, tt) => debrisAt(im, tt);
   st.chainSnap = true;
@@ -252,6 +254,7 @@ shot(6, 9, (t, w, cam, st) => {
 });
 // debris: chunks flung from the break ring, falling slowly (stylised g), tumbling
 const _m4 = new THREE.Matrix4(), _q4 = new THREE.Quaternion(), _e4 = new THREE.Euler();
+const _ab = axisOff(TRUNK.breakY);
 function debrisAt(im, t) {
   const r = R(55); let n = 0;
   for (let i = 0; i < 140; i++) {
@@ -259,14 +262,14 @@ function debrisAt(im, t) {
     const spin = (r() - 0.5) * 2; const ax = r(), ay = r();
     const d = t - t0; if (d < 0) continue;
     const g = 30;
-    const p = V(Math.cos(a) * (TRUNK.R + out * d), TRUNK.breakY + upv * d - 0.5 * g * d * d, Math.sin(a) * (TRUNK.R + out * d));
+    const p = V(Math.cos(a) * (TRUNK.R + out * d), TRUNK.breakY + upv * d - 0.5 * g * d * d, Math.sin(a) * (TRUNK.R + out * d)).add(_ab);
     _q4.setFromEuler(_e4.set(ax * 6 + spin * d, ay * 6 + spin * d * 0.7, spin * d * 0.5));
     _m4.compose(p, _q4, V(sz, sz * 0.7, sz)); im.setMatrixAt(n++, _m4);
   }
   // a few huge chunks: the S3→S4 carry (one keeps falling into the next shot)
   for (let i = 0; i < 4; i++) {
     const t0 = 6.1 + i * 0.15; const d = t - t0; if (d < 0) continue;
-    const a = 0.6 + i * 1.4; const p = V(Math.cos(a) * (TRUNK.R + 30 * d + 80), TRUNK.breakY - 30 - 0.5 * 22 * d * d, Math.sin(a) * (TRUNK.R + 30 * d + 80));
+    const a = 0.6 + i * 1.4; const p = V(Math.cos(a) * (TRUNK.R + 30 * d + 80), TRUNK.breakY - 30 - 0.5 * 22 * d * d, Math.sin(a) * (TRUNK.R + 30 * d + 80)).add(_ab);
     _q4.setFromEuler(_e4.set(d * 0.3 + i, d * 0.2, d * 0.25)); _m4.compose(p, _q4, V(70 - i * 8, 50, 60)); im.setMatrixAt(n++, _m4);
   }
   im.count = n; im.instanceMatrix.needsUpdate = true;
@@ -274,7 +277,7 @@ function debrisAt(im, t) {
 
 // S4 · 9–12 · 凡人，再也上不去了 and S5a · 12–13.5 · she steps off
 function fallenWorld(w) { const j = w.jm; j.upper.visible = false; j.sleeve.visible = false; j.splinters.visible = true; }
-function stumpDust(t, seed = 41) { const r = R(seed); const out = []; for (let i = 0; i < 14; i++) { const a = r() * 6.283; const d = 300 + 260 * r() + 30 * t; out.push({ p: V(Math.cos(a) * d * 0.6, TRUNK.breakY + 60 + r() * 300 + t * 10, Math.sin(a) * d * 0.6), w: 380 + 300 * r(), h: 220 + 150 * r(), cell: 12 + (i % 4), op: 0.55, flip: r() < 0.5, tint: C(0xc4beb0) }); } return out; }
+function stumpDust(t, seed = 41) { const r = R(seed); const out = []; for (let i = 0; i < 14; i++) { const a = r() * 6.283; const d = 300 + 260 * r() + 30 * t; out.push({ p: V(Math.cos(a) * d * 0.7, TRUNK.breakY + 60 + r() * 300 + t * 10, Math.sin(a) * d * 0.7).add(_ab), w: 380 + 300 * r(), h: 220 + 150 * r(), cell: 12 + (i % 4), op: 0.55, flip: r() < 0.5, tint: C(0xc4beb0) }); } return out; }
 let _c4 = null;
 function sectCam(w, cam, t, push, tiltDown = 0) {
   const E = sectEdge(w);
@@ -297,7 +300,7 @@ shot(9, 12, (t, w, cam, st) => {
   st.cranes = [{ c: E.stand.clone().addScaledVector(E.dir, 420).add(V(0, 120, 0)).addScaledVector(E.left, 260), v: E.left.clone().multiplyScalar(-12).add(V(0, 1.5, 0)), n: 6, spread: 30, size: 2.6, seed: 12, t0: 9 }];
   st.fx = (fx, tt) => { petals(fx, tt, E); };
   st.debris = (im, tt) => { // the carry: a huge fragment still falling far away, left of the stump
-    const d = tt - 6.1; const p = V(Math.cos(0.6) * (TRUNK.R + 30 * d + 80), TRUNK.breakY - 30 - 0.5 * 22 * d * d, Math.sin(0.6) * (TRUNK.R + 30 * d + 80));
+    const d = tt - 6.1; const p = V(Math.cos(0.6) * (TRUNK.R + 30 * d + 80), TRUNK.breakY - 30 - 0.5 * 22 * d * d, Math.sin(0.6) * (TRUNK.R + 30 * d + 80)).add(_ab);
     _q4.setFromEuler(_e4.set(d * 0.3, d * 0.2, d * 0.25)); _m4.compose(p, _q4, V(70, 50, 60)); im.setMatrixAt(0, _m4); im.count = 1; im.instanceMatrix.needsUpdate = true; };
   st.caps = [{ text: '凡人，再也上不去了。', t0: 9.3, t1: 11.85, x: 540, y: 330, size: 64 }];
 });
@@ -366,7 +369,7 @@ shot(13.5, 15.42, (t, w, cam, st) => {
 });
 
 // S6a · 15.42–18 · chase: behind and below her, spiralling up around the trunk just outside the branch-rung tips
-const CH_R = 720, CH_A0 = 2.35, CH_A1 = 1.45, CH_Y0 = 1020, CH_Y1 = 1640;
+const CH_R = 1120, CH_A0 = 2.35, CH_A1 = 1.65, CH_Y0 = 1020, CH_Y1 = 1700;
 function chasePos(t) { const k = clamp((t - 15.0) / 3.0); const kk = 0.35 * k + 0.65 * easeOut(k); const a = lerp(CH_A0, CH_A1, kk); const r = CH_R + 30 * Math.sin(kk * 7); return V(Math.cos(a) * r, lerp(CH_Y0, CH_Y1, kk) + 18 * Math.sin(kk * 9), Math.sin(a) * r); }
 let _c6 = null;
 shot(15.42, 18, (t, w, cam, st) => {
@@ -392,7 +395,7 @@ shot(15.42, 18, (t, w, cam, st) => {
 function godLightsDead() {}
 
 // S6b · 18–21 · 一剑起，万剑随: wide, she passes the broken stump; sword-lights rise from every island
-const WB = new THREE.CatmullRomCurve3([V(700, 1880, 260), V(560, 2250, 60), V(430, 2700, -150), V(360, 3200, -320), V(320, 3700, -420)]);
+const WB = new THREE.CatmullRomCurve3([V(1150, 1880, 300), V(1000, 2250, 80), V(860, 2700, -160), V(760, 3200, -340), V(700, 3700, -460)]);
 function widePos(t) { return WB.getPointAt(clamp((t - 17.7) / 3.6)); }
 let _c7 = null;
 shot(18, 21, (t, w, cam, st) => {
@@ -400,8 +403,8 @@ shot(18, 21, (t, w, cam, st) => {
   fallenWorld(w);
   const hp = widePos(t);
   const k = easeInOutSine(seg(t, 17.8, 21.2));
-  const pos = V(lerp(1500, 1450, k), lerp(1900, 2650, k), lerp(1500, 1350, k));
-  aim(cam, pos, V(lerp(150, 250, k), lerp(2350, 3250, k), lerp(-100, -200, k)), 50);
+  const pos = V(lerp(2500, 2450, k), lerp(1900, 2700, k), lerp(2300, 2150, k));
+  aim(cam, pos, V(lerp(400, 500, k), lerp(2400, 3300, k), lerp(-100, -200, k)), 50);
   if (!_c7) _c7 = w.baseClouds.concat(wispsAround(71, 30, V(800, 0, 800), 1400, 1200, 3600, 200, 520, 0.5, 0.3));
   st.clouds = _c7.concat(stumpDust(t - 9));
   st.heroPose = { pos: hp, scale: 3.0, pose: { wind: [0.1, 1], gust: 1, armL: 0.35, armR: 0.95, onSword: true, sheathed: false, feet: true, swordGlow: 1.6 }, rimDir: [-0.8, -0.6], light: C(0xfff6ea) };

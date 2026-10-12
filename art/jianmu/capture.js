@@ -15,10 +15,11 @@ const exe = '/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless
   const launch = async () => {
     const b = await chromium.launch({ executablePath: exe, args: ['--use-gl=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--allow-file-access-from-files'] });
     const p = await b.newPage({ viewport: { width: 1080, height: 1920 } });
-    p.on('pageerror', e => console.log('pageerror', e.message));
-    p.on('console', m => { if (/error/i.test(m.type())) console.log('console', m.text()); });
+    let initErr = null;
+    p.on('pageerror', e => { console.log('pageerror', e.message); initErr = initErr || e; });
+    p.on('console', m => { if (/error/i.test(m.type()) && !/^T /.test(m.text())) console.log('console', m.text()); });
     await p.goto('file://' + path.join(__dirname, 'index.html'));
-    await p.waitForFunction(() => window.__ready === true, null, { timeout: 600000 });
+    for (let i = 0; i < 600; i++) { if (initErr) { console.log('init failed'); process.exit(2); } if (await p.evaluate(() => window.__ready === true)) break; await new Promise(r => setTimeout(r, 500)); }
     return { b, p };
   };
   const timeout = (pr, ms) => Promise.race([pr, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);

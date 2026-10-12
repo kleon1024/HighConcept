@@ -56,9 +56,10 @@ float fbm3(vec3 p, int oct){ float s = 0., a = .5;
 // atmosphere: distance + height fog to a mist colour, with sun in-scatter. Uniforms declared by the caller (ATMO_UNIFORMS).
 export const GLSL_ATMO = /* glsl */`
 uniform vec3 uFogCol, uFogSunCol, uSunDir, uCamPos;
-uniform float uFogDen, uFogHeight, uFogHeightFall, uFogMax, uFogSunPow, uHighFog, uHighFogY;
+uniform float uFogDen, uFogHeight, uFogHeightFall, uFogMax, uFogSunPow, uHighFog, uHighFogY, uFogStart;
 vec3 atmo(vec3 col, vec3 wp, out float fogK){
-  vec3 d = wp - uCamPos; float dist = length(d); vec3 v = d / max(dist, 1e-3);
+  vec3 d = wp - uCamPos; float dist0 = length(d); vec3 v = d / max(dist0, 1e-3);
+  float dist = max(dist0 - uFogStart, 0.0);
   float f = 1.0 - exp(-dist * uFogDen);
   // height fog: thicker toward (and below) uFogHeight, integrated roughly along the ray
   float hy = mix(wp.y, uCamPos.y, 0.35);
