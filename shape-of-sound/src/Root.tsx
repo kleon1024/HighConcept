@@ -13,6 +13,8 @@ import { Elements } from "./elements/Elements";
 import EJ from "./elements/elements.json";
 import { Elements60 } from "./elements60/Elements60";
 import E6 from "./elements60/e60.json";
+import { Philo } from "./philo/Philo";
+import PH from "./philo/philo.json";
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -23,6 +25,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition id="Optogenetics" component={Opto} durationInFrames={OP.duration * OP.fps} fps={OP.fps} width={OP.width} height={OP.height} />
       <Composition id="Elements" component={Elements} durationInFrames={EJ.duration * EJ.fps} fps={EJ.fps} width={EJ.width} height={EJ.height} />
       <Composition id="Elements60" component={Elements60} durationInFrames={E6.duration * E6.fps} fps={E6.fps} width={E6.width} height={E6.height} />
+      <Composition id="Philo" component={Philo} durationInFrames={PH.duration * PH.fps} fps={PH.fps} width={PH.width} height={PH.height} />
       <Composition id="ArtDate" component={ArtDate} durationInFrames={AD.duration * AD.fps} fps={AD.fps} width={AD.width} height={AD.height} />
     </>
   );
