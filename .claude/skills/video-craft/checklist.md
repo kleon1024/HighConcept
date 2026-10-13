@@ -8,4 +8,10 @@
       (`sfxlib` HARSH flag), every stem audible. Tell the user previews may be muted.
 - [ ] Facts verified; demonstrations and paraphrases labelled; photo credits on screen.
 - [ ] Ending lifts (ending.md).
-- [ ] Commit sources + release (full + share copy < 30 MB), push, send the share copy and the full-quality link.
+- [ ] Commit sources + release (full + share copy < 30 MB), push.
+- [ ] **Deliver download cards for every version, unasked**: send the 1080p master, the 720p share copy and the
+      no-music copy with `SendUserFile` (`display: "attach"`), and list the GitHub raw links
+      (`https://github.com/<owner>/<repo>/raw/<branch>/<path>`) in the reply. The upload limit is 30 MB: if the master is
+      larger, also send a 1080p copy re-encoded under 30 MB. Never make the user ask for a download link.
+
+Feedback log: 「元素周期表的下载链接给我啊」「哲学的下载链接 please，以后别让我提醒」.
