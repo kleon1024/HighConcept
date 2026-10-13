@@ -34,3 +34,18 @@ copyrighted work (Duchamp's *Fountain* photo, Picasso/Braque, Rothko/Pollock, Wa
 Sound effects for that film are from Mixkit (free licence, see `music/SFX_LIBRARY.md`) or synthesised in `music/artdate.py`.
 
 YouTube downloads (yt-dlp) are blocked from this cloud environment by YouTube's bot check; footage would need a cookies file.
+| `public/media/me_athens.jpg` | 意义，从哪来？ (柏拉图) | Raphael (1509–1511) | Public domain | https://commons.wikimedia.org/wiki/File:"The_School_of_Athens"_by_Raffaello_Sanzio_da_Urbino.jpg |
+| `public/media/me_diogenes.jpg` | 意义，从哪来？ (犬儒) | Jean-Léon Gérôme (1860), Walters Art Museum | Public domain | https://commons.wikimedia.org/wiki/File:Jean-Léon_Gérôme_-_Diogenes_-_Walters_37131.jpg |
+| `public/media/me_marcus.jpg` | 意义，从哪来？ (斯多葛) | Wilfredor (photo) | CC0 | https://commons.wikimedia.org/wiki/File:Ancient_statue_of_emperor_Marcus_Aurelius.jpg |
+| `public/media/me_rose.jpg` | 意义，从哪来？ (中世纪) | Eusebius (photo) | Public domain | https://commons.wikimedia.org/wiki/File:Chartres_-_cathédrale_-_rosace_nord.jpg |
+| `public/media/me_vitruvian.jpg` | 意义，从哪来？ (文艺复兴) | Leonardo da Vinci (c. 1490); photo Luc Viatour | Public domain | https://commons.wikimedia.org/wiki/File:Da_Vinci_Vitruve_Luc_Viatour.jpg |
+| `public/media/me_descartes.jpg` | 意义，从哪来？ (笛卡尔) | after Frans Hals | Public domain | https://commons.wikimedia.org/wiki/File:Frans_Hals_-_Portret_van_René_Descartes.jpg |
+| `public/media/me_kant.jpg` | 意义，从哪来？ (康德) | Johann Gottlieb Becker (1768) | Public domain | https://commons.wikimedia.org/wiki/File:Immanuel_Kant_-_Gemaelde_1.jpg |
+| `public/media/me_bentham.jpg` | 意义，从哪来？ (边沁) | Henry William Pickersgill (1829) | Public domain | https://commons.wikimedia.org/wiki/File:Jeremy_Bentham_by_Henry_William_Pickersgill.jpg |
+| `public/media/me_wanderer.jpg` | 意义，从哪来？ (叔本华) | Caspar David Friedrich (1818) | Public domain | https://commons.wikimedia.org/wiki/File:Caspar_David_Friedrich_-_Wanderer_above_the_sea_of_fog.jpg |
+| `public/media/me_schop.jpg` | 意义，从哪来？ (叔本华) | Johann Schäfer (1859) | Public domain | https://commons.wikimedia.org/wiki/File:Arthur_Schopenhauer_by_J_Schäfer,_1859b.jpg |
+| `public/media/me_wedge.jpg` | 意义，从哪来？ (马克思) | El Lissitzky (1919) | Public domain | https://commons.wikimedia.org/wiki/File:Beat_the_Whites_with_the_Red_Wedge.jpg |
+| `public/media/me_marx.jpg` | 意义，从哪来？ (马克思) | John Jabez Edwin Mayall (1875) | Public domain | https://commons.wikimedia.org/wiki/File:Karl_Marx_001.jpg |
+| `public/media/me_scream.jpg` | 意义，从哪来？ (尼采) | Edvard Munch (1893), National Gallery of Norway | Public domain | https://commons.wikimedia.org/wiki/File:Edvard_Munch,_1893,_The_Scream,_oil,_tempera_and_pastel_on_cardboard,_91_x_73_cm,_National_Gallery_of_Norway.jpg |
+| `public/media/me_nietzsche.jpg` | 意义，从哪来？ (尼采) | Gustav-Adolf Schultze (1882) | Public domain | https://commons.wikimedia.org/wiki/File:Nietzsche1882.jpg |
+| `public/media/me_panopticon.jpg` | 意义，从哪来？ (福柯) | Willey Reveley (c. 1791) | Public domain | https://commons.wikimedia.org/wiki/File:Reveley_Plan_of_Houses_of_Inspection_c._1791.png |

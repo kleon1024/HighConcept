@@ -166,5 +166,126 @@
   "author": "Unknown (1897)",
   "license": "Public domain",
   "used_in": "periodic table opening"
+ },
+ {
+  "file": "me_athens.jpg",
+  "commons": "File:\"The School of Athens\" by Raffaello Sanzio da Urbino.jpg",
+  "author": "Raphael (1509–1511)",
+  "license": "Public domain",
+  "used_in": "意义 · 柏拉图",
+  "orig_w": 3820
+ },
+ {
+  "file": "me_diogenes.jpg",
+  "commons": "File:Jean-Léon Gérôme - Diogenes - Walters 37131.jpg",
+  "author": "Jean-Léon Gérôme (1860), Walters Art Museum",
+  "license": "Public domain",
+  "used_in": "意义 · 犬儒",
+  "orig_w": 1800
+ },
+ {
+  "file": "me_marcus.jpg",
+  "commons": "File:Ancient statue of emperor Marcus Aurelius.jpg",
+  "author": "Wilfredor (photo)",
+  "license": "CC0",
+  "used_in": "意义 · 斯多葛",
+  "orig_w": 5120
+ },
+ {
+  "file": "me_rose.jpg",
+  "commons": "File:Chartres - cathédrale - rosace nord.jpg",
+  "author": "Eusebius (photo)",
+  "license": "Public domain",
+  "used_in": "意义 · 中世纪",
+  "orig_w": 2167
+ },
+ {
+  "file": "me_vitruvian.jpg",
+  "commons": "File:Da Vinci Vitruve Luc Viatour.jpg",
+  "author": "Leonardo da Vinci (c. 1490); photo Luc Viatour",
+  "license": "Public domain",
+  "used_in": "意义 · 文艺复兴",
+  "orig_w": 2258
+ },
+ {
+  "file": "me_descartes.jpg",
+  "commons": "File:Frans Hals - Portret van René Descartes.jpg",
+  "author": "after Frans Hals",
+  "license": "Public domain",
+  "used_in": "意义 · 笛卡尔",
+  "orig_w": 817
+ },
+ {
+  "file": "me_kant.jpg",
+  "commons": "File:Immanuel Kant - Gemaelde 1.jpg",
+  "author": "Johann Gottlieb Becker (1768)",
+  "license": "Public domain",
+  "used_in": "意义 · 康德",
+  "orig_w": 1009
+ },
+ {
+  "file": "me_bentham.jpg",
+  "commons": "File:Jeremy Bentham by Henry William Pickersgill.jpg",
+  "author": "Henry William Pickersgill (1829)",
+  "license": "Public domain",
+  "used_in": "意义 · 边沁",
+  "orig_w": 2400
+ },
+ {
+  "file": "me_wanderer.jpg",
+  "commons": "File:Caspar David Friedrich - Wanderer above the sea of fog.jpg",
+  "author": "Caspar David Friedrich (1818)",
+  "license": "Public domain",
+  "used_in": "意义 · 叔本华",
+  "orig_w": 2327
+ },
+ {
+  "file": "me_schop.jpg",
+  "commons": "File:Arthur Schopenhauer by J Schäfer, 1859b.jpg",
+  "author": "Johann Schäfer (1859)",
+  "license": "Public domain",
+  "used_in": "意义 · 叔本华",
+  "orig_w": 1997
+ },
+ {
+  "file": "me_wedge.jpg",
+  "commons": "File:Beat the Whites with the Red Wedge.jpg",
+  "author": "El Lissitzky (1919)",
+  "license": "Public domain",
+  "used_in": "意义 · 马克思",
+  "orig_w": 1920
+ },
+ {
+  "file": "me_marx.jpg",
+  "commons": "File:Karl Marx 001.jpg",
+  "author": "John Jabez Edwin Mayall (1875)",
+  "license": "Public domain",
+  "used_in": "意义 · 马克思",
+  "orig_w": 1428
+ },
+ {
+  "file": "me_scream.jpg",
+  "commons": "File:Edvard Munch, 1893, The Scream, oil, tempera and pastel on cardboard, 91 x 73 cm, National Gallery of Norway.jpg",
+  "author": "Edvard Munch (1893), National Gallery of Norway",
+  "license": "Public domain",
+  "used_in": "意义 · 尼采",
+  "orig_w": 3223
+ },
+ {
+  "file": "me_nietzsche.jpg",
+  "commons": "File:Nietzsche1882.jpg",
+  "author": "Gustav-Adolf Schultze (1882)",
+  "license": "Public domain",
+  "used_in": "意义 · 尼采",
+  "orig_w": 1274
+ },
+ {
+  "file": "me_panopticon.jpg",
+  "commons": "File:Reveley Plan of Houses of Inspection c. 1791.png",
+  "author": "Willey Reveley (c. 1791)",
+  "license": "Public domain",
+  "used_in": "意义 · 福柯",
+  "orig_w": 500,
+  "note": "500 px standard thumbnail of the 664 px original"
  }
 ]
