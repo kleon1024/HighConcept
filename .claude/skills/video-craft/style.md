@@ -24,7 +24,13 @@ Never start a new style from imagination alone. **Research first, then build, th
 7. **Colour comes from the genre's references**, then gets pushed for vividness in small areas (jewel accents,
    rim light, sword light) — never a whole-frame saturation template borrowed from another genre.
 
+8. **Never hand-draw people in a flat icon style for a serious subject**: crude figures read as deformed and cheap. Show
+   people through real public-domain artworks and photos (graded, cropped, moved), and draw only geometry, type and
+   abstraction in code. For a history of ideas, give **each era its own art movement and its own music and sounds**
+   (Raphael for Plato, Friedrich for Schopenhauer, Lissitzky for Marx, Munch for Nietzsche, De Stijl for Wittgenstein …),
+   tied together by one recurring geometric motif and one consistent type/label system.
+
 Feedback log: 「a b c 三种你都需要先对风格调研看参考图片再上手」 (first three style frames rejected as not good enough).
 「a 意义不明 而且没有理解巨构 仙侠的元素 配色 风格 完全重做 动画不合适」 (xianxia video v1 read as a
 psychedelic mandala poster: abstract metaphor, no sword flight or sect mountains, no felt scale, purple/magenta palette, static
-centred compositions with zoom tunnels).
+centred compositions with zoom tunnels). 「哲学的这一版本质感太糙了……画的画都是很难看的，人物都变形了，应该大量使用华丽的不同的艺术风格，还有更多的艺术流派……配乐上，音效上也要区分」.
