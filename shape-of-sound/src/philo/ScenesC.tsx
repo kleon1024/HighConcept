@@ -110,7 +110,7 @@ const NODES: { id: string; cn: string; y: number; up: boolean }[] = [
 const ARCS: [string, string, string][] = [["soc", "dio", "师承"], ["soc", "pla", ""], ["pla", "ari", ""], ["ben", "mil", ""], ["sch", "nie", "旧书店"], ["nie", "sar", "上帝死后"], ["ben", "fou", "全景监狱"], ["dio", "fou", "1984 最后一课"], ["dio", "slo", "名字被借走"]];
 export const End: React.FC<{ t: number }> = ({ t }) => {
   const E = PJ.end;
-  const map = win(t, E.map - 0.1, E.lamp + 0.05, 0.3, 0.1);
+  const map = win(t, E.map - 0.5, E.lamp + 0.05, 0.3, 0.1);
   const Y = 560;
   const XS = [220, 380, 540, 700, 980, 1110, 1240, 1370, 1510, 1650, 1790];
   const pos = Object.fromEntries(NODES.map((n, i) => [n.id, XS[i]]));
@@ -134,7 +134,7 @@ export const End: React.FC<{ t: number }> = ({ t }) => {
             );
           })}
           {NODES.map((n, i) => {
-            const k = backOut(range(t, E.map + i * 0.06, E.map + i * 0.06 + 0.3), 2);
+            const k = backOut(range(t, E.map - 0.45 + i * 0.05, E.map - 0.15 + i * 0.05), 2);
             return (
               <g key={n.id} transform={`translate(${pos[n.id]} ${Y})`}>
                 <circle r={9 * k} fill={GOLD} />
