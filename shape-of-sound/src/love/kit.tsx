@@ -69,10 +69,14 @@ export const fieldToScreen = (px: number, py: number, z: number, fx: number, fy:
 export const Field: React.FC<{ z: number; fx: number; fy: number; o?: number; dim?: number; filter?: string }> = ({ z, fx, fy, o = 1, dim = 0, filter }) => {
   if (o <= 0.001) return null;
   const [x0, y0] = fieldToScreen(0, 0, z, fx, fy);
+  // painted as a background so the browser only rasterizes the visible 1920×1080 (a scaled <img> of this texture can
+  // become a 12,000-pixel layer and crash the renderer); the hidden <Img> makes Remotion wait until it has loaded
+  const url = staticFile("media/lv_field.jpg");
   return (
     <div style={{ position: "absolute", inset: 0, overflow: "hidden", opacity: o }}>
-      <Img src={staticFile("media/lv_field.jpg")} style={{ position: "absolute", left: x0, top: y0, width: FIELD.w * z, height: FIELD.h * z, maxWidth: "none",
-        filter: `${filter ?? ""} saturate(${1 - 0.25 * dim}) brightness(${1 - 0.6 * dim})` }} />
+      <Img src={url} style={{ position: "absolute", width: 1, height: 1, opacity: 0 }} />
+      <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${url})`, backgroundRepeat: "no-repeat", backgroundSize: `${FIELD.w * z}px ${FIELD.h * z}px`,
+        backgroundPosition: `${x0}px ${y0}px`, filter: `${filter ?? ""} saturate(${1 - 0.25 * dim}) brightness(${1 - 0.6 * dim})` }} />
     </div>
   );
 };
