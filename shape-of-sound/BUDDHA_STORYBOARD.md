@@ -30,10 +30,7 @@ Look: **绀纸金字**, sutras copied in gold ink on indigo-dyed paper. Asymmetr
 - Liang Kai, *The Sixth Patriarch Chopping Bamboo*
 - the Ten Ox-herding pictures attributed to Shūbun (Muromachi)
 
-The music travels the same way. India comes first: sitar, a tanpura-like drone, bansuri and low drums. China follows:
-koto and dizi, with a 木鱼 pulse under the Heart Sutra. Then Chan, which is almost silent: a shakuhachi and 拍子木
-clappers. At the end everyone joins, and the choir sings the syllable rhythm of the mantra up to D major. Leitmotif:
-A–D–C–A (the arrow), answered by A–D–E–F♯–A–D.
+The score is a temple, not a world-music tour (v2, after 「配乐和音效太尖锐，跟佛没关系」): monks reciting on one tone with a 木鱼 stroke per syllable (formant-synthesised voices), a temple drum, a deep low-passed bronze bell struck three times (佛, 空, the far shore), a guqin-like low string for the leitmotif, 箫 and shakuhachi, monks humming and low strings. No bright plucks, no presence boost; every effect is low-passed. The ending recites the mantra in rhythm, the reciting tone climbing D–E–F♯–A, and lands on D major with the bell. Leitmotif: A–D–C–A on the qin.
 
 ## Beats
 | t (s) | Scene | Saying (source) | 解 / visual | Carry into next |
