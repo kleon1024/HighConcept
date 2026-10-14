@@ -27,4 +27,10 @@ clue → how it works → what it unlocked → the human payoff → the lift**.
   each lens = a colour field + one label + one big number + its own sound gesture), and frame the film with one
   everyday metaphor the viewer already owns (元素周期表 = 宇宙的配料表) that opens and closes it.
 
-Feedback log: 「感觉把不相关的素材拼在一起了」「增加科普性，展开成吸引人的故事性科普」「给我选题先」「控制在60秒以内」「a 意义不明」「节奏太慢，信息密度太低，没有音乐的形状有趣」.
+- **Stage the whole film as one designed piece** when the subject is emotional or artistic: give it a frame device that
+  opens, structures and closes it (a theatre curtain that rises on the question, acts with playbill labels, an
+  intermission that turns joy into grief, a curtain call where the film's images take their bow). Alternate joy and
+  sorrow (喜 → 悲 → 释怀 → 升华) and let every act change its art style *and* its music while one theme and one visual
+  thread (the 什么是爱 gold thread) run through all of them.
+
+Feedback log: 「关于爱的视频我要求华丽，有喜又悲，音乐艺术风格，你都大胆尝试；转场，开场，谢幕，整个都是一部精心安排的」. 「感觉把不相关的素材拼在一起了」「增加科普性，展开成吸引人的故事性科普」「给我选题先」「控制在60秒以内」「a 意义不明」「节奏太慢，信息密度太低，没有音乐的形状有趣」.

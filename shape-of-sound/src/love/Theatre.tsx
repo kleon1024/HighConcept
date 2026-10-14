@@ -105,7 +105,7 @@ export const CurtainCall: React.FC<{ t: number }> = ({ t }) => {
     <Layer o={1}>
       <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at 50% 110%, #3A1418 0%, #170A0C 55%, #0B0506 100%)" }} />
       <Svg>{Array.from({ length: 60 }, (_, i) => <circle key={i} cx={rnd(i) * 1920} cy={880 + rnd(i + 1) * 200} r={1 + rnd(i + 2) * 1.6} fill="#FFDCA0" opacity={0.08 + 0.12 * rnd(i + 3)} />)}</Svg>
-      <div style={{ position: "absolute", left: 960, top: 150, transform: "translateX(-50%)", fontFamily: SERIF, fontWeight: 600, fontSize: 30, letterSpacing: 16, color: GOLDL, opacity: eOut(range(t, K.t + 0.6, K.t + 1.2)) }}>感 谢 出 演</div>
+      <div style={{ position: "absolute", left: 960, top: 190, transform: "translateX(-50%)", fontFamily: SERIF, fontWeight: 600, fontSize: 34, letterSpacing: 18, color: GOLDL, opacity: eOut(range(t, K.t + 0.6, K.t + 1.2)) }}>感 谢 出 演</div>
       {CAST.map(([src, role, by, [fx, fy]], i) => {
         const x = 165 + i * 227, at = K.bows[i];
         const lit = Math.max(eOut(range(t, at - 0.15, at + 0.3)) * (1 - 0.5 * eIn(range(t, at + 0.5, at + 0.9))), 0.5 * eOut(range(t, at + 0.5, at + 0.9)), all);
@@ -113,18 +113,18 @@ export const CurtainCall: React.FC<{ t: number }> = ({ t }) => {
         return <React.Fragment key={i}>
           <div style={{ position: "absolute", left: x - 140, top: 0, width: 280, height: 1080, background: "linear-gradient(180deg, rgba(255,225,160,0.0) 0%, rgba(255,225,160,0.10) 35%, rgba(255,225,160,0.22) 70%, rgba(255,225,160,0) 100%)",
             clipPath: "polygon(45% 0%, 55% 0%, 100% 100%, 0% 100%)", opacity: 0.3 + 0.7 * lit }} />
-          <div style={{ position: "absolute", left: x - 92, top: 330, width: 184, height: 246, transform: `translateY(${bow * 22}px) rotateX(${bow * 14}deg)`, transformOrigin: "50% 100%",
+          <div style={{ position: "absolute", left: x - 100, top: 270, width: 200, height: 290, transform: `translateY(${bow * 22}px) rotateX(${bow * 14}deg)`, transformOrigin: "50% 100%",
             boxShadow: `0 0 0 8px #B8892C, 0 0 0 11px #6E4E14, 0 18px 40px rgba(0,0,0,0.7), 0 0 ${40 * lit}px rgba(255,220,150,${0.5 * lit})`, overflow: "hidden", filter: `brightness(${0.45 + 0.6 * lit})`,
             opacity: eOut(range(t, K.t + 0.2 + i * 0.06, K.t + 0.8 + i * 0.06)) }}>
             <Img src={staticFile(`media/${src}`)} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: `${fx * 100}% ${fy * 100}%` }} />
           </div>
-          <div style={{ position: "absolute", left: x, top: 610, transform: "translateX(-50%)", textAlign: "center", whiteSpace: "nowrap", opacity: (0.4 + 0.6 * lit) * eOut(range(t, K.t + 0.6, K.t + 1.2)) }}>
-            <div style={{ fontFamily: SERIF, fontWeight: 900, fontSize: role.length > 4 ? 22 : 32, color: PAPER }}>{role}</div>
+          <div style={{ position: "absolute", left: x, top: 600, transform: "translateX(-50%)", textAlign: "center", whiteSpace: "nowrap", opacity: (0.4 + 0.6 * lit) * eOut(range(t, K.t + 0.6, K.t + 1.2)) }}>
+            <div style={{ fontFamily: SERIF, fontWeight: 900, fontSize: role.length > 4 ? 24 : 36, color: PAPER }}>{role}</div>
             <div style={{ fontFamily: SERIF, fontWeight: 600, fontSize: 20, color: "#C8A870", marginTop: 6 }}>{by}</div>
           </div>
         </React.Fragment>;
       })}
-      <div style={{ position: "absolute", left: 960, top: 780, transform: "translateX(-50%)", textAlign: "center", fontFamily: SERIF, fontWeight: 600, fontSize: 24, color: "#B8A080", lineHeight: 1.7, whiteSpace: "nowrap",
+      <div style={{ position: "absolute", left: 960, top: 760, transform: "translateX(-50%)", textAlign: "center", fontFamily: SERIF, fontWeight: 600, fontSize: 26, color: "#B8A080", lineHeight: 1.7, whiteSpace: "nowrap",
         opacity: eOut(range(t, K.bows[7], K.bows[7] + 0.6)) }}>
         原著：圣埃克苏佩里《小王子》· 柏拉图《会饮篇》· 莎士比亚 · 元好问 · 归有光 · 里尔克 · 弗洛姆 · 汤显祖 · 苏轼
       </div>
