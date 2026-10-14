@@ -30,4 +30,7 @@ videos"; Sonilo, "Transition effect sounds in video edits"; Violet Recording, "H
 flag; `audition` renders candidates back to back; `alias` names one for the scores. In a score, `Sfx.play(t, name, db,
 align='peak'|'onset')`, then `fx.mix(ir, verb, lp=9000)` so the bus shares the reverb and loses any fizz.
 
-Feedback log: 「音效太大声，太突兀」「音效的音源也要换」「建立本地音效库」「一些尖锐的铃铛声等都要重新选，音效应该仔细设计」.
+9. **Effects belong to the subject's world too**: in a temple film the stamps, brushes, water and drums are soft and
+   low (low-passed ~3–4.5 kHz); a bright library whoosh or a sharp clapper breaks the room.
+
+Feedback log: 「配乐和音效不好，太尖锐了，跟佛没关系」. 「音效太大声，太突兀」「音效的音源也要换」「建立本地音效库」「一些尖锐的铃铛声等都要重新选，音效应该仔细设计」.
