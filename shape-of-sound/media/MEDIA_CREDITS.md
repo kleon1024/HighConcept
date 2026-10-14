@@ -98,3 +98,14 @@ YouTube downloads (yt-dlp) are blocked from this cloud environment by YouTube's 
 | `public/media/ru_family.jpg` | 儒 · 齐家 | 传李公麟《孝经图》卷 (北宋, c. 1085), section 「纪孝行章」, The Met 1996.479a–c | CC0 | https://www.metmuseum.org/art/collection/search/39895 |
 | `public/media/ru_gui.png` (cut out with media/chroma_cut.py) | 儒 · 齐家 | 西周 青铜簋 (late 11th–early 10th c. BCE), The Met | CC0 | https://www.metmuseum.org/art/collection/search/49385 |
 | `public/media/ru_bells.jpg` (top of the 2048-px Flickr copy (the upper bells between the rack's two beams)) | 儒 · 四海之内 | 曾侯乙编钟 (战国, 433 BCE or later), Hubei Provincial Museum; photo Gary Todd | CC0 | https://commons.wikimedia.org/wiki/File:Two_Tone_Set-bells_of_Marquis_Yi_of_Zeng_(10166252544).jpg |
+| `public/media/hlm_daiyu.jpg` | 红楼 · 开场 / 判词 | 改琦《红楼梦图咏》(woodblock, 1879 ed.), scan from 東京藝術大学 · 林黛玉 | Public domain | https://commons.wikimedia.org/wiki/File:Lin_Daiyu_Hongloumeng_Tuyong.jpg |
+| `public/media/hlm_baochai.jpg` | 红楼 · 判词 | 改琦《红楼梦图咏》(woodblock, 1879 ed.), scan from 東京藝術大学 · 薛宝钗 | Public domain | https://commons.wikimedia.org/wiki/File:Hongloumeng_Tuyong_Xue_Baochai.jpg |
+| `public/media/hlm_baoyu.jpg` | 红楼 · 太虚幻境 | 改琦《红楼梦图咏》(woodblock, 1879 ed.), scan from 東京藝術大学 · 贾宝玉 | Public domain | https://commons.wikimedia.org/wiki/File:Jia_Baoyu_Hongloumeng_Tuyong.jpg |
+| `public/media/hlm_stone.jpg` | 红楼 · 第一页 | 改琦《红楼梦图咏》(woodblock, 1879 ed.), scan from 東京藝術大学 · 通灵宝石、绛珠仙草 | Public domain | https://commons.wikimedia.org/wiki/File:红楼梦图咏-通灵宝石、绛珠仙草.jpg |
+| `public/media/hlm_yuanchun.jpg` | 红楼 · 原应叹息 | 改琦《红楼梦图咏》(woodblock, 1879 ed.), scan from 東京藝術大学 · 贾元春 | Public domain | https://commons.wikimedia.org/wiki/File:Hongloumeng_Tuyong_Jia_Yuanchun.jpg |
+| `public/media/hlm_yingchun.jpg` | 红楼 · 原应叹息 | 改琦《红楼梦图咏》(woodblock, 1879 ed.), scan from 東京藝術大学 · 贾迎春 | Public domain | https://commons.wikimedia.org/wiki/File:Hongloumeng_Tuyong_Jia_Yingchun.jpg |
+| `public/media/hlm_tanchun.jpg` | 红楼 · 原应叹息 | 改琦《红楼梦图咏》(woodblock, 1879 ed.), scan from 東京藝術大学 · 贾探春 | Public domain | https://commons.wikimedia.org/wiki/File:Hongloumeng_Tuyong_Jia_Tanchun.jpg |
+| `public/media/hlm_xichun.jpg` | 红楼 · 原应叹息 | 改琦《红楼梦图咏》(woodblock, 1879 ed.), scan from 東京藝術大学 · 贾惜春 | Public domain | https://commons.wikimedia.org/wiki/File:Hongloumeng_Tuyong_Jia_Xichun.jpg |
+| `public/media/hlm_xifeng.jpg` | 红楼 · 好了歌 | 改琦《红楼梦图咏》(woodblock, 1879 ed.), scan from 東京藝術大学 · 王熙凤 | Public domain | https://commons.wikimedia.org/wiki/File:Hongloumeng_Tuyong_Wang_Xifeng.jpg |
+| `public/media/hlm_zanghua.jpg` | 红楼 · 葬花 | 费丹旭「金陵十二钗：林黛玉葬花」(before 1850), from 《中國歷代仕女畫集》 | Public domain | https://commons.wikimedia.org/wiki/File:Lin_Daiyu_Burying_Flowers.png |
+| `public/media/hlm_garden.jpg` | 红楼 · 大观园 | 孙温《全本红楼梦图》大观园 (late Qing), 旅顺博物馆 | Public domain | https://commons.wikimedia.org/wiki/File:Sun_Wen_Red_Chamber_Daguanyuan.jpg |

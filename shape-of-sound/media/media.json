@@ -773,15 +773,6 @@
   "thumb_w": 1280
  },
  {
-  "file": "hlm_xiangling.jpg",
-  "commons": "File:Hongloumeng Tuyong Xiangling.jpg",
-  "author": "改琦《红楼梦图咏》(woodblock, 1879 ed.), scan from 東京藝術大学 · 香菱（甄英莲）",
-  "license": "Public domain",
-  "used_in": "红楼 · 名字",
-  "orig_w": 1595,
-  "thumb_w": 1280
- },
- {
   "file": "hlm_xifeng.jpg",
   "commons": "File:Hongloumeng Tuyong Wang Xifeng.jpg",
   "author": "改琦《红楼梦图咏》(woodblock, 1879 ed.), scan from 東京藝術大学 · 王熙凤",
@@ -807,23 +798,5 @@
   "used_in": "红楼 · 大观园",
   "orig_w": 1920,
   "thumb_w": 1280
- },
- {
-  "file": "hlm_window.jpg",
-  "commons": "File:花窗 - Window of Heyuan Garden - 2015.04 - panoramio.jpg",
-  "author": "rheins, 花窗 · 扬州何园 (2015)",
-  "license": "CC BY 3.0",
-  "used_in": "红楼 · 花窗",
-  "orig_w": 4171,
-  "thumb_w": 1920
- },
- {
-  "file": "hlm_icecrack.jpg",
-  "commons": "File:觀稼樓冰裂紋漏窗 Ice Crack Openwork Window of Guanjia House - panoramio.jpg",
-  "author": "lienyuan lee, 冰裂纹漏窗 · 觀稼樓",
-  "license": "CC BY 3.0",
-  "used_in": "红楼 · 冰裂",
-  "orig_w": 5966,
-  "thumb_w": 1920
  }
 ]
