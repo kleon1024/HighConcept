@@ -20,6 +20,8 @@ import MN from "./meaning/meaning.json";
 import { Nihil } from "./nihil/Nihil";
 import { Buddha } from "./buddha/Buddha";
 import { Love } from "./love/Love";
+import { Ocean } from "./ocean/Ocean";
+import OC from "./ocean/ocean.json";
 import LV from "./love/love.json";
 import BD from "./buddha/buddha.json";
 import NH from "./nihil/nihil.json";
@@ -38,6 +40,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition id="Nihil" component={Nihil} durationInFrames={NH.duration * NH.fps} fps={NH.fps} width={NH.width} height={NH.height} />
       <Composition id="Buddha" component={Buddha} durationInFrames={BD.duration * BD.fps} fps={BD.fps} width={BD.width} height={BD.height} />
       <Composition id="Love" component={Love} durationInFrames={LV.duration * LV.fps} fps={LV.fps} width={LV.width} height={LV.height} />
+      <Composition id="Ocean" component={Ocean} durationInFrames={OC.duration * OC.fps} fps={OC.fps} width={OC.width} height={OC.height} />
       <Composition id="ArtDate" component={ArtDate} durationInFrames={AD.duration * AD.fps} fps={AD.fps} width={AD.width} height={AD.height} />
     </>
   );
