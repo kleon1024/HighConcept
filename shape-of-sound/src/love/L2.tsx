@@ -9,7 +9,7 @@ const Shards: React.FC<{ t: number; o: number }> = ({ t, o }) => (
   <Svg>{Array.from({ length: 34 }, (_, i) => {
     const cx = rnd(i) * 1920, cy = rnd(i + 1) * 1080, r = 120 + rnd(i + 2) * 260, a0 = rnd(i + 3) * 6.28 + t * (0.05 + 0.08 * rnd(i + 4)) * (i % 2 ? 1 : -1);
     const pts = [0, 1, 2].map((k) => `${cx + Math.cos(a0 + k * 2.1 + rnd(i + k) * 0.6) * r},${cy + Math.sin(a0 + k * 2.1 + rnd(i + k) * 0.6) * r}`).join(" ");
-    return <polygon key={i} points={pts} fill={MARC[i % MARC.length]} opacity={o * (0.1 + 0.16 * rnd(i + 5)) * (cx > 900 ? 1.6 : 1)} style={{ mixBlendMode: "multiply" }} />;
+    return <polygon key={i} points={pts} fill={MARC[i % MARC.length]} opacity={o * (0.1 + 0.16 * rnd(i + 5)) * (cx > 900 ? 1.6 : 1)} />;
   })}</Svg>
 );
 // Van Gogh's sky, alive: short curved strokes riding a swirling flow field
