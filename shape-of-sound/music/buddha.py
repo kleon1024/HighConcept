@@ -174,6 +174,16 @@ chord('strS', CN['shen'] - 0.6, 3.6, [38, 45, 50, 57], 50, h=0); line('shaku', C
 chord('strS', CN['decode'] + 0.6, 3.0, [38, 50, 57], 48, h=0); note('shaku', CN['ox'] - 0.6, 2.2, 74, 56); note('koto', CN['ox'], 1.0, 62, 56)
 chord('strS', EN['t'] - 0.4, 1.2, [38, 50, 57, 62], 54, h=0); chord('trem', EN['swarm'] + 0.4, 0.8, [62, 63, 68], 54)
 
+# a held note and a new note on the same pitch: end the old one just before the new one starts (otherwise the old
+# note-off would silence the new note)
+for part, evs in sc.ev.items():
+    evs.sort(key=lambda e: e[0]); last = {}
+    for i, (s0, d, p, v) in enumerate(evs):
+        j = last.get(p)
+        if j is not None and evs[j][0] + evs[j][1] > s0 - 0.01:
+            a = evs[j]; evs[j] = (a[0], max(0.03, s0 - a[0] - 0.012), a[2], a[3])
+        last[p] = i
+
 music, stems = sc.render(PARTS, kick_part=None)
 
 # ═══ sound design (all synthesized unless a library number is given)
