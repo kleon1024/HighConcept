@@ -1,8 +1,8 @@
 // 什么是爱 — shared timing, palette, type and pieces. Warm paper, rose and wheat; one gold thread (the fox's
 // 「建立联系」) runs through the film and ties each scene to the next. Real paintings carry the people; the rest is
 // type, light and the thread.
-import React from "react";
-import { Img, staticFile } from "remotion";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { continueRender, delayRender, Img, staticFile } from "remotion";
 import J from "./love.json";
 export { clamp01, lerp, range, eOut, eIn, eInOut, backOut, win, rnd, mix } from "../elements/core";
 import { eIn, eInOut, eOut, lerp, range, rnd } from "../elements/core";
@@ -66,19 +66,34 @@ export const Art: React.FC<{ src: string; t: number; a: number; b: number; from:
 
 // the garden of five thousand identical roses: z = screen pixels per texture pixel, (fx, fy) = texture point at screen centre
 export const fieldToScreen = (px: number, py: number, z: number, fx: number, fy: number): [number, number] => [960 + (px - fx) * z, 540 + (py - fy) * z];
+// Drawn on a canvas: each frame copies only the visible part of the 6400×3200 texture into 1920×1080. (Scaling the whole
+// image with CSS made the browser cache an up-to-8000-pixel bitmap for every zoom level and the renderer crashed.)
+let fieldImg: HTMLImageElement | null = null, fieldLoad: Promise<void> | null = null;
+const loadField = () => {
+  if (!fieldLoad) {
+    fieldImg = new Image(); fieldImg.src = staticFile("media/lv_field.jpg");
+    fieldLoad = fieldImg.decode().catch(() => new Promise<void>((res) => { fieldImg!.onload = () => res(); }));
+  }
+  return fieldLoad;
+};
 export const Field: React.FC<{ z: number; fx: number; fy: number; o?: number; dim?: number; filter?: string }> = ({ z, fx, fy, o = 1, dim = 0, filter }) => {
+  const ref = useRef<HTMLCanvasElement>(null);
+  const [ready, setReady] = useState(() => !!fieldImg && fieldImg.complete && fieldImg.naturalWidth > 0);
+  const [handle] = useState(() => (ready ? null : delayRender("rose field")));
+  useEffect(() => { if (ready) return; loadField().then(() => { setReady(true); if (handle !== null) continueRender(handle); }); }, []);
+  useLayoutEffect(() => {
+    const c = ref.current; if (!c || !ready || !fieldImg) return;
+    const g = c.getContext("2d")!;
+    g.filter = "none"; g.fillStyle = "#18221A"; g.fillRect(0, 0, 1920, 1080);
+    const sx = fx - 960 / z, sy = fy - 540 / z, sw = 1920 / z, sh = 1080 / z;
+    const x0 = Math.max(0, sx), y0 = Math.max(0, sy), x1 = Math.min(FIELD.w, sx + sw), y1 = Math.min(FIELD.h, sy + sh);
+    if (x1 <= x0 || y1 <= y0) return;
+    g.filter = `${filter ?? ""} saturate(${1 - 0.25 * dim}) brightness(${1 - 0.6 * dim})`.trim();
+    g.imageSmoothingQuality = "high";
+    g.drawImage(fieldImg, x0, y0, x1 - x0, y1 - y0, (x0 - sx) * z, (y0 - sy) * z, (x1 - x0) * z, (y1 - y0) * z);
+  });
   if (o <= 0.001) return null;
-  const [x0, y0] = fieldToScreen(0, 0, z, fx, fy);
-  // painted as a background so the browser only rasterizes the visible 1920×1080 (a scaled <img> of this texture can
-  // become a 12,000-pixel layer and crash the renderer); the hidden <Img> makes Remotion wait until it has loaded
-  const url = staticFile("media/lv_field.jpg");
-  return (
-    <div style={{ position: "absolute", inset: 0, overflow: "hidden", opacity: o }}>
-      <Img src={url} style={{ position: "absolute", width: 1, height: 1, opacity: 0 }} />
-      <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${url})`, backgroundRepeat: "no-repeat", backgroundSize: `${FIELD.w * z}px ${FIELD.h * z}px`,
-        backgroundPosition: `${x0}px ${y0}px`, filter: `${filter ?? ""} saturate(${1 - 0.25 * dim}) brightness(${1 - 0.6 * dim})` }} />
-    </div>
-  );
+  return <canvas ref={ref} width={1920} height={1080} style={{ position: "absolute", inset: 0, opacity: o }} />;
 };
 // the one rose (a cut-out of Redouté's plate), drawn at a point with a given height in pixels
 export const Rose: React.FC<{ x: number; y: number; h: number; o?: number; glow?: number; rot?: number }> = ({ x, y, h, o = 1, glow = 0, rot = 0 }) => {
