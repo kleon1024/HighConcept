@@ -46,10 +46,15 @@ ANSWER = [69, 74, 76, 78, 81, 86]      # A D E F♯ A D — the same leap, now c
 
 # ═══ hook: a drone from frame 1; the first arrow lands; the thoughts swarm; the second arrow, heavier
 chord('drone', 0.0, 7.2, [38, 45, 50], 70, h=0); note('sub', HK['hit1'], 1.2, 26, 92)
+# the question slams in on frame 1; the answer lands with the arrow motif on the sitar
+note('timp', HK['q'], 1.0, 38, 114); note('taiko', HK['q'], 0.5, 45, 104); note('sub', HK['q'], 1.2, 26, 100)
+chord('strS', HK['q'], 1.3, [38, 50, 57, 62], 84, h=0); chord('choir', HK['q'], 1.2, [50, 57, 62], 74)
+note('timp', HK['ans'] + 0.2, 0.6, 38, 98); note('taiko', HK['ans'] + 0.2, 0.4, 48, 90)
+chord('strS', HK['ans'] + 0.2, 1.3, [38, 50, 57, 62, 69], 78, h=0); line('sitar', HK['ans'] + 0.45, MOTIF, 0.2, v=86)
 note('timp', HK['hit1'], 0.8, 38, 104); note('taiko', HK['hit1'], 0.5, 48, 90)
 note('sitar', HK['t1'], 1.2, 74, 78); note('sitar', HK['t1'] + 0.6, 0.8, 72, 66)
 chord('trem', HK['swarm'], HK['hit2'] - HK['swarm'], [62, 63, 68], 54)                                   # the thoughts: a nervous cluster
-for k in range(6): note('pizz', HK['swarm'] + k * 0.15, 0.12, [63, 68, 62, 69, 63, 70][k], 60 + k * 4)
+for k in range(6): note('pizz', HK['swarm'] + k * 0.075, 0.1, [63, 68, 62, 69, 63, 70][k], 60 + k * 4)
 note('timp', HK['hit2'], 1.0, 38, 118); note('taiko', HK['hit2'], 0.6, 45, 104); note('sub', HK['hit2'], 1.4, 26, 100)
 chord('horn', HK['hit2'], 0.8, [38, 44, 50], 92); chord('cb', HK['hit2'], 1.4, [26, 38], 80)
 line('sitar', HK['quote'], MOTIF, 0.35, v=82); note('sitar', HK['quote'] + 1.4, 1.0, 62, 70)
@@ -77,7 +82,7 @@ chord('cb', FX['wheel'], 2.6, [26, 33], 70)
 for i, s in enumerate(FX['poisons']): note('taiko', s, 0.4, [41, 43, 38][i], 96)
 chord('strS', FX['who'], 0.8, [45, 52, 57, 62, 64], 66, h=0)                                                                  # A sus — a question
 # ═══ no-self: the character is written; five plucks, one per aggregate; the chariot clatters and comes apart; it resolves
-note('timp', SE['t'], 0.8, 38, 98); chord('strS', SE['t'], 2.2, [38, 50, 57, 62], 62, h=0); chord('drone', SE['t'], 8.0, [38, 45, 50], 60, h=0)
+note('timp', SE['t'], 0.8, 38, 98); chord('strS', SE['t'], 2.2, [38, 50, 57, 62], 70, h=0); chord('oohs', SE['t'], 1.3, [50, 57, 62], 58); chord('drone', SE['t'], 8.0, [38, 45, 50], 60, h=0)
 for i, s in enumerate(SE['heaps']): note('harp', s, 0.5, [62, 65, 67, 69, 72][i], 72); note('sitar', s, 0.3, [74, 77, 79, 81, 84][i], 60)
 chord('strS', SE['which'], 1.0, [45, 57, 60, 64], 60, h=0)
 for k in range(6): note('pizz', SE['cart'] + k * 0.15, 0.12, [50, 57, 50, 57, 50, 57][k], 70)
@@ -86,7 +91,7 @@ chord('strS', SE['name'], 1.2, [41, 53, 57, 60, 65], 70, h=0); chord('oohs', SE[
 line('flute', SE['decode'], MOTIF, 0.4, v=72); chord('pad', SE['decode'], 2.0, [62, 65, 69, 74], 46, h=0)
 chord('strS', SE['out'] - 0.6, 0.8, [43, 55, 62, 67], 58, h=0)
 # ═══ dependent origination: the koto arrives; each node one pentatonic note; the net, a bright chord; the cloud pulled; 空
-chord('koto', NT['quote'], 1.0, [50, 57, 62], 74, roll=0.08)
+chord('koto', NT['quote'], 1.0, [50, 57, 62], 58, roll=0.08)
 for i in range(8): note('koto', NT['nodes'] + i * 0.17, 0.6, [62, 64, 67, 69, 71, 74, 76, 79][i], 72)
 chord('strS', NT['web'], 1.4, [43, 55, 59, 62, 66, 71], 64, h=0)
 for k, p in enumerate([79, 76, 74, 71, 74, 76, 79, 83]): note('harp', NT['web'] + k * 0.15, 0.4, p, 56)
@@ -164,7 +169,7 @@ note('sitar', EN['card'] + 0.3, 1.5, 74, 64); note('koto', EN['card'] + 0.6, 1.5
 chord('cello', 0.0, 1.4, [38], 72); note('cb', 0.0, 1.4, 26, 70)
 note('cello', DO['out'] - 0.3, 1.2, 45, 62)
 chord('strS', FX['phases'][3] + 0.6, 1.0, [38, 45, 50, 57], 56, h=0)
-chord('strS', NT['t'] - 0.1, 2.9, [38, 50, 57, 62], 54, h=0)
+chord('strS', NT['t'] - 0.5, 3.3, [38, 50, 57, 62], 64, h=0); chord('oohs', NT['t'], 2.6, [50, 57], 54)
 chord('strS', NT['kong'] - 1.5, 1.6, [45, 57, 60, 64], 56, h=0)
 chord('strS', HT['t'] - 0.2, 0.9, [38, 50, 57], 56, h=0)
 chord('strS', DM['t'] + 2.4, 1.0, [38, 50, 57, 62], 56, h=0)
@@ -288,6 +293,7 @@ ARROW = 0.7
 def arrow_at(hit, db, why, seed=1):           # the whoosh ends exactly on the hit
     put(hit - ARROW, s_arrow(ARROW, seed), db, 'arrow flight + thunk (synth)', why)
 
+put(HK['q'], L[774], -24, 'impact_space (774)', 'the question slams in'); put(HK['ans'] + 0.2, s_thump(100, 50, 0.3), -28, 'low thump (synth)', 'the answer lands')
 arrow_at(HK['hit1'], -24, 'the first arrow lands')
 put(HK['swarm'], s_murmur(0.9), -32, 'anxious murmur (synth)', 'the thoughts swarm')
 arrow_at(HK['hit2'], -22, 'the second arrow lands, harder', seed=2)

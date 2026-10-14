@@ -15,5 +15,9 @@ Rules:
 - Escalate: question → proof → bigger proof → reveal. Each beat 0.8–1.5 s, every beat on the music grid.
 - Sound must be present and characterful from frame 1 (a low hit, a switch, a breath) — a silent opening reads as broken.
 - Text in the opening: ≤ 10 characters per line, huge, centred in the upper third.
+- **Say what the film is about in the first second.** Name the subject in the hook itself (「佛家，到底在讲什么？」)
+  and give the viewer's stake right after, as one counter-intuitive sentence (「你的苦，一半是自己加的。」). Only then
+  play the metaphor or demonstration. An abstract metaphor on its own (an arrow hitting 「你」) leaves the viewer not
+  knowing what they are watching, even if the title explains it at 7 s.
 
-Feedback log: 「开头冲击要大」「视频开头要更有吸引力，最好以悬念，问题，反常识，冲击力开场」「光遗传的开头不够吸引人」.
+Feedback log: 「开头不吸引人啊，观众不知道讲啥的」 (佛家 v1 opened on an abstract arrow; the subject only appeared at 7 s). 「开头冲击要大」「视频开头要更有吸引力，最好以悬念，问题，反常识，冲击力开场」「光遗传的开头不够吸引人」.

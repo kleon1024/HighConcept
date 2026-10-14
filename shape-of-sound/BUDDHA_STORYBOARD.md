@@ -12,7 +12,7 @@ experiment that makes it click.
 The frame is the Buddha's oldest metaphor for himself: **大医王**, the physician. 苦集灭道 is a diagnosis: the
 illness, its cause, the fact that it can be cured, and the prescription.
 
-The hook and the ending are **the two arrows** (《杂阿含经》卷十七). The first arrow is pain, and nobody avoids it.
+The film opens by naming its subject and its claim at once: 「佛家，到底在讲什么？」 over the Buddha of the oldest dated printed book, then 「你的苦，一半是自己加的。」 (the first cut opened on the arrows alone and viewers could not tell what it was about). The proof and the ending are **the two arrows** (《杂阿含经》卷十七). The first arrow is pain, and nobody avoids it.
 The second arrow is what we add ourselves: 为什么是我, 完了, 凭什么. At the end the first arrow comes again, but the
 thoughts turn to dust before they can become a second one. Last line: 痛，躲不开；苦，可以放下。
 
@@ -38,7 +38,8 @@ A–D–C–A (the arrow), answered by A–D–E–F♯–A–D.
 ## Beats
 | t (s) | Scene | Saying (source) | 解 / visual | Carry into next |
 |---|---|---|---|---|
-| 0–7 | Two arrows | 譬如士夫被一毒箭，不被第二毒箭（杂阿含经） | a gold arrow hits 「你」: 第一支箭：痛（身受）; anxious thoughts swarm and fuse into a red arrow: 第二支箭：是你自己射的（心受）. 解：痛，躲不开；苦，是你自己加上去的 | the target ring grows into the ensō |
+| 0–2.7 | The question | — | frame 1: the Buddha of the 868 Diamond Sutra, and slammed type 「佛家，到底在讲什么？」; at 1.3 s the answer in one sentence: 一句话：「你的苦，一半是自己加的。」 | the type clears; the target appears |
+| 2.7–7 | Two arrows | 譬如士夫被一毒箭，不被第二毒箭（杂阿含经） | a gold arrow hits 「你」: 第一支箭：痛（身受）; anxious thoughts swarm and fuse into a red arrow: 第二支箭：是你自己射的（心受）. 解：佛家要拔的，就是这第二支箭 | the target ring grows into the ensō |
 | 7–9 | Title | — | 佛 in gold brush; Buddha · 觉醒的人; seal 觉者; Liang Kai's Shakyamuni | — |
 | 9–15.5 | The physician | 如来为大医王（杂阿含经） | four rows stamped: 苦·病 / 集·病因 / 灭·能治（涅槃：火，吹灭了; a flame is blown out）/ 道·药方（八正道）. 解：佛陀开出的不是信仰，是一张诊断书. Zoom into 苦; the eight sufferings flip in. 解：苦 ≠ 疼。苦 = 什么都抓不住 | the tiles collapse into particles |
 | 15.5–24 | Impermanence, grasping | 诸行无常（三法印 · 一） | the particles gather, hold, warp, scatter: 生 住 异 灭. 解：苦，不是因为一切都在变——是因为你想让它不变. Sand runs through a closing grip: 执着 · 抓得越紧，漏得越快. The grip becomes the hub of the Wheel of Life: rooster, snake, pig = 贪 嗔 痴. 那个在「抓」的我——是谁？ | zoom into the hub |

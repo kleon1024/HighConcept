@@ -31,36 +31,56 @@ export const Defs = () => (
 export const THOUGHTS: [string, number, number, number][] = [["为什么是我", 1180, 330, 50], ["完了", 1360, 540, 58], ["凭什么", 1120, 790, 46], ["都怪他", 1500, 720, 44], ["要是没有……", 1490, 400, 40], ["我不行", 1270, 930, 40]];
 export const LAUNCH: [number, number] = [1760, 230];
 
-// ═══ hook: the first arrow is pain; the second, you shoot yourself
+// a line that slams in: visible from its first frame, settling from a little larger
+const Slam: React.FC<{ t: number; at: number; out: number; text: string; x: number; y: number; size: number; gold?: boolean; color?: string }> = ({ t, at, out, text, x, y, size, gold, color = PAPER }) => {
+  if (t < at || t >= out) return null;
+  const k = range(t, at, at + 0.18), o = 1 - eIn(range(t, out - 0.25, out));
+  return <div style={{ position: "absolute", left: x, top: y, transformOrigin: "0% 50%", transform: `scale(${lerp(1.22, 1, backOut(k, 1.6))})`, opacity: Math.min(1, 0.55 + k) * o, whiteSpace: "nowrap",
+    fontFamily: SERIF, fontWeight: 900, fontSize: size, lineHeight: 1.15, ...(gold ? GOLDFILL : { color }), textShadow: gold ? "0 0 30px rgba(221,184,98,0.4)" : "0 4px 24px rgba(0,0,0,0.6)" }}>{text}</div>;
+};
+
+// ═══ hook: what is Buddhism about? — one sentence; then the two arrows prove it
 export const Hook: React.FC<{ t: number }> = ({ t }) => {
   const H = BJ.hook;
   if (t >= H.out + 0.6) return null;
   const o = 1 - eIn(range(t, H.out - 0.2, H.out + 0.5));
+  const qo = 1 - eInOut(range(t, H.clear - 0.3, H.clear));
+  const tgt = eOut(range(t, H.clear - 0.05, H.clear + 0.3));
   return (
     <Layer o={1}>
+      {/* the question, over the Buddha of the oldest dated printed book */}
+      {qo > 0 && <Layer o={qo}>
+        <Art src="bd_jingang.jpg" t={t} a={-0.3} b={H.clear + 0.3} from={[0.81, 0.5, 1.75]} to={[0.81, 0.47, 2.0]} filter="sepia(0.55) saturate(0.9) brightness(0.72) contrast(1.2)" />
+        <div style={{ position: "absolute", inset: 0, background: `linear-gradient(90deg, ${INDIGO} 0%, rgba(13,24,53,0.92) 38%, rgba(13,24,53,0.25) 62%, rgba(13,24,53,0.05) 100%)` }} />
+        <Slam t={t} at={H.q} out={H.ans} text="佛家，" x={130} y={210} size={124} gold />
+        <Slam t={t} at={H.q + 0.2} out={H.ans} text="到底在讲什么？" x={130} y={360} size={124} />
+        <Say t={t} at={H.ans} out={H.clear + 0.3} text="一句话：" x={130} y={150} size={54} color={GOLDL} stagger={0.02} />
+        <Slam t={t} at={H.ans + 0.2} out={H.clear + 0.3} text="你的苦，" x={130} y={250} size={124} />
+        <Slam t={t} at={H.ans + 0.45} out={H.clear + 0.3} text="一半是自己加的。" x={130} y={400} size={124} gold />
+      </Layer>}
       <Svg>
         <Defs />
-        <Target t={t} hits={[{ at: H.hit1, c: GOLD }, { at: H.hit2, c: CINNABAR, big: true }]} o={1} r={74 + 226 * eInOut(range(t, H.out - 0.3, H.out + 0.4))} />
-        <Arrow t={t} t0={-0.2} t1={H.hit1} p0={[-300, 330]} p1={[TGT[0] - 72, TGT[1]]} o={o} />
+        <Target t={t} hits={[{ at: H.hit1, c: GOLD }, { at: H.hit2, c: CINNABAR, big: true }]} o={tgt} r={74 + 226 * eInOut(range(t, H.out - 0.3, H.out + 0.4))} />
+        <Arrow t={t} t0={H.hit1 - 0.45} t1={H.hit1} p0={[-300, 330]} p1={[TGT[0] - 72, TGT[1]]} o={o} />
         <Arrow t={t} t0={H.form + 0.1} t1={H.hit2} p0={LAUNCH} p1={[TGT[0] + 70, TGT[1] - 6]} color={CINNABAR} bend={-60} o={o} />
       </Svg>
-      <Layer o={o}>
+      <Layer o={o * tgt}>
         <div style={{ position: "absolute", left: TGT[0], top: TGT[1], transform: "translate(-50%, -50%)", fontFamily: SERIF, fontWeight: 900, fontSize: 52, color: PAPER }}>你</div>
         {/* the thoughts swarm, shake, and rush to the launch point */}
         {THOUGHTS.map(([w, x, y, s], i) => {
-          const a = H.swarm + i * 0.13, k = eOut(range(t, a, a + 0.3)), g = eIn(range(t, H.form - 0.1 + i * 0.03, H.form + 0.2 + i * 0.03));
+          const a = H.swarm + i * 0.07, k = eOut(range(t, a, a + 0.25)), g = eIn(range(t, H.form - 0.1 + i * 0.03, H.form + 0.2 + i * 0.03));
           if (t < a || g >= 1) return null;
           const jx = Math.sin(t * 37 + i * 3) * 4, jy = Math.cos(t * 41 + i) * 3;
           return <div key={i} style={{ position: "absolute", left: lerp(x, LAUNCH[0], g) + jx, top: lerp(y, LAUNCH[1], g) + jy, transform: `translate(-50%, -50%) scale(${lerp(1, 0.2, g)})`,
             fontFamily: SERIF, fontWeight: 900, fontSize: s, color: CINNABAR, opacity: k * (1 - g * 0.6), whiteSpace: "nowrap", textShadow: "0 0 18px rgba(201,68,46,0.45)" }}>{w}</div>;
         })}
-        <Say t={t} at={H.t1} out={H.out} text="第一支箭：痛。" x={130} y={110} size={84} gold />
-        <Seal t={t} at={H.t1 + 0.5} out={H.out} text="身受" x={760} y={128} size={30} anchor="left" />
-        <Say t={t} at={H.t2} out={H.out} text="第二支箭：" x={130} y={240} size={84} color={CINNABAR} />
-        <Say t={t} at={H.t2 + 0.35} out={H.out} text="是你自己射的。" x={130} y={350} size={84} />
-        <Seal t={t} at={H.t2 + 0.9} out={H.out} text="心受" x={760} y={258} size={30} anchor="left" />
-        <VQuote t={t} at={H.quote} out={H.out} cols={["譬如士夫被一毒箭", "不被第二毒箭"]} x={1820} y={110} size={62} src="杂阿含经" />
-        <Decode t={t} at={H.decode} out={H.out} text="痛，躲不开；苦，是你自己加上去的。" x={130} y={900} size={46} />
+        <Say t={t} at={H.t1} out={H.out} text="第一支箭：痛。" x={130} y={110} size={84} gold stagger={0.03} />
+        <Seal t={t} at={H.t1 + 0.4} out={H.out} text="身受" x={760} y={128} size={30} anchor="left" />
+        <Say t={t} at={H.t2} out={H.out} text="第二支箭：" x={130} y={240} size={84} color={CINNABAR} stagger={0.03} />
+        <Say t={t} at={H.t2 + 0.25} out={H.out} text="是你自己射的。" x={130} y={350} size={84} stagger={0.03} />
+        <Seal t={t} at={H.t2 + 0.7} out={H.out} text="心受" x={760} y={258} size={30} anchor="left" />
+        <VQuote t={t} at={H.quote} out={H.out} cols={["譬如士夫被一毒箭", "不被第二毒箭"]} x={1820} y={110} size={62} src="杂阿含经" stagger={0.035} />
+        <Decode t={t} at={H.decode} out={H.out} text="佛家要拔的，就是这第二支箭。" x={130} y={900} size={50} />
       </Layer>
     </Layer>
   );

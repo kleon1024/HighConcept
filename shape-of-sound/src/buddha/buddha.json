@@ -1,6 +1,6 @@
 {
   "fps": 30, "duration": 90, "width": 1920, "height": 1080, "bpm": 120,
-  "hook": { "hit1": 0.5, "t1": 0.6, "swarm": 1.6, "form": 2.5, "hit2": 3.0, "t2": 3.1, "quote": 4.4, "decode": 5.4, "out": 7.0 },
+  "hook": { "q": 0.0, "ans": 1.3, "clear": 2.7, "hit1": 3.0, "t1": 3.05, "swarm": 3.4, "form": 3.85, "hit2": 4.3, "t2": 4.35, "quote": 5.2, "decode": 6.0, "out": 7.0 },
   "title": { "t": 7.0, "sub": 7.4, "seal": 7.9, "out": 9.0 },
   "doctor": { "t": 9.0, "head": 9.0, "rows": [9.5, 10.0, 10.5, 11.0], "blow": 11.5, "decode": 12.0, "zoom": 13.0, "eight": 13.2, "bitter": 14.0, "out": 15.5 },
   "flux": { "t": 15.5, "quote": 15.5, "phases": [16.0, 16.75, 17.5, 18.25], "decode": 18.6, "grasp": 19.5, "glabel": 19.7, "gdecode": 20.3, "wheel": 21.5, "poisons": [21.9, 22.3, 22.7], "who": 23.2, "out": 24.0 },
