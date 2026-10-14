@@ -80,14 +80,6 @@
   "used_in": "optogenetics pond"
  },
  {
-  "file": "neuron_real.jpg",
-  "commons": "File:Нейрон коры с множеством дендритных шипиков.jpg",
-  "orig_w": 1024,
-  "author": "Sergb95",
-  "license": "CC BY-SA 4.0",
-  "used_in": "optogenetics problem"
- },
- {
   "file": "ad_lastsupper.jpg",
   "commons": "File:Leonardo da Vinci - The Last Supper high res.jpg",
   "author": "Leonardo da Vinci (1495–1498)",
@@ -345,5 +337,75 @@
   "license": "Public domain",
   "used_in": "佛 · 慧能",
   "orig_w": 439
+ },
+ {
+  "file": "lv_rose.jpg",
+  "commons": "File:Redoute - Rosa centifolia foliacea.jpg",
+  "author": "Pierre-Joseph Redouté, Les Roses (1817–1824)",
+  "license": "Public domain",
+  "used_in": "什么是爱 · 玫瑰",
+  "orig_w": 1408,
+  "thumb_w": 1280
+ },
+ {
+  "file": "lv_foxes.jpg",
+  "commons": "File:Franz Marc - The Foxes - Google Art Project.jpg",
+  "author": "Franz Marc, The Foxes (1913), Kunstpalast Düsseldorf",
+  "license": "Public domain",
+  "used_in": "什么是爱 · 狐狸",
+  "orig_w": 2497,
+  "thumb_w": 1280
+ },
+ {
+  "file": "lv_wheat.jpg",
+  "commons": "File:Wheat Field with Cypresses MET DT1567.jpg",
+  "author": "Vincent van Gogh, Wheat Field with Cypresses (1889), Metropolitan Museum of Art",
+  "license": "CC0",
+  "used_in": "什么是爱 · 麦子",
+  "orig_w": 3811,
+  "thumb_w": 1920
+ },
+ {
+  "file": "lv_geese.jpg",
+  "commons": "File:Geese flying past the full moon (5759417842).jpg",
+  "author": "Utagawa Hiroshige, Geese flying past the full moon, San Diego Museum of Art",
+  "license": "Public domain",
+  "used_in": "什么是爱 · 雁丘",
+  "orig_w": 880
+ },
+ {
+  "file": "lv_romeo.jpg",
+  "commons": "File:Frank Bernard Dicksee - Romeo and Juliet, 1884.jpg",
+  "author": "Frank Dicksee, Romeo and Juliet (1884), Southampton City Art Gallery",
+  "license": "Public domain",
+  "used_in": "什么是爱 · 罗密欧与朱丽叶",
+  "orig_w": 1000
+ },
+ {
+  "file": "lv_kiss.jpg",
+  "commons": "File:The Kiss - Gustav Klimt - Google Cultural Institute.jpg",
+  "author": "Gustav Klimt, The Kiss (1907–08), Belvedere, Vienna",
+  "license": "Public domain",
+  "used_in": "什么是爱 · 吻",
+  "orig_w": 7376,
+  "thumb_w": 1920
+ },
+ {
+  "file": "lv_bride.jpg",
+  "commons": "File:Rembrandt Harmensz. van Rijn - Portret van een paar als oudtestamentische figuren, genaamd 'Het Joodse bruidje' - Google Art Project.jpg",
+  "author": "Rembrandt, The Jewish Bride (c. 1665–69), Rijksmuseum",
+  "license": "Public domain",
+  "used_in": "什么是爱 · 两个孤独",
+  "orig_w": 5486,
+  "thumb_w": 1920
+ },
+ {
+  "file": "lv_loquat.jpg",
+  "commons": "File:Loquats and Mountain Bird.jpg",
+  "author": "Lin Chun 林椿, Loquats and Mountain Bird 枇杷山鸟图 (Southern Song), Palace Museum",
+  "license": "Public domain",
+  "used_in": "什么是爱 · 枇杷树",
+  "orig_w": 1482,
+  "thumb_w": 1280
  }
 ]

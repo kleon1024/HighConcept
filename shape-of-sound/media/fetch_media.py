@@ -4,10 +4,12 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from commons import UA
 HERE = os.path.dirname(os.path.abspath(__file__)); OUT = os.path.join(HERE, '..', 'public', 'media')
 def commons_url(title, orig_w, width=1280):
-    """Direct upload.wikimedia.org URL (no API call): originals up to `width`, otherwise a standard-size thumbnail."""
+    """Direct upload.wikimedia.org URL (no API call) at a standard thumbnail width."""
     name = title.split(':', 1)[1].replace(' ', '_'); h = hashlib.md5(name.encode()).hexdigest(); q = urllib.parse.quote(name)
-    if orig_w <= width: return f'https://upload.wikimedia.org/wikipedia/commons/{h[0]}/{h[:2]}/{q}'
-    return f'https://upload.wikimedia.org/wikipedia/commons/thumb/{h[0]}/{h[:2]}/{q}/{width}px-{q}'
+    # Wikimedia asks for its standard thumbnail widths: take the largest one that fits the original and the request
+    std = [w for w in (3840, 1920, 1280, 960, 500, 330, 250, 120) if w <= min(width, orig_w)]
+    if not std: return f'https://upload.wikimedia.org/wikipedia/commons/{h[0]}/{h[:2]}/{q}'
+    return f'https://upload.wikimedia.org/wikipedia/commons/thumb/{h[0]}/{h[:2]}/{q}/{std[0]}px-{q}'
 def main():
     items = json.load(open(os.path.join(HERE, 'media.json'), encoding='utf-8'))
     os.makedirs(OUT, exist_ok=True)
