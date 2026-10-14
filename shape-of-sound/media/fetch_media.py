@@ -14,7 +14,7 @@ def main():
     for it in sorted(items, key=lambda i: i['file'].endswith('.mp4')):   # photos first, footage last
         dst = os.path.join(OUT, it['file'])
         if os.path.exists(dst): continue
-        src = it.get('direct') or commons_url(it['commons'], it.get('orig_w', 0))
+        src = it.get('direct') or commons_url(it['commons'], it.get('orig_w', 0), it.get('thumb_w', 1280))
         tmp = dst + '.src'
         for k in range(6):                                  # back off politely when the image servers rate-limit
             try:
