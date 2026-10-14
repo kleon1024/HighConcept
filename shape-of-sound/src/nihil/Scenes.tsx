@@ -195,10 +195,10 @@ export const Abyss: React.FC<{ t: number }> = ({ t }) => {
         <Line t={t} at={A.l2} out={A.monk} text="深渊也在凝视你。" x={960} y={890} size={60} anchor="center" stagger={0.06} />
       </Layer>
       {monk > 0 && <Layer o={monk}>
-        <Img src={staticFile("media/nh_monk.jpg")} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", filter: "grayscale(1) contrast(1.25) brightness(0.8)",
-          transform: `scale(${1.03 + 0.06 * range(t, A.monk, A.out)})` }} />
+        <Img src={staticFile("media/nh_monk.jpg")} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 100%", filter: "grayscale(1) contrast(1.25) brightness(0.8)",
+          transformOrigin: "35% 85%", transform: `scale(${1.03 + 0.08 * range(t, A.monk, A.out)})` }} />
         <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at 50% 55%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.7) 100%)" }} />
-        <Note t={t} at={A.monk + 0.3} out={A.out + 0.2} text="弗里德里希《海边的僧侣》1810" x={80} y={980} color={WH} />
+        <Note t={t} at={A.monk + 0.3} out={A.out + 0.2} text="弗里德里希《海边的僧侣》1810" x={1840} y={70} anchor="right" color={WH} />
       </Layer>}
     </Layer>
   );

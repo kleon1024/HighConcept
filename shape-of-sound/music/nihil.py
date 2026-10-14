@@ -65,7 +65,7 @@ chord('choir', GD['dead'], 1.0, [55, 60, 63], 70)
 chord('trem', GD['snap'] + 0.3, GD['out'] - GD['snap'] - 0.3, [72, 79], 46); note('cb', GD['snap'] + 0.3, GD['out'] - GD['snap'] - 0.3, 24 + 12, 46)
 for i, p in enumerate(FALL): note('piano', GD['q'] + i * 0.5, 0.45, p - 12, 62)
 for i, p in enumerate(FALL): note('piano', GD['q'] + 2.0 + i * 0.5, 0.45, p - 24, 58)
-chord('strS', GD['flip'], 1.5, [48, 55, 59, 65], 60, h=0)                      # 「还有上和下吗？」: an unresolved G7 (no root)
+chord('strS', GD['flip'], 2.4, [48, 55, 59, 65], 60, h=0)                      # 「还有上和下吗？」: an unresolved G7 (no root)
 
 # ═══ two nihilisms: the passive side sinks (a pad that loses its voice); the active side knocks, breaks, rebuilds
 chord('pad', TW['passive'], 3.0, CH['Cm'][1], 50, h=0)
