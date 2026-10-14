@@ -24,7 +24,7 @@ def main():
             except urllib.error.HTTPError as e:
                 if e.code != 429 or k == 5: raise
                 time.sleep(20 * 2 ** k)
-        time.sleep(3)
+        time.sleep(12)                                      # stay well under the image servers' rate limits
         if it['file'].endswith('.mp4'):   # footage: h264, no audio, at most 1080 wide
             subprocess.run(['ffmpeg', '-nostdin', '-loglevel', 'error', '-y', '-i', tmp, '-an', '-vf', 'scale=min(1080\\,iw):-2', '-c:v', 'libx264', '-crf', '20', '-pix_fmt', 'yuv420p', dst], check=True)
         else:                             # photos: jpeg, long edge 2000

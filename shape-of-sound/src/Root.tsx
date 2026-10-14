@@ -24,6 +24,8 @@ import { Ocean } from "./ocean/Ocean";
 import { Dao } from "./dao/Dao";
 import { Halloween } from "./halloween/Halloween";
 import HW from "./halloween/halloween.json";
+import { Ru } from "./ru/Ru";
+import RU from "./ru/ru.json";
 import DA from "./dao/dao.json";
 import OC from "./ocean/ocean.json";
 import LV from "./love/love.json";
@@ -45,6 +47,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition id="Buddha" component={Buddha} durationInFrames={BD.duration * BD.fps} fps={BD.fps} width={BD.width} height={BD.height} />
       <Composition id="Love" component={Love} durationInFrames={LV.duration * LV.fps} fps={LV.fps} width={LV.width} height={LV.height} />
       <Composition id="Halloween" component={Halloween} durationInFrames={HW.duration * HW.fps} fps={HW.fps} width={HW.width} height={HW.height} />
+      <Composition id="Ru" component={Ru} durationInFrames={RU.duration * RU.fps} fps={RU.fps} width={RU.width} height={RU.height} />
       <Composition id="Dao" component={Dao} durationInFrames={DA.duration * DA.fps} fps={DA.fps} width={DA.width} height={DA.height} />
       <Composition id="Ocean" component={Ocean} durationInFrames={OC.duration * OC.fps} fps={OC.fps} width={OC.width} height={OC.height} />
       <Composition id="ArtDate" component={ArtDate} durationInFrames={AD.duration * AD.fps} fps={AD.fps} width={AD.width} height={AD.height} />

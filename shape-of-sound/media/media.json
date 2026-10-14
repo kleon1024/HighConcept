@@ -648,8 +648,7 @@
   "license": "Public domain",
   "used_in": "儒 · 结尾",
   "orig_w": 1519,
-  "thumb_w": 1280,
-  "direct": "https://upload.wikimedia.org/wikipedia/commons/3/32/Ma_Yuan-Confucius.png"
+  "thumb_w": 1280
  },
  {
   "file": "ru_stele.jpg",
@@ -659,7 +658,7 @@
   "used_in": "儒 · 周游列国",
   "orig_w": 1566,
   "thumb_w": 1280,
-  "direct": "https://upload.wikimedia.org/wikipedia/commons/a/a2/%E4%BA%9C%E7%B4%B0%E4%BA%9C%E5%A4%A7%E8%A6%B3_06_070_%22%E5%90%B3%E9%81%93%E5%AD%90%E5%AD%94%E5%AD%90%E5%83%8F_%EF%BC%88%E6%9B%B2%E9%98%9C%EF%BC%89%22.jpg"
+  "note": "the rubbing only (crumpled paper at right removed): crop=948:1791:154:0"
  },
  {
   "file": "ru_xiaojing.jpg",
@@ -668,42 +667,163 @@
   "license": "Public domain",
   "used_in": "儒 · 学生问仁",
   "orig_w": 2162,
-  "thumb_w": 1920
+  "thumb_w": 1920,
+  "note": "painting area cropped from the 1920-px thumbnail (mount removed): crop=1666:1416:100:114"
  },
  {
   "file": "ru_family.jpg",
-  "commons": "File:北宋 李公麟 孝經圖 卷-The Classic of Filial Piety MET DP151512.jpg",
-  "author": "传李公麟《孝经图》(北宋, c. 1085), The Met",
+  "met": "https://www.metmuseum.org/art/collection/search/39895",
+  "direct": "https://images.metmuseum.org/CRDImages/as/original/DP151528.jpg",
+  "author": "传李公麟《孝经图》卷 (北宋, c. 1085), section 「纪孝行章」, The Met 1996.479a–c",
   "license": "CC0",
   "used_in": "儒 · 齐家",
-  "orig_w": 1961,
-  "thumb_w": 1920
+  "orig_w": 1581
  },
  {
-  "file": "ru_shitai.jpg",
-  "commons": "File:《唐玄宗注孝经》-Xuanzong's Preface, Text, and Commentary on the Classic of Filial Piety, also known as Shitai Xiaojing (Stone Platform Classic of Filial Piety) MET 1977 375 3a d label strip sf.jpg",
-  "author": "《石台孝经》拓本 (碑 745年, 西安碑林; 20th-c. rubbing), The Met",
-  "license": "CC0",
-  "used_in": "儒 · 碑拓",
-  "orig_w": 3648,
-  "thumb_w": 1920
- },
- {
-  "file": "ru_gui.jpg",
-  "commons": "File:西周 青銅簋-Ritual Grain Vessel (Gui) MET DP218224.jpg",
+  "file": "ru_gui.png",
+  "met": "https://www.metmuseum.org/art/collection/search/49385",
+  "direct": "https://images.metmuseum.org/CRDImages/as/original/DP218224.jpg",
   "author": "西周 青铜簋 (late 11th–early 10th c. BCE), The Met",
   "license": "CC0",
   "used_in": "儒 · 齐家",
   "orig_w": 4000,
-  "thumb_w": 1920
+  "note": "cut out of its grey studio ground: python3 media/chroma_cut.py DP218224.jpg ru_gui.png 1400 16 100"
  },
  {
   "file": "ru_bells.jpg",
+  "flickr": "https://www.flickr.com/photos/101561334@N08/10166252544/",
   "commons": "File:Two Tone Set-bells of Marquis Yi of Zeng (10166252544).jpg",
+  "direct": "https://live.staticflickr.com/7295/10166252544_89af2653b9_k.jpg",
   "author": "曾侯乙编钟 (战国, 433 BCE or later), Hubei Provincial Museum; photo Gary Todd",
   "license": "CC0",
   "used_in": "儒 · 四海之内",
   "orig_w": 4752,
+  "note": "top of the 2048-px Flickr copy (the upper bells between the rack's two beams): crop=1400:684:0:0"
+ },
+ {
+  "file": "hlm_daiyu.jpg",
+  "commons": "File:Lin Daiyu Hongloumeng Tuyong.jpg",
+  "author": "改琦《红楼梦图咏》(woodblock, 1879 ed.), scan from 東京藝術大学 · 林黛玉",
+  "license": "Public domain",
+  "used_in": "红楼 · 开场 / 判词",
+  "orig_w": 1588,
+  "thumb_w": 1280
+ },
+ {
+  "file": "hlm_baochai.jpg",
+  "commons": "File:Hongloumeng Tuyong Xue Baochai.jpg",
+  "author": "改琦《红楼梦图咏》(woodblock, 1879 ed.), scan from 東京藝術大学 · 薛宝钗",
+  "license": "Public domain",
+  "used_in": "红楼 · 判词",
+  "orig_w": 1578,
+  "thumb_w": 1280
+ },
+ {
+  "file": "hlm_baoyu.jpg",
+  "commons": "File:Jia Baoyu Hongloumeng Tuyong.jpg",
+  "author": "改琦《红楼梦图咏》(woodblock, 1879 ed.), scan from 東京藝術大学 · 贾宝玉",
+  "license": "Public domain",
+  "used_in": "红楼 · 太虚幻境",
+  "orig_w": 1591,
+  "thumb_w": 1280
+ },
+ {
+  "file": "hlm_stone.jpg",
+  "commons": "File:红楼梦图咏-通灵宝石、绛珠仙草.jpg",
+  "author": "改琦《红楼梦图咏》(woodblock, 1879 ed.), scan from 東京藝術大学 · 通灵宝石、绛珠仙草",
+  "license": "Public domain",
+  "used_in": "红楼 · 第一页",
+  "orig_w": 1597,
+  "thumb_w": 1280
+ },
+ {
+  "file": "hlm_yuanchun.jpg",
+  "commons": "File:Hongloumeng Tuyong Jia Yuanchun.jpg",
+  "author": "改琦《红楼梦图咏》(woodblock, 1879 ed.), scan from 東京藝術大学 · 贾元春",
+  "license": "Public domain",
+  "used_in": "红楼 · 原应叹息",
+  "orig_w": 1597,
+  "thumb_w": 1280
+ },
+ {
+  "file": "hlm_yingchun.jpg",
+  "commons": "File:Hongloumeng Tuyong Jia Yingchun.jpg",
+  "author": "改琦《红楼梦图咏》(woodblock, 1879 ed.), scan from 東京藝術大学 · 贾迎春",
+  "license": "Public domain",
+  "used_in": "红楼 · 原应叹息",
+  "orig_w": 1644,
+  "thumb_w": 1280
+ },
+ {
+  "file": "hlm_tanchun.jpg",
+  "commons": "File:Hongloumeng Tuyong Jia Tanchun.jpg",
+  "author": "改琦《红楼梦图咏》(woodblock, 1879 ed.), scan from 東京藝術大学 · 贾探春",
+  "license": "Public domain",
+  "used_in": "红楼 · 原应叹息",
+  "orig_w": 1607,
+  "thumb_w": 1280
+ },
+ {
+  "file": "hlm_xichun.jpg",
+  "commons": "File:Hongloumeng Tuyong Jia Xichun.jpg",
+  "author": "改琦《红楼梦图咏》(woodblock, 1879 ed.), scan from 東京藝術大学 · 贾惜春",
+  "license": "Public domain",
+  "used_in": "红楼 · 原应叹息",
+  "orig_w": 1606,
+  "thumb_w": 1280
+ },
+ {
+  "file": "hlm_xiangling.jpg",
+  "commons": "File:Hongloumeng Tuyong Xiangling.jpg",
+  "author": "改琦《红楼梦图咏》(woodblock, 1879 ed.), scan from 東京藝術大学 · 香菱（甄英莲）",
+  "license": "Public domain",
+  "used_in": "红楼 · 名字",
+  "orig_w": 1595,
+  "thumb_w": 1280
+ },
+ {
+  "file": "hlm_xifeng.jpg",
+  "commons": "File:Hongloumeng Tuyong Wang Xifeng.jpg",
+  "author": "改琦《红楼梦图咏》(woodblock, 1879 ed.), scan from 東京藝術大学 · 王熙凤",
+  "license": "Public domain",
+  "used_in": "红楼 · 好了歌",
+  "orig_w": 1600,
+  "thumb_w": 1280
+ },
+ {
+  "file": "hlm_zanghua.jpg",
+  "commons": "File:Lin Daiyu Burying Flowers.png",
+  "author": "费丹旭「金陵十二钗：林黛玉葬花」(before 1850), from 《中國歷代仕女畫集》",
+  "license": "Public domain",
+  "used_in": "红楼 · 葬花",
+  "orig_w": 2804,
+  "thumb_w": 1920
+ },
+ {
+  "file": "hlm_garden.jpg",
+  "commons": "File:Sun Wen Red Chamber Daguanyuan.jpg",
+  "author": "孙温《全本红楼梦图》大观园 (late Qing), 旅顺博物馆",
+  "license": "Public domain",
+  "used_in": "红楼 · 大观园",
+  "orig_w": 1920,
+  "thumb_w": 1280
+ },
+ {
+  "file": "hlm_window.jpg",
+  "commons": "File:花窗 - Window of Heyuan Garden - 2015.04 - panoramio.jpg",
+  "author": "rheins, 花窗 · 扬州何园 (2015)",
+  "license": "CC BY 3.0",
+  "used_in": "红楼 · 花窗",
+  "orig_w": 4171,
+  "thumb_w": 1920
+ },
+ {
+  "file": "hlm_icecrack.jpg",
+  "commons": "File:觀稼樓冰裂紋漏窗 Ice Crack Openwork Window of Guanjia House - panoramio.jpg",
+  "author": "lienyuan lee, 冰裂纹漏窗 · 觀稼樓",
+  "license": "CC BY 3.0",
+  "used_in": "红楼 · 冰裂",
+  "orig_w": 5966,
   "thumb_w": 1920
  }
 ]
