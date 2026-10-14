@@ -74,7 +74,7 @@ export const Why: React.FC<{ t: number }> = ({ t }) => {
 
 export const White: React.FC<{ t: number }> = ({ t }) => {
   if (t < WH.t - 0.5 || t >= WH.out + 0.6) return null;
-  const wash = eInOut(range(t, WH.t + 0.5, WH.l2 + 0.6));
+  const wash = 0.4 + 0.6 * eInOut(range(t, WH.t, WH.l2 + 0.6));   // the garden comes back already fading
   return (
     <Layer o={eOut(range(t, WH.t - 0.5, WH.t)) * (1 - eIn(range(t, WH.out - 0.1, WH.out + 0.5)))}>
       <Paper t={t} />
