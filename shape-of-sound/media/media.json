@@ -479,5 +479,43 @@
   "used_in": "洋流 · 结尾",
   "orig_w": 1708,
   "thumb_w": 1280
+ },
+ {
+  "file": "dao_fisher.jpg",
+  "commons": "File:Angler on a Wintry Lake, by Ma Yuan, 1195.jpg",
+  "author": "传马远《寒江独钓图》 (Southern Song, late 12th–early 13th c.), Tokyo National Museum TA-140",
+  "license": "Public domain",
+  "used_in": "道 · 留白, 结尾",
+  "orig_w": 5906,
+  "thumb_w": 3840
+ },
+ {
+  "file": "dao_ox.jpg",
+  "commons": "File:Хань Хуан. Пять быков. Гугун, Пекин.1.jpg",
+  "author": "韩滉《五牛图》 (Tang, 8th c.), Palace Museum, Beijing",
+  "license": "Public domain",
+  "used_in": "道 · 庖丁解牛",
+  "orig_w": 4180,
+  "thumb_w": 3840,
+  "note": "3840-px thumbnail, cropped to the fourth ox (x 2110–3010) by hand"
+ },
+ {
+  "file": "dao_tree.jpg",
+  "commons": "File:北宋 郭熙 樹色平遠圖 卷 -Old Trees, Level Distance MET DP167811.jpg",
+  "author": "郭熙 Guo Xi, Old Trees, Level Distance (c. 1080), Metropolitan Museum of Art 1981.276",
+  "license": "CC0",
+  "used_in": "道 · 无用之用",
+  "orig_w": 4000,
+  "thumb_w": 3840,
+  "note": "3840-px thumbnail, cropped to the old trees (1280×720 at x 840, y 930) by hand"
+ },
+ {
+  "file": "dao_fly.jpg",
+  "commons": "File:Dschuang-Dsi-Schmetterlingstraum-Zhuangzi-Butterfly-Dream.jpg",
+  "author": "陆治《梦蝶图》 (Ming, 16th c.)",
+  "license": "Public domain",
+  "used_in": "道 · 庄周梦蝶",
+  "orig_w": 3342,
+  "thumb_w": 1920
  }
 ]

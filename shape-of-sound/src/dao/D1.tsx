@@ -30,11 +30,11 @@ export const Hook: React.FC<{ t: number }> = ({ t }) => {
           </g>
           {/* a white-washed garden wall (粉墙) under a dark tile roof (黛瓦) */}
           <g mask="url(#gate)" opacity={roomK}>
-            <rect x={0} y={250} width={1920} height={830} fill="#F3EEE4" />
-            <rect x={0} y={250} width={1920} height={830} fill="url(#wallWash)" />
-            <rect x={0} y={232} width={1920} height={30} fill="#33312C" />
-            {Array.from({ length: 49 }, (_, i) => <path key={i} d={`M ${i * 40},262 q 20,18 40,0`} fill="#33312C" />)}
-            <rect x={0} y={214} width={1920} height={14} fill="#46433C" />
+            <rect x={0} y={330} width={1920} height={750} fill="#F3EEE4" />
+            <rect x={0} y={330} width={1920} height={750} fill="url(#wallWash)" />
+            <rect x={0} y={312} width={1920} height={26} fill="#33312C" />
+            {Array.from({ length: 49 }, (_, i) => <path key={i} d={`M ${i * 40},338 q 20,16 40,0`} fill="#33312C" />)}
+            <rect x={0} y={298} width={1920} height={12} fill="#46433C" />
           </g>
           <defs><linearGradient id="wallWash" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#D9D1C0" stopOpacity="0.7" /><stop offset="0.25" stopColor="#E9E2D3" stopOpacity="0.2" /><stop offset="1" stopColor="#CFC6B2" stopOpacity="0.5" /></linearGradient></defs>
         </Svg>}
@@ -60,7 +60,8 @@ export const Hook: React.FC<{ t: number }> = ({ t }) => {
       </div>
       {/* the claim, from frame 1 */}
       <Layer o={1 - eIn(range(t, H.out - 0.5, H.out))}>
-        <Say t={t} at={0.0} out={H.out} text="老子说：" x={960} y={70} size={44} anchor="center" weight={600} color={INK2} stagger={0.03} />
+        <Say t={t} at={0.0} out={H.out} text="道家：" x={960} y={70} size={44} anchor="center" weight={600} color={INK2} stagger={0.03} />
+        <Note t={t} at={0.6} out={H.out} text="（老子 · 大意）" x={1390} y={214} size={22} />
         <Say t={t} at={H.claim} out={H.out} text="空，才有用。" x={960} y={130} size={128} anchor="center" font={BRUSH} weight={400} stagger={0.12} />
       </Layer>
       {label(H.wheel + 0.2, H.bowl, "车轮")}{why(H.wheel + 0.6, H.bowl)}

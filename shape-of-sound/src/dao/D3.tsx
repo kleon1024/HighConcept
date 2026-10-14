@@ -1,6 +1,7 @@
 // Taiji (有无相生, 反者道之动), the full calendar of a modern life (满了的杯子), and the ending on Ma Yuan's cold river:
 // the circle becomes the moon — 「给生活，留一点白」.
 import React from "react";
+import { SILK } from "./D2";
 import { Art, BRUSH, Columns, Credit, DJ, INK, INK2, InkCircle, Layer, Note, Paper, SANS, SEAL, Say, Seal, Svg, WASH, eIn, eInOut, eOut, lerp, range, rnd } from "./kit";
 
 const TJ = DJ.taiji, B = DJ.busy, E = DJ.end;
@@ -25,6 +26,7 @@ export const Taiji: React.FC<{ t: number }> = ({ t }) => {
       <Columns t={t} at={TJ.l1} out={TJ.l2} x={300} y={150} size={96} cols={["有无相生"]} />
       <Say t={t} at={TJ.l1 + 0.6} out={TJ.l2} text="有和无，互相生出对方。" x={110} y={620} size={44} weight={900} />
       <Note t={t} at={TJ.l1 + 0.8} out={TJ.l2} text="《道德经》第二章" x={112} y={690} size={22} />
+      <Note t={t} at={TJ.fill + 1.0} out={TJ.out} text="阴阳鱼图是宋以后的画法 · 此处示意" x={1160} y={900} anchor="center" size={20} />
       <Columns t={t} at={TJ.l2} out={TJ.l3} x={300} y={150} size={96} cols={["反者道之动"]} />
       <Say t={t} at={TJ.l2 + 0.6} out={TJ.l3} text="走到头，就会往回走。" x={110} y={700} size={44} weight={900} />
       <Note t={t} at={TJ.l2 + 0.8} out={TJ.l3} text="《道德经》第四十章" x={112} y={770} size={22} />
@@ -74,18 +76,18 @@ export const End: React.FC<{ t: number }> = ({ t }) => {
   return (
     <Layer o={o}>
       <Paper />
-      <Art src="dao_fisher.jpg" t={t} a={E.t - 0.6} b={E.title} from={[0.5, 0.55, 1.18]} to={[0.5, 0.52, 1.0]} filter="sepia(0.2) contrast(1.05) brightness(1.02)" />
+      <Art src="dao_fisher.jpg" t={t} a={E.t - 0.6} b={E.title} from={[0.45, 0.62, 1.25]} to={[0.5, 0.55, 1.0]} filter={SILK} />
       <Svg><InkCircle id="moon" cx={1500} cy={250} r={90} w={10} k={eInOut(range(t, E.moon, E.moon + 1.4))} seed={31} color={INK2} /></Svg>
       <Say t={t} at={E.l1} out={E.title + 0.2} text="给生活，留一点白。" x={140} y={150} size={92} font={BRUSH} weight={400} stagger={0.12} />
-      <Say t={t} at={E.l2} out={E.title + 0.2} text="空，才有用。" x={150} y={290} size={58} weight={900} color={INK2} stagger={0.09} />
+      <Say t={t} at={E.l2} out={E.title + 0.2} text="留一点空，日子才转得动。" x={150} y={290} size={58} weight={900} color={INK2} stagger={0.07} />
       <Seal t={t} at={E.seal} text="道" x={540} y={410} s={84} o={1 - card} />
-      <Credit t={t} at={E.t} out={E.title} text="马远《寒江独钓图》（南宋）· 东京国立博物馆" />
+      <Credit t={t} at={E.t} out={E.title} text="传马远《寒江独钓图》（南宋）· 东京国立博物馆" />
       <Layer o={card}>
         <Paper />
         <div style={{ position: "absolute", left: 0, right: 0, top: 300, textAlign: "center", fontFamily: BRUSH, fontSize: 230, color: INK, letterSpacing: 40 }}>道 · 空</div>
-        <Seal t={t} at={E.title + 0.6} text="老子" x={1290} y={560} s={86} />
+        <Seal t={t} at={E.title + 0.6} text="老子" x={1470} y={560} s={86} />
         <div style={{ position: "absolute", left: 0, right: 0, top: 940, textAlign: "center", fontFamily: SANS, fontWeight: 500, fontSize: 20, color: WASH, letterSpacing: 1.5, lineHeight: 1.7 }}>
-          引文：《道德经》第二、八、十一、四十、七十八章 · 《庄子》养生主、人间世、齐物论<br />图：马远 · 韩滉 · 及画中所列
+          引文：《道德经》第二、八、十一、四十、七十八章 · 《庄子》养生主、人间世、齐物论<br />图：传马远《寒江独钓图》 · 韩滉《五牛图》 · 郭熙《树色平远图》 · 陆治《梦蝶图》
         </div>
       </Layer>
       <div style={{ position: "absolute", inset: 0, background: "#000", opacity: eIn(range(t, E.out - 0.6, E.out)) }} />
