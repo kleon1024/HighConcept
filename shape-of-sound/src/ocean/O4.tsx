@@ -93,13 +93,13 @@ export const Ending: React.FC<{ t: number }> = ({ t }) => {
         <Col t={t} at={E.poem + 2.0} out={E.back + 0.1} text="李白·将进酒" x={1556} y={96} size={34} color="#7A1F14" />
         {/* it does come back: the river loops round */}
         <Svg>
-          <path d="M 1500,140 C 1200,120 900,260 900,520 C 900,820 1300,900 1480,760 C 1640,640 1560,420 1380,430" fill="none" stroke="#1F3B5C" strokeWidth={8} strokeLinecap="round"
+          <path d="M 1600,300 C 1300,280 1000,420 1000,640 C 1000,900 1360,980 1540,860 C 1700,740 1620,540 1440,550" fill="none" stroke="#1F3B5C" strokeWidth={8} strokeLinecap="round"
             strokeDasharray={`${L * loop} ${L * 2}`} opacity={0.85 * fade(t, E.back, E.l1 + 0.2, 0.2, 0.5)} />
         </Svg>
-        <Say t={t} at={E.back} out={E.l1} text="其实，它会回来。" x={300} y={180} size={96} color={SILK_INK} weight={900} stagger={0.08} blur={0} />
-        <div style={{ position: "absolute", left: 240, top: 120, width: 1160, height: 300, background: "radial-gradient(ellipse at 40% 50%, rgba(238,222,190,0.75) 0%, rgba(238,222,190,0) 70%)", opacity: fade(t, E.l1 - 0.2, E.home, 0.3, 0.4) }} />
-        <Say t={t} at={E.l1} out={E.home + 0.2} text="此刻从太平洋深处升起的海水，" x={300} y={170} size={58} color={SILK_INK} weight={600} blur={0} />
-        <Say t={t} at={E.l2} out={E.home + 0.2} text="上一次见到阳光，李白可能还在写诗。" x={300} y={255} size={64} color="#7A1F14" weight={900} blur={0} />
+        <Say t={t} at={E.back} out={E.l1} text="其实，它会回来。" x={440} y={180} size={96} color={SILK_INK} weight={900} stagger={0.08} blur={0} />
+        <div style={{ position: "absolute", left: 380, top: 120, width: 1160, height: 300, background: "radial-gradient(ellipse at 40% 50%, rgba(238,222,190,0.75) 0%, rgba(238,222,190,0) 70%)", opacity: fade(t, E.l1 - 0.2, E.home, 0.3, 0.4) }} />
+        <Say t={t} at={E.l1} out={E.home + 0.2} text="此刻从太平洋深处升起的海水，" x={440} y={170} size={58} color={SILK_INK} weight={600} blur={0} />
+        <Say t={t} at={E.l2} out={E.home + 0.2} text="上一次见到阳光，李白可能还在写诗。" x={440} y={255} size={64} color="#7A1F14" weight={900} blur={0} />
         <Note t={t} at={E.l2} out={E.home} text="北太平洋深层水约1200–1500年未接触海面 · Gebbie & Huybers 2012" x={112} y={1020} size={18} color="rgba(42,28,16,0.7)" />
         <Credit t={t} at={E.t} out={E.home} text="马远《水图》· 黄河逆流（南宋）· 故宫博物院" color="rgba(42,28,16,0.7)" />
       </Layer>

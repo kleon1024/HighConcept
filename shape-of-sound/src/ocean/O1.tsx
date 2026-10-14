@@ -152,8 +152,8 @@ const Ship: React.FC<{ x: number; y: number; c: string; s?: number; flip?: boole
     <line x1={0} y1={4} x2={0} y2={-48} stroke={c} strokeWidth={2.5} />
   </g>
 );
-const Panel: React.FC<React.PropsWithChildren<{ o: number; x: number; y: number; w: number }>> = ({ o, x, y, w, children }) => (o <= 0.001 ? null :
-  <div style={{ position: "absolute", left: x, top: y, width: w, padding: "26px 40px 30px", background: "rgba(243,236,220,0.94)", border: "3px double #4A3A28", boxShadow: "0 6px 30px rgba(40,30,20,0.35)", opacity: o }}>{children}</div>);
+const Panel: React.FC<React.PropsWithChildren<{ o: number; x: number; y: number; w: number; h: number }>> = ({ o, x, y, w, h, children }) => (o <= 0.001 ? null :
+  <div style={{ position: "absolute", left: x, top: y, width: w, height: h, background: "rgba(243,236,220,0.94)", border: "3px double #4A3A28", boxShadow: "0 6px 30px rgba(40,30,20,0.35)", opacity: o }}>{children}</div>);
 
 export const Franklin: React.FC<{ t: number }> = ({ t }) => {
   if (t < F.t - 0.6 || t >= HO.t + 0.6) return null;
@@ -187,18 +187,15 @@ export const Franklin: React.FC<{ t: number }> = ({ t }) => {
             return <path key={i} d={`M ${ax - 18},${ay + 8} l 26,-6 l -6,-8 M ${ax + 8},${ay + 2} l -6,10`} stroke={AMBER} strokeWidth={4} fill="none" opacity={(1 - ph) * 0.9} strokeLinecap="round" />; })}
         </g>}
       </Svg>
-      <Panel o={fade(t, F.l1 - 0.1, F.l3 - 0.1, 0.3, 0.3)} x={80} y={60} w={980}>
-        <Say t={t} at={F.l1} out={F.l3} text="1768年，富兰克林遇到一件怪事：" x={0} y={0} size={44} color={INK} weight={900} blur={0} />
-        <div style={{ height: 66 }} />
-        <Say t={t} at={F.l2} out={F.l3} text="英国邮船横渡大西洋，" x={0} y={66} size={52} color={INK} weight={600} blur={0} />
-        <Say t={t} at={F.l2 + 0.5} out={F.l3} text="总比商船慢两个星期。" x={0} y={136} size={52} color={RED} weight={900} blur={0} />
-        <div style={{ height: 140 }} />
+      <Panel o={fade(t, F.l1 - 0.1, F.l3 - 0.1, 0.3, 0.3)} x={80} y={60} w={900} h={262}>
+        <Say t={t} at={F.l1} out={F.l3} text="1768年，富兰克林遇到一件怪事：" x={44} y={30} size={44} color={INK} weight={900} blur={0} stagger={0.03} />
+        <Say t={t} at={F.l2} out={F.l3} text="英国邮船横渡大西洋，" x={44} y={102} size={52} color={INK} weight={600} blur={0} />
+        <Say t={t} at={F.l2 + 0.5} out={F.l3} text="总比商船慢两个星期。" x={44} y={172} size={52} color={RED} weight={900} blur={0} />
       </Panel>
-      <Panel o={fade(t, F.l3 - 0.1, F.out + 0.2, 0.3, 0.3)} x={80} y={60} w={1000}>
-        <Say t={t} at={F.l3} out={F.l4} text="捕鲸的表亲告诉他：" x={0} y={0} size={44} color={INK} weight={600} blur={0} />
-        <Say t={t} at={F.l3 + 0.5} out={F.l4} text="“你们一直在逆着一条河开。”" x={0} y={66} size={56} color="#8A5410" weight={900} blur={0} />
-        <Say t={t} at={F.l4} out={F.out + 0.2} text="于是他把这条河，画成了地图。" x={0} y={0} size={52} color={INK} weight={900} blur={0} />
-        <div style={{ height: 136 }} />
+      <Panel o={fade(t, F.l3 - 0.1, F.out + 0.2, 0.3, 0.3)} x={80} y={60} w={900} h={t < F.l4 ? 196 : 126}>
+        <Say t={t} at={F.l3} out={F.l4} text="捕鲸的表亲告诉他：" x={44} y={30} size={44} color={INK} weight={600} blur={0} />
+        <Say t={t} at={F.l3 + 0.5} out={F.l4} text="“你们一直在逆着一条河开。”" x={44} y={100} size={56} color="#8A5410" weight={900} blur={0} />
+        <Say t={t} at={F.l4} out={F.out + 0.2} text="于是他把这条河，画成了地图。" x={44} y={30} size={52} color={INK} weight={900} blur={0} />
       </Panel>
       {t > F.note && <div style={{ position: "absolute", left: 1240, top: 120, padding: "10px 26px", border: `5px solid ${RED}`, color: RED, fontFamily: SERIF, fontWeight: 900, fontSize: 46,
         transform: `rotate(-7deg) scale(${lerp(1.6, 1, eOut(range(t, F.note, F.note + 0.22)))})`, opacity: eOut(range(t, F.note, F.note + 0.15)) * (1 - eIn(range(t, F.out - 0.2, F.out + 0.2))), background: "rgba(243,236,220,0.7)" }}>船长们：不信。</div>}
