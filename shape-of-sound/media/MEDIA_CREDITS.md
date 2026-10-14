@@ -49,3 +49,4 @@ YouTube downloads (yt-dlp) are blocked from this cloud environment by YouTube's 
 | `public/media/me_scream.jpg` | 意义，从哪来？ (尼采) | Edvard Munch (1893), National Gallery of Norway | Public domain | https://commons.wikimedia.org/wiki/File:Edvard_Munch,_1893,_The_Scream,_oil,_tempera_and_pastel_on_cardboard,_91_x_73_cm,_National_Gallery_of_Norway.jpg |
 | `public/media/me_nietzsche.jpg` | 意义，从哪来？ (尼采) | Gustav-Adolf Schultze (1882) | Public domain | https://commons.wikimedia.org/wiki/File:Nietzsche1882.jpg |
 | `public/media/me_panopticon.jpg` | 意义，从哪来？ (福柯) | Willey Reveley (c. 1791) | Public domain | https://commons.wikimedia.org/wiki/File:Reveley_Plan_of_Houses_of_Inspection_c._1791.png |
+| `public/media/nh_monk.jpg` | NIHIL · 虚无 (the abyss) | Caspar David Friedrich (1808–1810), Alte Nationalgalerie | Public domain | https://commons.wikimedia.org/wiki/File:Caspar_David_Friedrich_-_Der_Mönch_am_Meer_-_Google_Art_Project.jpg |
