@@ -121,9 +121,23 @@ export const Chips: React.FC<{ t: number }> = ({ t }) => {
       <Headline t={t} at={S.t} out={out} n={2} text="长鑫一句话，韩国芯片股暴跌" hi="暴跌" />
       <Note t={t} at={L(0) + 0.5} out={L(2)} text="长鑫存储高管：年底推出新一代服务器内存（DDR5 RDIMM）" x={300} y={260} size={32} color={WHITE} weight={700} />
       <Tag t={t} at={L(0) + 0.9} out={L(2)} text="报道 · 10.10 会议发言" x={300} y={320} kind="report" />
+      {/* the news itself: a server memory module, then the three days to Seoul */}
+      <Layer o={eOut(range(t, L(0) + 0.3, L(0) + 0.9)) * (1 - eIn(range(t, L(1) + 0.5, L(1) + 0.9)))}>
+        <Svg>
+          <g transform={`translate(560, ${lerp(470, 440, eOut(range(t, L(0) + 0.3, L(0) + 1.2)))})`}>
+            <rect x={0} y={0} width={800} height={190} rx={8} fill="#1D5A3C" stroke="rgba(221,235,255,0.5)" strokeWidth={2} />
+            {Array.from({ length: 9 }, (_, i) => <rect key={i} x={30 + i * 84} y={34} width={64} height={96} rx={3} fill="#0E0F12" stroke="rgba(221,235,255,0.25)" />)}
+            {Array.from({ length: 70 }, (_, i) => <rect key={i} x={20 + i * 11} y={168} width={7} height={22} fill="#D9B45A" />)}
+            <rect x={394} y={160} width={12} height={30} fill={"#07080A"} />
+            <text x={30} y={22} fontFamily={MONO} fontWeight={700} fontSize={16} fill="rgba(244,241,234,0.75)">DDR5 RDIMM · SERVER</text>
+          </g>
+        </Svg>
+        <Note t={t} at={L(0) + 0.8} out={L(1) + 0.9} text="长鑫存储 · 新一代服务器内存 · 计划年底推出" x={960} y={690} anchor="center" size={34} color={WHITE} weight={700} />
+        <Note t={t} at={L(1)} out={L(1) + 0.9} text="10.10  →  10.13" x={960} y={760} anchor="center" size={44} color={AMBER} font={MONO} weight={700} />
+      </Layer>
       <Layer o={1 - chart}>
         <Slam t={t} at={L(1) + 1.0} out={L(2) + 0.2} text="崩了" x={960} y={420} size={260} anchor="center" color={RED} tracking={30} />
-        <Note t={t} at={L(1) + 0.2} out={L(2) + 0.2} text="10月13日 · 首尔" x={960} y={740} anchor="center" size={34} color={DIM} font={MONO} weight={700} />
+        <Note t={t} at={L(1) + 1.0} out={L(2) + 0.2} text="10月13日 · 首尔" x={960} y={740} anchor="center" size={34} color={DIM} font={MONO} weight={700} />
       </Layer>
       <Layer o={chart}>
         {BARS.map(([name, v], i) => { const s = L(2) + 0.2 + i * 0.35, k = eOut(range(t, s, s + 0.9)), h = (Math.abs(v) / 10.09) * 420 * k, x = 420 + i * 420;
