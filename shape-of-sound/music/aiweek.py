@@ -4,9 +4,11 @@ Run: python3 music/aiweek.py → public/aiweek_mix.wav (narration + score + soun
 sound), out/aiweek_cues.md
 
 The narrator leads; the music is a movie-trailer bed under him, in D minor:
-  · a sub drone that never stops, and a clock tick under the spy story (the bug is "listening");
-  · braams (a low, distorted brass-like stack that opens and closes) on the big words — 窃听器, the title, 崩了, the
-    AI-worm reveal, and 下周见 — each with a low boom;
+  · a sub drone that never stops; a clock tick that runs in sixteenths under the cold-open montage, then in quarters
+    under the spy story (the bug is "listening");
+  · a cut hit (a low thump and a short burst of air) on each of the montage's four flash frames;
+  · braams (a low, distorted brass-like stack that opens and closes) on the big words — 窃听器, the title, 崩了,
+    后背发凉, the AI-worm reveal, and 下周见 — each with a low boom;
   · a filtered eighth-note ostinato that drives the two busiest stories (three giants, the China front);
   · a noise riser into every story, a whoosh for every beam of light.
 The music ducks ~9 dB under the voice. Sound effects stay motivated: typing on the police form, the button, the
@@ -26,6 +28,9 @@ J = json.load(open(os.path.join(ROOT, 'src', 'aiweek', 'aiweek.json'), encoding=
 SR, DUR = 48000, J['duration']; N = int(DUR * SR)
 SEG = {s['id']: s for s in J['segments']}
 def L(sid, i): return SEG[sid]['lines'][i]['t']
+def W(sid, i, word):
+    """when the narrator says `word` in line i of segment sid"""
+    l = SEG[sid]['lines'][i]; return l['t'] + l['ct'][l['text'].index(word)]
 def lp(x, f): return sosfilt(butter(2, f, 'low', fs=SR, output='sos'), x, axis=0)
 def hp(x, f): return sosfilt(butter(2, f, 'high', fs=SR, output='sos'), x, axis=0)
 def bp(x, a, b): return sosfilt(butter(2, [a, b], 'band', fs=SR, output='sos'), x, axis=0)
@@ -84,12 +89,16 @@ pads = [('hook', [50, 57, 62]), ('spy', [50, 53, 57]), ('chips', [46, 53, 58]), 
 for sid, ch in pads:
     s = SEG[sid]['t'] - 0.3; d = SEG[sid]['out'] - s + 0.5
     for p in ch: note('pad', s, d, p, 70)
-# the clock under the bug (hook → end of the spy story), slowing out
-for k in range(int((SEG['spy']['out'] - 0.6) / 0.5)): note('tick', 0.6 + k * 0.5, 0.05, 76, 82 if k % 2 == 0 else 60)
+# the clock: sixteenths under the montage, getting louder into the title; then quarters under the spy story
+for k in range(int(L('hook', 4) / 0.125)): note('tick', k * 0.125, 0.04, 76, 50 + int(40 * k * 0.125 / L('hook', 4)) - (10 if k % 2 else 0))
+k = 0
+while SEG['spy']['t'] + k * 0.5 < SEG['spy']['out'] - 0.3: note('tick', SEG['spy']['t'] + k * 0.5, 0.05, 76, 82 if k % 2 == 0 else 60); k += 1
 # braams + booms on the big words
-BIG = [(L('hook', 1) + 0.25, 1.6, 'the word 窃听器'), (L('hook', 4), 2.4, 'the title'), (L('chips', 1) + 0.95, 1.8, '崩了'), (L('rogue', 0), 1.6, '后背发凉'),
-       (L('rogue', 3) + 0.05, 1.8, 'AI 蠕虫'), (L('end', 1), 3.0, '下周见')]
+BIG = [(L('hook', 0), 0.9, 'the word 窃听器, frame one'), (L('hook', 4), 2.2, 'the title'), (W('chips', 1, '崩了'), 1.6, '崩了'), (W('rogue', 0, '后背'), 1.4, '后背发凉'),
+       (W('rogue', 3, 'AI'), 1.6, 'AI 蠕虫'), (L('end', 1), 3.0, '下周见')]
 for s, d, _ in BIG: note('braam', s, d, 38, 100); note('boom', s, 0.5, 31, 100)
+# the montage's other three cuts: a boom each, rising
+for i in (1, 2, 3): note('boom', L('hook', i), 0.4, 33 + i, 88)
 # a smaller boom on each story's index
 for sid in ('spy', 'chips', 'giants', 'china', 'rogue', 'fall'): note('boom', SEG[sid]['t'], 0.4, 36, 72)
 # the ostinato: eighths through the giants and the China front, quieter through the fall
@@ -146,6 +155,11 @@ def s_crack(seed=7):
         i = int((0.02 + k * 0.05 + r.uniform(0, 0.02)) * SR); m = int(0.02 * SR); y[i:i + m] += bp(r.standard_normal(m), 600, 4000) * np.exp(-np.arange(m) / (0.003 * SR))
     return st(lp(y + 0.3 * lp(noise(n, seed), 300) * np.exp(-t / 0.15), 5000))
 
+def s_hit(seed=20):
+    """a cut hit: a short low thump and a burst of air, for a flash frame"""
+    n = int(0.45 * SR); t = np.arange(n) / SR; fr = 55 * (1 + 1.5 * np.exp(-t / 0.03))
+    return st(np.tanh(1.3 * (np.sin(2 * np.pi * np.cumsum(fr) / SR) * np.exp(-t / 0.12) + 0.6 * bp(noise(n, seed), 600, 5000) * np.exp(-t / 0.035))))
+
 SFX = np.zeros((N, 2)); LOG = []
 def put(t, x, db, name, why):
     x = norm(x); i0 = int(t * SR); a, b = max(0, i0), min(N, i0 + len(x))
@@ -153,13 +167,17 @@ def put(t, x, db, name, why):
     LOG.append((round(t, 3), name, db, why))
 for sid in ('spy', 'chips', 'giants', 'china', 'rogue', 'fall', 'end'):
     put(SEG[sid]['t'] - 1.2, s_riser(1.2, hash(sid) % 100), -30, 'riser (synth)', f'into {sid}')
+for i in range(4): put(L('hook', i) - 0.03, s_hit(20 + i), -24, 'cut hit (synth)', f'montage flash frame {i + 1}')
+put(L('hook', 2) + 0.15, s_stamp(8), -27, 'stamp (synth)', 'montage: the spam stamp on the police form')
+put(L('hook', 3) + 0.25, s_crack(9), -28, 'crack (synth)', 'montage: the chat bubble splits')
 put(L('hook', 4) - 0.15, s_whoosh(0.6, 2), -26, 'whoosh (synth)', 'the beam slices in under the title')
 put(L('end', 1) - 0.1, s_whoosh(0.6, 3), -26, 'whoosh (synth)', 'the beam under 下周见')
-put(L('rogue', 1) + 0.6, s_keys(1.6, 3), -27, 'typing (synth)', 'the invented tip is typed into the police form')
-put(L('rogue', 1) + 2.45, s_click(4), -27, 'button (synth)', 'submit')
-put(L('rogue', 1) + 2.9, s_stamp(5), -23, 'stamp (synth)', 'flagged as spam')
-put(L('rogue', 2) + 0.7, s_snap(6), -25, 'cable snap (synth)', 'live internet cut from all internal tests')
-put(L('fall', 0) + 1.4, s_crack(7), -26, 'crack (synth)', 'the chat bubble splits')
+form = W('rogue', 1, '假线索') - 1.9   # the police form's own clock (src/aiweek/A3.tsx)
+put(form + 0.3, s_keys(1.15, 3), -27, 'typing (synth)', 'the invented tip is typed into the police form')
+put(form + 1.58, s_click(4), -27, 'button (synth)', 'submit')
+put(form + 1.9, s_stamp(5), -23, 'stamp (synth)', 'flagged as spam')
+put(W('rogue', 2, '切断') + 0.3, s_snap(6), -25, 'cable snap (synth)', 'live internet cut from all internal tests')
+put(W('fall', 0, '破产') - 0.1, s_crack(7), -26, 'crack (synth)', 'the chat bubble splits')
 
 SFX = lp(SFX, 7000)
 sfx_mix = SFX + 0.25 * np.stack([fftconvolve(SFX[:, ch], sc.ir[:, ch])[:N] for ch in range(2)], axis=1)

@@ -20,4 +20,10 @@ Rules:
   play the metaphor or demonstration. An abstract metaphor on its own (an arrow hitting 「你」) leaves the viewer not
   knowing what they are watching, even if the title explains it at 7 s.
 
-Feedback log: 「开头不吸引人啊，观众不知道讲啥的」 (佛家 v1 opened on an abstract arrow; the subject only appeared at 7 s). 「开头冲击要大」「视频开头要更有吸引力，最好以悬念，问题，反常识，冲击力开场」「光遗传的开头不够吸引人」.
+- **A news recap opens on a montage of the week's beats, not on one story.** Four hard cuts, about a second each, each
+  with one huge word, a flash frame and a hit (窃听器 / 芯片股暴跌 / AI 报假警 / 明星公司破产), then "all true, all this
+  week" and the title by ~4 s. Each beat is a preview of the picture its story will open with, and carries that
+  story's number, so the montage is paid off later. One slow dramatic line as the cold open (v1: 「一卷卫生纸里，藏着
+  一个窃听器」 over 15 s before the first story) was not gripping.
+
+Feedback log: 「配音难听…节奏太慢，开场不吸引人。」 (AI weekly v1). 「开头不吸引人啊，观众不知道讲啥的」 (佛家 v1 opened on an abstract arrow; the subject only appeared at 7 s). 「开头冲击要大」「视频开头要更有吸引力，最好以悬念，问题，反常识，冲击力开场」「光遗传的开头不够吸引人」.

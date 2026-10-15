@@ -1,4 +1,4 @@
-// 本周AI要闻 (8–15 Oct 2026) — a news recap cut like a movie trailer, narrated by a deep, dramatic local voice. The
+// 本周AI要闻 (8–15 Oct 2026) — a news recap cut like a movie trailer, narrated by a deep, natural local voice. The
 // narration's timeline (aiweek.json, from music/aiweek_vo.py) drives every cue; the mix (narration, score and sound
 // design) comes from music/aiweek.py. Script and sources: src/aiweek/script.json, AIWEEK_STORYBOARD.md.
 import "@fontsource/noto-sans-sc/500.css";
@@ -11,7 +11,8 @@ import React from "react";
 import { AbsoluteFill, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { Audio } from "@remotion/media";
 import { BG, Grain, Vignette } from "./kit";
-import { Chips, Hook, Spy } from "./A1";
+import { Hook } from "./A0";
+import { Chips, Spy } from "./A1";
 import { China, Giants } from "./A2";
 import { End, Fall, Rogue, Subs } from "./A3";
 

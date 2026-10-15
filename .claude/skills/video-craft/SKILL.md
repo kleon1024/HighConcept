@@ -18,7 +18,7 @@ taught us; follow them, and when the user gives new feedback, add it to the matc
 | Motion | [motion.md](motion.md) | One focal point, eased and staggered, with time to read. |
 | Music | [music.md](music.md) | Real instruments and designed synths, an arc that follows the edit, no rough GM sound. |
 | Sound effects | [sfx.md](sfx.md) | Motivated, one palette, no bells/chimes/glitter, ~10 dB under the music. |
-| Narration | [voice.md](voice.md) | Local TTS shaped into a character, every line checked by ASR, the narration drives the timeline, music ~12 dB under. |
+| Narration | [voice.md](voice.md) | A real recorded voice (CosyVoice), never pitch-shifted; fast; best of several takes by ASR; the narration drives the timeline to the word; music ~12 dB under. |
 | Photos & footage | [media.md](media.md) | Real images only where drawing can't carry it, free-licensed, credited, graded into the style. |
 | Ending | [ending.md](ending.md) | Lift it: bookend the opening, widen the frame, land one resonant line. |
 | Before delivery | [checklist.md](checklist.md) | Length, legibility, audio, transitions, credits. |

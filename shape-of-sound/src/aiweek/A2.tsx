@@ -1,10 +1,10 @@
 // 本周AI要闻 · part 2 — three giants in one week (Google's Gemini 4 Argon opens to everyone at an introductory price;
 // GPT-6 reaches free ChatGPT users with answers you can tap; Meta's first frontier model), and the China front (StepFun's
-// 3,999-yuan agent phone and open weights; 155 apps refuse to be driven by Doubao's phone assistant).
+// 3,999-yuan agent phone; 155 apps refuse to be driven by Doubao's phone assistant).
 import React from "react";
-import { AMBER, BEAM, Counter, DIM, DISPLAY, eIn, eInOut, eOut, FAINT, HEAVY, Layer, lerp, MONO, Note, range, RED, rnd, Svg, Tag, WHITE } from "./kit";
+import { AMBER, BEAM, Counter, DIM, DISPLAY, eIn, eInOut, eOut, FAINT, HEAVY, Layer, lerp, MONO, Note, range, RED, Svg, Tag, WHITE } from "./kit";
 import { Headline } from "./A1";
-import { line, seg } from "./timeline";
+import { at, line, seg } from "./timeline";
 
 // ---------- three giants ----------
 const Card: React.FC<React.PropsWithChildren<{ t: number; x: number; on: number; dim: number; name: string; model: string; date: string }>> = ({ t, x, on, dim, name, model, date, children }) => {
@@ -47,7 +47,7 @@ export const Giants: React.FC<{ t: number }> = ({ t }) => {
         <Card t={t} x={820} on={on(1)} dim={dim(1)} name="OPENAI" model="GPT-6" date="10.8 起 · 免费用户可用">
           <Counter t={t} at={L(2) + 0.3} dur={1.0} out={out} to={12} suffix="亿+ 周活用户" x={0} y={0} size={84} suffixSize={30} />
           <div style={{ position: "absolute", top: 100, fontFamily: HEAVY, fontSize: 22, color: DIM }}>免费版用 GPT-6 Luna · 付费版用 Sol</div>
-          <MiniUI t={t} at={L(2) + 1.0} />
+          <MiniUI t={t} at={L(2) + 0.6} />
         </Card>
         <Card t={t} x={1340} on={on(2)} dim={dim(2)} name="META" model="Muse Wonder" date="10.12 发布">
           <div style={{ fontFamily: HEAVY, fontWeight: 900, fontSize: 38, color: WHITE, lineHeight: 1.35 }}>超级智能实验室<br />第一个前沿模型</div>
@@ -71,49 +71,39 @@ const Phone: React.FC<{ t: number; x: number; y: number; k: number }> = ({ t, x,
     <div style={{ position: "absolute", left: 0, right: 0, top: 350, textAlign: "center", fontFamily: HEAVY, fontWeight: 700, fontSize: 24, color: WHITE }}>你好，我是 Amoo</div>
     <div style={{ position: "absolute", left: 30, right: 30, top: 400, height: 44, borderRadius: 22, border: "1.5px solid rgba(221,235,255,0.35)", fontFamily: HEAVY, fontSize: 18, color: DIM, display: "flex", alignItems: "center", paddingLeft: 16 }}>帮我订明早的高铁票…</div>
   </div>);
-// 600 dots = 600B parameters; 27 lit = the ~27B active for each token
-const LIT = new Set(Array.from({ length: 600 }, (_, i) => i).sort((a, b) => rnd(a * 13 + 7) - rnd(b * 13 + 7)).slice(0, 27));
 const APPS = ["微信", "淘宝", "支付宝", "QQ", "高德地图", "DeepSeek", "Kimi", "拼多多", "小红书", "WPS"];
 export const China: React.FC<{ t: number }> = ({ t }) => {
   const S = seg("china");
   if (t < S.t - 0.4 || t >= S.out + 0.4) return null;
   const L = (i: number) => line("china", i).t, out = S.out + 0.2;
-  const step = 1 - eInOut(range(t, L(2) - 0.4, L(2))), dou = eInOut(range(t, L(2) - 0.4, L(2)));
-  const moe = eOut(range(t, L(1) - 0.1, L(1) + 0.5));
+  const step = 1 - eInOut(range(t, L(1) - 0.4, L(1))), dou = eInOut(range(t, L(1) - 0.4, L(1)));
+  const price = at("china", 0, "三千"), n155 = at("china", 1, "一百五十五"), wx = at("china", 2, "微信");
   return (
     <Layer o={eOut(range(t, S.t - 0.4, S.t)) * (1 - eIn(range(t, S.out - 0.1, S.out + 0.3)))}>
       <Headline t={t} at={S.t} out={out} n={4} text="中国战场，火药味十足" hi="中国" />
       <Layer o={step}>
-        <Phone t={t} x={300} y={290} k={eOut(range(t, L(0) + 0.6, L(0) + 1.3))} />
-        <Note t={t} at={L(0) + 0.9} out={out} text="阶跃星辰 · STEPX Neo" x={620} y={300} size={40} color={WHITE} weight={900} />
-        <Counter t={t} at={L(0) + 2.6} dur={1.2} out={out} to={3999} suffix="元" x={620} y={370} size={110} suffixSize={44} />
-        <Note t={t} at={L(0) + 3.4} out={out} text="先行版 · 10.13 发布 · 10.16 首销" x={622} y={500} size={26} />
-        <Tag t={t} at={L(0) + 3.6} out={out} text="官方" x={622} y={550} kind="official" />
-        <Layer o={moe}>
-          <Svg>
-            {Array.from({ length: 600 }, (_, i) => { const c = i % 30, r = Math.floor(i / 30), lit = LIT.has(i);
-              return <circle key={i} cx={1130 + c * 22} cy={330 + r * 22} r={6} fill={lit ? AMBER : "rgba(221,235,255,0.16)"} opacity={lit ? 0.05 + 0.95 * eOut(range(t, L(1) + 0.6, L(1) + 1.0)) : 1} />; })}
-          </Svg>
-          <Note t={t} at={L(1) + 0.3} out={out} text="Step 5 Preview · 开放权重" x={1130} y={790} size={34} color={WHITE} weight={900} />
-          <Note t={t} at={L(1) + 0.8} out={out} text="6000亿参数，每次只激活约270亿（MoE）" x={1130} y={842} size={26} />
-          <Tag t={t} at={L(1) + 1.0} out={out} text="开放权重 · 需登记下载" x={1130} y={894} kind="report" />
-        </Layer>
+        <Phone t={t} x={480} y={290} k={eOut(range(t, at("china", 0, "阶跃") - 0.1, at("china", 0, "阶跃") + 0.6))} />
+        <Note t={t} at={at("china", 0, "阶跃")} out={out} text="阶跃星辰 · STEPX Neo" x={820} y={330} size={44} color={WHITE} weight={900} />
+        <Note t={t} at={at("china", 0, "AI")} out={out} text="会替你点手机的 AI 手机" x={822} y={400} size={30} />
+        <Counter t={t} at={price} dur={0.9} out={out} to={3999} suffix="元" x={820} y={470} size={130} suffixSize={50} />
+        <Note t={t} at={price + 0.6} out={out} text="先行版 · 10.13 发布 · 10.16 首销" x={822} y={630} size={26} />
+        <Tag t={t} at={price + 0.8} out={out} text="官方" x={822} y={680} kind="official" />
       </Layer>
       <Layer o={dou}>
         <Svg>
-          {Array.from({ length: 155 }, (_, i) => { const c = i % 31, r = Math.floor(i / 31), s = L(2) + 0.2 + i * 0.012, k = eOut(range(t, s, s + 0.3));
+          {Array.from({ length: 155 }, (_, i) => { const c = i % 31, r = Math.floor(i / 31), s = n155 + i * 0.009, k = eOut(range(t, s, s + 0.3));
             const x = 300 + c * 49, y = 330 + r * 62;
             return <g key={i}>
               <rect x={x} y={y} width={40} height={40} rx={10} fill={k > 0.5 ? "rgba(255,90,78,0.85)" : "rgba(221,235,255,0.12)"} />
               {k > 0.5 && <path d={`M${x + 12},${y + 12}L${x + 28},${y + 28}M${x + 28},${y + 12}L${x + 12},${y + 28}`} stroke="#fff" strokeWidth={3} />}
             </g>; })}
         </Svg>
-        <Counter t={t} at={L(2) + 0.2} dur={1.9} out={out} to={155} suffix="款应用拒绝被豆包操作" x={300} y={660} size={110} suffixSize={42} color={RED} />
-        {APPS.map((a, i) => { const s = L(3) + i * 0.12, k = eOut(range(t, s, s + 0.3));
+        <Counter t={t} at={n155} dur={1.4} out={out} to={155} suffix="款应用拒绝被豆包操作" x={300} y={660} size={110} suffixSize={42} color={RED} />
+        {APPS.map((a, i) => { const s = wx + (i < 3 ? i * 0.3 : 0.9 + (i - 3) * 0.08), k = eOut(range(t, s, s + 0.25));
           return k > 0 ? <div key={a} style={{ position: "absolute", left: 300 + (i % 5) * 300, top: 800 + Math.floor(i / 5) * 56, opacity: k * (1 - eIn(range(t, out - 0.3, out))), fontFamily: HEAVY, fontWeight: 900, fontSize: 34, color: WHITE }}>
             <span style={{ color: RED, marginRight: 10 }}>✕</span>{a}</div> : null; })}
-        <Note t={t} at={L(3) + 1.4} out={out} text="腾讯系 66 · 阿里系 23 · 目前适用于两款努比亚手机 · 名单每周更新" x={1810} y={930} anchor="right" size={22} />
-        <Tag t={t} at={L(2) + 0.6} out={out} text="官方 · 豆包公告 10.14" x={1810 - 280} y={290} kind="official" />
+        <Note t={t} at={wx + 1.2} out={out} text="腾讯系 66 · 阿里系 23 · 目前适用于两款努比亚手机 · 名单每周更新" x={1810} y={930} anchor="right" size={22} />
+        <Tag t={t} at={L(1) + 0.5} out={out} text="官方 · 豆包公告 10.14" x={1810 - 280} y={290} kind="official" />
       </Layer>
     </Layer>
   );
