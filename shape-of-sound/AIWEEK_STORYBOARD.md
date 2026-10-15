@@ -1,4 +1,4 @@
-# 本周AI要闻 · 2026.10.8 – 10.15 — v2, about 75 seconds
+# 本周AI要闻 · 2026.10.8 – 10.15 — v2, 75 seconds
 
 16:9 · 1920×1080 · 30 fps · Remotion composition `AiWeek` (`src/aiweek/`).
 
@@ -16,7 +16,7 @@ A week of AI news cut like a **movie trailer**, read by a **deep male narrator**
 
 - **A real voice.** v1 was Kokoro taken down 2.5 semitones. v2 uses CosyVoice-300M-Instruct, speaker 中文男, with a
   trailer-narrator instruct prompt. It is a recorded male voice at about 90 Hz with no pitch shifting.
-- **Faster.** About 6 characters a second (v1: 4.5), with 0.1–0.2 s gaps inside a story. The film runs about 75 s
+- **Faster.** About 6 characters a second (v1: 4.5), with 0.1–0.2 s gaps inside a story. The film runs 75 s
   (v1: 115 s).
 - **A montage cold open.** Four hard cuts in about four seconds, each a huge word with a flash frame and a hit:
   窃听器 / 芯片股暴跌 / AI 报假警 / 明星公司破产. Then 「全是这周 AI 圈的真事」 and the title. Each beat previews the

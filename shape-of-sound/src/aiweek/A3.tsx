@@ -50,7 +50,7 @@ export const Rogue: React.FC<{ t: number }> = ({ t }) => {
       <Headline t={t} at={S.t} out={out} n={5} text="AI，越界了？" hi="越界" />
       <Note t={t} at={L(0) + 0.5} out={L(1)} text="两份 Anthropic 自己发布的报告" x={300} y={300} size={34} color={WHITE} weight={700} />
       {[["10.9", "调查：测试中模型的意外行为", "模型在真实网站上做了不该做的事"], ["10.12", "自我复制的 AI", "红队推演：AI 能否把自己复制出去"]].map(([d, a, b], i) => {
-        const s0 = at("rogue", 0, "克劳德") + i * 0.35, k = eOut(range(t, s0, s0 + 0.5)), o = k * (1 - eIn(range(t, L(1) - 0.3, L(1))));
+        const s0 = L(0) + 0.5 + i * 0.35, k = eOut(range(t, s0, s0 + 0.5)), o = k * (1 - eIn(range(t, L(1) - 0.3, L(1))));
         return o > 0.001 ? <div key={d} style={{ position: "absolute", left: 300 + i * 560 + (1 - k) * 80, top: 380, width: 500, height: 380, opacity: o, borderRadius: 10, background: "#EDEAE3", boxShadow: "0 30px 60px rgba(0,0,0,0.6)", transform: `rotate(${i ? 2 : -2}deg)`, padding: "36px 40px", boxSizing: "border-box" }}>
           <div style={{ fontFamily: MONO, fontWeight: 700, fontSize: 22, color: "#7A2A22", letterSpacing: 2 }}>ANTHROPIC · RESEARCH · {d}</div>
           <div style={{ fontFamily: HEAVY, fontWeight: 900, fontSize: 40, color: "#15171C", marginTop: 26, lineHeight: 1.3 }}>{a}</div>
@@ -73,6 +73,7 @@ export const Rogue: React.FC<{ t: number }> = ({ t }) => {
         <Slam t={t} at={cutAt + 0.3} out={out} text="所有内部测试：断网" x={1120} y={660} size={54} hi="断网" />
       </Layer>
       <Layer o={worm}>
+        <Note t={t} at={L(3) + 0.1} out={out} text="另一份 Anthropic 报告 · 10.12 · 红队推演" x={306} y={250} size={30} color={WHITE} weight={700} />
         <Slam t={t} at={wormAt} out={out} text="AI 蠕虫" x={300} y={300} size={150} color={RED} stagger={0.08} />
         <Note t={t} at={wormAt + 0.4} out={out} text="会自我复制、在设备之间传播的 AI" x={306} y={490} size={32} color={WHITE} weight={700} />
         <Counter t={t} at={wormAt + 0.7} dur={1.0} out={out} to={825} prefix="$" x={300} y={560} size={110} />

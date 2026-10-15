@@ -83,7 +83,7 @@ export const China: React.FC<{ t: number }> = ({ t }) => {
     <Layer o={eOut(range(t, S.t - 0.4, S.t)) * (1 - eIn(range(t, S.out - 0.1, S.out + 0.3)))}>
       <Headline t={t} at={S.t} out={out} n={4} text="中国战场，火药味十足" hi="中国" />
       <Layer o={step}>
-        <Phone t={t} x={480} y={290} k={eOut(range(t, at("china", 0, "阶跃") - 0.1, at("china", 0, "阶跃") + 0.6))} />
+        <Phone t={t} x={480} y={290} k={eOut(range(t, L(0) + 0.1, L(0) + 0.7))} />
         <Note t={t} at={at("china", 0, "阶跃")} out={out} text="阶跃星辰 · STEPX Neo" x={820} y={330} size={44} color={WHITE} weight={900} />
         <Note t={t} at={at("china", 0, "AI")} out={out} text="会替你点手机的 AI 手机" x={822} y={400} size={30} />
         <Counter t={t} at={price} dur={0.9} out={out} to={3999} suffix="元" x={820} y={470} size={130} suffixSize={50} />

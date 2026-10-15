@@ -44,7 +44,7 @@ export const Spy: React.FC<{ t: number }> = ({ t }) => {
   return (
     <Layer o={eOut(range(t, S.t - 0.4, S.t)) * (1 - eIn(range(t, S.out - 0.1, S.out + 0.3)))}>
       <Headline t={t} at={S.t} out={out} n={1} text="OpenAI 会议室窃听器案" hi="窃听器" />
-      <Fact t={t} at={at("spy", 0, "起诉")} out={out} k="指控" v="企图窃听 · 最高可判5年" y={300} />
+      <Fact t={t} at={at("spy", 0, "司法部")} out={out} k="指控" v="企图窃听 · 最高可判5年" y={300} />
       <Fact t={t} at={at("spy", 0, "OpenAI")} out={out} k="嫌疑人" v="35岁 OpenAI 工程师" y={380} />
       <Fact t={t} at={at("spy", 1, "卫生纸")} out={out} k="发现" v="9月30日 · 卫生纸里，接在电视后面" y={460} />
       <Fact t={t} at={at("spy", 1, "高管")} out={out} k="被捕" v="10月9日 · 他包里还有第二个设备" y={540} />
