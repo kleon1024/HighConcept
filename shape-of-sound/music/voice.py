@@ -60,8 +60,10 @@ def hear(x, sr=SR, stamps=False):
     return (s.result.text, list(s.result.tokens), list(s.result.timestamps)) if stamps else s.result.text
 
 def _sounds(s):
-    """a text as toneless pinyin syllables, with Latin letters lower-cased and run together per word"""
+    """a text as toneless pinyin syllables, with Latin letters lower-cased and run together per word (the recogniser
+    spells "AI" as "A I"), and digits read as Chinese numerals"""
     from pypinyin import lazy_pinyin
+    s = re.sub(r'(?<=[A-Za-z]) +(?=[A-Za-z])', '', s); s = re.sub(r'\d', lambda m: '零一二三四五六七八九'[int(m.group())], s)
     out = []
     for tok in re.findall(r'[一-鿿]|[A-Za-z]+|\d', s):
         out += [tok.lower()] if tok.isascii() else lazy_pinyin(tok)
