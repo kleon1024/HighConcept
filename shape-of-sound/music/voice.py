@@ -2,7 +2,7 @@
   · speech: sherpa-onnx + Kokoro v1.1-zh (Apache-2.0), speaker 58 — a low male voice that reads "AI" as letters.
     Model: https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_1.tar.bz2
     Set KOKORO_DIR to the unpacked folder.
-  · a trailer-narrator chain: pitch and formants down ~3 semitones, a touch slower, chest boosted, mud cut, hard
+  · a trailer-narrator chain: pitch and formants down ~2.5 semitones (3 blurred words), a touch slower, chest boosted, mud cut, hard
     compression, gentle saturation, an optional hall tail.
   · a check by ear we can't do ourselves: every line is transcribed back with SenseVoice (set SENSEVOICE_DIR,
     https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2025-09-09.tar.bz2)
@@ -44,7 +44,7 @@ def _hall(sec=1.6, seed=3):
     n = int(sec * SR); t = np.arange(n) / SR; ir = np.random.default_rng(seed).standard_normal(n) * np.exp(-t / (sec / 5.5))
     ir = sosfilt(butter(2, 3500, 'low', fs=SR, output='sos'), ir); ir[:int(0.012 * SR)] = 0; return ir / np.abs(ir).max()
 
-def deepen(x, sr, semis=-3.0, slow=0.94, hall=0.10):
+def deepen(x, sr, semis=-2.5, slow=0.97, hall=0.10):
     """the trailer-narrator chain (returns mono float32 at 48 kHz, tail included)"""
     r = 2 ** (semis / 12)
     with tempfile.TemporaryDirectory() as d:
@@ -59,11 +59,11 @@ def deepen(x, sr, semis=-3.0, slow=0.94, hall=0.10):
         global _ir
         if _ir is None: _ir = _hall()
         w = fftconvolve(y, _ir)[:len(y) + int(1.2 * SR)]; y = np.concatenate([y, np.zeros(len(w) - len(y))]) + hall * w / (np.abs(w).max() + 1e-9) * 0.7
-    # trim leading silence to 20 ms so cue times are exact
-    lead = np.argmax(np.abs(y) > 0.02 * np.abs(y).max()); y = y[max(0, lead - int(0.02 * SR)):]
+    # trim leading silence (keep 60 ms before the first soft onset) so cue times are exact
+    lead = np.argmax(np.abs(y) > 0.004 * np.abs(y).max()); y = y[max(0, lead - int(0.06 * SR)):]
     return (y / (np.abs(y).max() + 1e-9) * 0.89).astype(np.float32)
 
-def narrate(text, speed=0.9, semis=-3.0, slow=0.94, hall=0.10):
+def narrate(text, speed=0.9, semis=-2.5, slow=0.97, hall=0.10):
     x, sr = speak(text, speed); return deepen(x, sr, semis, slow, hall)
 
 def hear(x, sr=SR):

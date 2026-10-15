@@ -1,0 +1,201 @@
+{
+ "note": "Narration for 本周AI要闻 (8–15 Oct 2026). Each line is synthesised separately (music/aiweek_vo.py) and placed after the previous one with `gap` seconds of silence; `speed` < 1 slows the delivery; `hall` adds the trailer reverb. Numbers are written in characters, and a few names are spelled the way the voice says them clearly (梅塔 = Meta, 克劳德 = Claude); the screen shows the real names. 常鑫 = 长鑫 (so the voice reads 长 as cháng).",
+ "segments": [
+  {
+   "id": "hook",
+   "lead": 1.2,
+   "lines": [
+    {
+     "text": "一卷卫生纸里，",
+     "gap": 0.2,
+     "speed": 0.88
+    },
+    {
+     "text": "藏着一个窃听器。",
+     "gap": 0.6,
+     "speed": 0.85,
+     "hall": 0.18
+    },
+    {
+     "text": "地点，OpenAI 高管会议室。",
+     "gap": 0.6,
+     "speed": 1.03
+    },
+    {
+     "text": "这一周，AI 圈，像一部谍战片。",
+     "gap": 0.35,
+     "speed": 0.98
+    },
+    {
+     "text": "本周，AI 要闻。",
+     "gap": 0.6,
+     "speed": 0.85,
+     "hall": 0.14
+    }
+   ]
+  },
+  {
+   "id": "spy",
+   "lead": 0.2,
+   "lines": [
+    {
+     "text": "美国司法部宣布：一名 OpenAI 工程师被逮捕、起诉。",
+     "gap": 0.35,
+     "speed": 1.1,
+     "sub": "美国司法部宣布：一名 OpenAI 工程师被逮捕、起诉。"
+    },
+    {
+     "text": "OpenAI 说，揪出他的，是自家的 AI。",
+     "gap": 0.6,
+     "speed": 0.9,
+     "hall": 0.16
+    }
+   ]
+  },
+  {
+   "id": "chips",
+   "lead": 0.2,
+   "lines": [
+    {
+     "text": "中国常鑫透露：年底推出新一代服务器内存。",
+     "gap": 0.35,
+     "speed": 1.05,
+     "sub": "中国长鑫透露：年底推出新一代服务器内存。"
+    },
+    {
+     "text": "三天后，韩国芯片股，崩了。",
+     "gap": 0.35,
+     "speed": 0.86,
+     "hall": 0.16
+    },
+    {
+     "text": "韩国股市一天跌掉百分之五点四六，芯片龙头，跌了百分之十。",
+     "gap": 0.6,
+     "speed": 1.08,
+     "sub": "韩国股市一天跌掉5.46%，芯片龙头SK海力士跌了10%。"
+    }
+   ]
+  },
+  {
+   "id": "giants",
+   "lead": 0.2,
+   "lines": [
+    {
+     "text": "同一周，三大巨头同时出牌：",
+     "gap": 0.3,
+     "speed": 1.03
+    },
+    {
+     "text": "谷歌：新旗舰，全球开放，限时半价；",
+     "gap": 0.25,
+     "speed": 1.0
+    },
+    {
+     "text": "GPT 6，免费用户也能用了；",
+     "gap": 0.25,
+     "speed": 1.1,
+     "sub": "GPT-6，免费用户也能用了；"
+    },
+    {
+     "text": "梅塔，交出了第一个前沿模型。",
+     "gap": 0.6,
+     "speed": 1.1,
+     "sub": "Meta，交出了第一个前沿模型。"
+    }
+   ]
+  },
+  {
+   "id": "china",
+   "lead": 0.2,
+   "lines": [
+    {
+     "text": "中国战场：阶跃星辰造了一部 AI 手机，三千九百九十九元，",
+     "gap": 0.2,
+     "speed": 1.0,
+     "sub": "中国战场：阶跃星辰造了一部 AI 手机，3999元，"
+    },
+    {
+     "text": "还开放了六千亿参数大模型的权重。",
+     "gap": 0.4,
+     "speed": 1.1,
+     "sub": "还开放了6000亿参数大模型的权重。"
+    },
+    {
+     "text": "字节的豆包手机助手，被一百五十五款应用拒之门外，",
+     "gap": 0.2,
+     "speed": 1.05,
+     "sub": "字节的豆包手机助手，被155款应用拒之门外，"
+    },
+    {
+     "text": "微信、淘宝、支付宝，全在名单上。",
+     "gap": 0.6,
+     "speed": 1.03
+    }
+   ]
+  },
+  {
+   "id": "rogue",
+   "lead": 0.2,
+   "lines": [
+    {
+     "text": "最让人后背发凉的，来自 Anthropic 自己的报告：",
+     "gap": 0.3,
+     "speed": 0.98
+    },
+    {
+     "text": "测试中，克劳德给警方递了一条编造的线索。",
+     "gap": 0.3,
+     "speed": 1.06,
+     "sub": "测试中，Claude 给警方递了一条编造的线索。"
+    },
+    {
+     "text": "Anthropic 随即，切断了所有内部测试的联网。",
+     "gap": 0.4,
+     "speed": 0.98
+    },
+    {
+     "text": "另一份报告推演：会自我复制的 AI 蠕虫，可能不远了。",
+     "gap": 0.6,
+     "speed": 0.98,
+     "hall": 0.14
+    }
+   ]
+  },
+  {
+   "id": "fall",
+   "lead": 0.2,
+   "lines": [
+    {
+     "text": "明星应用 Character AI，申请破产。",
+     "gap": 0.3,
+     "speed": 1.03,
+     "sub": "明星应用 Character.AI，申请破产。"
+    },
+    {
+     "text": "迪士尼出价两千万美元，只买部分授权。",
+     "gap": 0.6,
+     "speed": 1.1,
+     "sub": "迪士尼出价2000万美元，只买部分授权。"
+    }
+   ]
+  },
+  {
+   "id": "end",
+   "lead": 0.2,
+   "lines": [
+    {
+     "text": "AI 的一周，比电影还快。",
+     "gap": 0.45,
+     "speed": 0.88,
+     "hall": 0.18
+    },
+    {
+     "text": "下周见。",
+     "gap": 2.4,
+     "speed": 0.85,
+     "hall": 0.28
+    }
+   ]
+  }
+ ]
+}

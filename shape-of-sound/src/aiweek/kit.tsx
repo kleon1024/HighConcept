@@ -85,10 +85,10 @@ export const Counter: React.FC<{ t: number; at: number; dur?: number; out: numbe
   </div>;
 };
 // the story index: a big outlined number
-export const Index: React.FC<{ t: number; at: number; out: number; n: number; x?: number; y?: number }> = ({ t, at, out, n, x = 110, y = 120 }) => {
+export const Index: React.FC<{ t: number; at: number; out: number; n: number; x?: number; y?: number; size?: number }> = ({ t, at, out, n, x = 110, y = 120, size = 150 }) => {
   if (t < at || t >= out) return null;
   const k = eOut(range(t, at, at + 0.3)), o = 1 - eIn(range(t, out - 0.3, out));
-  return <div style={{ position: "absolute", left: x, top: y, opacity: k * o, fontFamily: DISPLAY, fontSize: 150, lineHeight: 1, color: "transparent", WebkitTextStroke: `2px ${FAINT}`, transform: `translateY(${(1 - k) * 30}px)` }}>
+  return <div style={{ position: "absolute", left: x, top: y, opacity: k * o, fontFamily: DISPLAY, fontSize: size, lineHeight: 1, color: "transparent", WebkitTextStroke: `2px ${FAINT}`, transform: `translateY(${(1 - k) * 30}px)` }}>
     {String(n).padStart(2, "0")}</div>;
 };
 // light streaks drifting through (anamorphic flares) for the trailer moments
