@@ -32,7 +32,8 @@ export const Giants: React.FC<{ t: number }> = ({ t }) => {
   const S = seg("giants");
   if (t < S.t - 0.4 || t >= S.out + 0.4) return null;
   const L = (i: number) => line("giants", i).t, out = S.out + 0.2;
-  const on = (i: number) => range(t, L(i + 1) - 0.1, L(i + 1) + 0.3), dim = (i: number) => (i < 2 ? range(t, L(i + 2) - 0.1, L(i + 2) + 0.3) : 0);
+  const cue = [at("giants", 0, "谷歌"), L(1), L(2)];   // Google, OpenAI, Meta
+  const on = (i: number) => range(t, cue[i] - 0.1, cue[i] + 0.3), dim = (i: number) => (i < 2 ? range(t, cue[i + 1] - 0.1, cue[i + 1] + 0.3) : 0);
   const shown = eOut(range(t, S.t + 0.2, S.t + 0.8));
   return (
     <Layer o={eOut(range(t, S.t - 0.4, S.t)) * (1 - eIn(range(t, S.out - 0.1, S.out + 0.3)))}>
@@ -45,9 +46,9 @@ export const Giants: React.FC<{ t: number }> = ({ t }) => {
           <div style={{ fontFamily: DISPLAY, fontSize: 44, color: DIM, marginTop: 6 }}>→ $4 / $20</div>
         </Card>
         <Card t={t} x={820} on={on(1)} dim={dim(1)} name="OPENAI" model="GPT-6" date="10.8 起 · 免费用户可用">
-          <Counter t={t} at={L(2) + 0.3} dur={1.0} out={out} to={12} suffix="亿+ 周活用户" x={0} y={0} size={84} suffixSize={30} />
+          <Counter t={t} at={L(1) + 0.3} dur={1.0} out={out} to={12} suffix="亿+ 周活用户" x={0} y={0} size={84} suffixSize={30} />
           <div style={{ position: "absolute", top: 100, fontFamily: HEAVY, fontSize: 22, color: DIM }}>免费版用 GPT-6 Luna · 付费版用 Sol</div>
-          <MiniUI t={t} at={L(2) + 0.6} />
+          <MiniUI t={t} at={L(1) + 0.6} />
         </Card>
         <Card t={t} x={1340} on={on(2)} dim={dim(2)} name="META" model="Muse Wonder" date="10.12 发布">
           <div style={{ fontFamily: HEAVY, fontWeight: 900, fontSize: 38, color: WHITE, lineHeight: 1.35 }}>超级智能实验室<br />第一个前沿模型</div>
@@ -55,7 +56,7 @@ export const Giants: React.FC<{ t: number }> = ({ t }) => {
           <div style={{ fontFamily: HEAVY, fontSize: 22, color: FAINT, marginTop: 24 }}>官方公告未公布跑分</div>
         </Card>
       </Layer>
-      <Tag t={t} at={L(1) + 0.4} out={out} text="官方 · 三家官方公告" x={300} y={900} kind="official" />
+      <Tag t={t} at={cue[0] + 0.4} out={out} text="官方 · 三家官方公告" x={300} y={900} kind="official" />
     </Layer>
   );
 };
